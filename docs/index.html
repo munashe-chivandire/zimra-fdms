@@ -489,16 +489,16 @@ if(!reduced){
 }
 
 /* ---------- scroll reveals ---------- */
-document.querySelectorAll('[data-rv]').forEach(el=>{
+document.querySelectorAll('[data-rv]:not(.card)').forEach(el=>{
   gsap.fromTo(el,
     {y:reduced?0:56,opacity:reduced?1:0,filter:reduced?'none':'blur(8px)'},
-    {y:0,opacity:1,filter:'blur(0px)',duration:1.1,ease:'power4.out',
+    {y:0,opacity:1,filter:'blur(0px)',duration:1.1,ease:'power4.out',clearProps:'filter',
      scrollTrigger:{trigger:el,start:'top 88%'}});
 });
 /* bento cards: stagger as a batch with slight rotation settle */
+gsap.set('.bento .card',{y:reduced?0:70,opacity:reduced?1:0});
 ScrollTrigger.batch('.bento .card',{start:'top 90%',onEnter:b=>{
-  gsap.fromTo(b,{y:reduced?0:70,opacity:reduced?1:0,rotate:reduced?0:i=>(i%2?1.2:-1.2)},
-    {y:0,opacity:1,rotate:0,duration:1.15,stagger:.1,ease:'power4.out',overwrite:true});
+  gsap.to(b,{y:0,opacity:1,duration:1.15,stagger:.1,ease:'power4.out',overwrite:true});
 }});
 /* code lines type-reveal on scroll */
 gsap.from('#codeblock .ln',{opacity:0,x:reduced?0:-14,duration:.5,stagger:.055,ease:'power2.out',
