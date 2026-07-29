@@ -1,7 +1,28 @@
 {
   "name": "zimra-fdms",
-  "version": "0.0.1",
-  "description": "TypeScript SDK for the ZIMRA Fiscalisation Data Management System (FDMS) API",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for the ZIMRA Fiscalisation Data Management System (FDMS) — direct device registration, mTLS, receipt signing, fiscal days, offline queue and QR codes",
+  "keywords": [
+    "zimra",
+    "fdms",
+    "fiscalisation",
+    "fiscalization",
+    "zimbabwe",
+    "tax",
+    "receipt",
+    "pos",
+    "invoice",
+    "vfd"
+  ],
+  "author": "Shaun Chivandire",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/munashe-chivandire/zimra-fdms.git"
+  },
+  "bugs": {
+    "url": "https://github.com/munashe-chivandire/zimra-fdms/issues"
+  },
+  "homepage": "https://github.com/munashe-chivandire/zimra-fdms#readme",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -10,6 +31,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "npm test && npm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsx --test test/*.test.ts",
     "test:e2e": "tsx scripts/e2e.ts",

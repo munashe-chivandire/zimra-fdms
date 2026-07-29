@@ -1,8 +1,26 @@
+# dependencies / build output
 node_modules/
 dist/
+
+# credentials & keys — never commit
 secrets/
 fdms-test-credentials.md
+*.pem
+*.p12
+*.pfx
+.env
+.env.*
 
 # personal / business files — never publish
 Goko Consultancy Tax  clearance.pdf
 ZIMRA CHAT FABLE.txt
+
+# editor / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# logs & coverage
+*.log
+coverage/
