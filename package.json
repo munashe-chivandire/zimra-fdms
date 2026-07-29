@@ -38,6 +38,9 @@
     "register": "tsx scripts/register.ts"
   },
   "license": "MIT",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
   "dependencies": {
     "@peculiar/x509": "^1.12.3"
   },
