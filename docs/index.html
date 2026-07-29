@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,348 +9,442 @@
 <meta property="og:description" content="Open-source TypeScript SDK for ZIMRA FDMS. Verified live against ZIMRA's own validation.">
 <meta property="og:image" content="https://raw.githubusercontent.com/munashe-chivandire/zimra-fdms/assets/assets/logoDark.png">
 <link rel="icon" type="image/png" href="img/favicon.png">
-<link rel="preconnect" href="https://api.fontshare.com">
-<link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<script>(function(){try{var t=localStorage.getItem('zf-theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t)}catch(e){}})()</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <style>
 :root{
-  --bg:#040b1b; --bg2:#061024; --panel:#081226; --panel2:#0a1730;
+  --bg:#040b1b; --panel:#081226; --panel2:#0a1730;
   --ink:#eef2fa; --dim:rgba(238,242,250,.56); --faint:rgba(238,242,250,.30);
   --hair:rgba(148,180,255,.10); --hair2:rgba(148,180,255,.18);
   --blue:#2f7de1; --blue-hi:#5aa2ff; --blue-dim:rgba(47,125,225,.13);
   --gold:#cd982d; --gold-hi:#e7b84f; --gold-dim:rgba(205,152,45,.12);
+  --nav-bg:rgba(6,14,31,.62);
+  --card-edge:linear-gradient(160deg,rgba(148,180,255,.14),rgba(148,180,255,.04) 40%,rgba(148,180,255,.02));
+  --card-face:linear-gradient(180deg,var(--panel2),var(--panel));
+  --card-inset:inset 0 1px 0 rgba(148,180,255,.07);
+  --numeral:rgba(148,180,255,.28);
+  --pill-ink:#071022;
+  --goko:radial-gradient(40rem 22rem at 85% 0%,rgba(205,152,45,.13),transparent 60%),radial-gradient(30rem 20rem at 0% 100%,rgba(47,125,225,.12),transparent 60%),linear-gradient(180deg,#0a1428,#071022);
+  --orb-blue:rgba(47,125,225,.20); --orb-gold:rgba(205,152,45,.10); --orb-blue2:rgba(47,125,225,.12);
+  --gridline:rgba(148,180,255,.033); --grain-op:.05;
   --ease:cubic-bezier(.32,.72,0,1);
-  --font-d:'Clash Display',sans-serif; --font-b:'Satoshi',sans-serif; --font-m:'JetBrains Mono',monospace;
+  --font-d:'Bricolage Grotesque',sans-serif; --font-b:'Instrument Sans',sans-serif; --font-m:'JetBrains Mono',monospace;
+}
+:root[data-theme="light"]{
+  --bg:#f4f7fd; --panel:#ffffff; --panel2:#f8faff;
+  --ink:#091430; --dim:rgba(9,20,48,.62); --faint:rgba(9,20,48,.40);
+  --hair:rgba(12,36,84,.10); --hair2:rgba(12,36,84,.18);
+  --blue:#1f66c9; --blue-hi:#2375d5; --blue-dim:rgba(35,117,213,.10);
+  --gold:#a97a1a; --gold-hi:#b98a1e; --gold-dim:rgba(169,122,26,.10);
+  --nav-bg:rgba(255,255,255,.72);
+  --card-edge:linear-gradient(160deg,rgba(12,36,84,.16),rgba(12,36,84,.06) 40%,rgba(12,36,84,.04));
+  --card-face:linear-gradient(180deg,#ffffff,#f7f9fe);
+  --card-inset:inset 0 1px 0 rgba(255,255,255,.9), 0 18px 40px -24px rgba(9,20,48,.18);
+  --numeral:rgba(12,36,84,.25);
+  --pill-ink:#f4f7fd;
+  --goko:radial-gradient(40rem 22rem at 85% 0%,rgba(169,122,26,.10),transparent 60%),radial-gradient(30rem 20rem at 0% 100%,rgba(35,117,213,.10),transparent 60%),linear-gradient(180deg,#ffffff,#f2f6fe);
+  --orb-blue:rgba(35,117,213,.14); --orb-gold:rgba(169,122,26,.08); --orb-blue2:rgba(35,117,213,.09);
+  --gridline:rgba(12,36,84,.045); --grain-op:.035;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 html,body{background:var(--bg)}
-body{color:var(--ink);font-family:var(--font-b);-webkit-font-smoothing:antialiased;overflow-x:hidden}
-::selection{background:rgba(47,125,225,.35)}
+body{color:var(--ink);font-family:var(--font-b);-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  transition:background .6s var(--ease),color .6s var(--ease)}
+::selection{background:rgba(47,125,225,.3)}
 ::-webkit-scrollbar{width:10px}
 ::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:#12203c;border-radius:99px;border:2px solid var(--bg)}
-::-webkit-scrollbar-thumb:hover{background:#1b3054}
+::-webkit-scrollbar-thumb{background:var(--hair2);border-radius:99px;border:2px solid var(--bg)}
 
-/* ambient layers */
+/* ambient */
 .mesh{position:fixed;inset:-20%;z-index:0;pointer-events:none}
-.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5}
-.orb-a{width:44rem;height:30rem;top:-6rem;right:-8rem;background:radial-gradient(closest-side,rgba(47,125,225,.20),transparent)}
-.orb-b{width:34rem;height:26rem;top:38%;left:-12rem;background:radial-gradient(closest-side,rgba(205,152,45,.10),transparent)}
-.orb-c{width:50rem;height:32rem;bottom:-10rem;left:30%;background:radial-gradient(closest-side,rgba(47,125,225,.12),transparent)}
-.grid-lines{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
-  background-image:linear-gradient(rgba(148,180,255,.033) 1px,transparent 1px),
-                   linear-gradient(90deg,rgba(148,180,255,.033) 1px,transparent 1px);
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.55;transition:background .6s var(--ease)}
+.orb-a{width:44rem;height:30rem;top:-6rem;right:-8rem;background:radial-gradient(closest-side,var(--orb-blue),transparent)}
+.orb-b{width:34rem;height:26rem;top:38%;left:-12rem;background:radial-gradient(closest-side,var(--orb-gold),transparent)}
+.orb-c{width:50rem;height:32rem;bottom:-10rem;left:30%;background:radial-gradient(closest-side,var(--orb-blue2),transparent)}
+.grid-lines{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(var(--gridline) 1px,transparent 1px),linear-gradient(90deg,var(--gridline) 1px,transparent 1px);
   background-size:72px 72px;
   -webkit-mask-image:radial-gradient(80rem 60rem at 50% 0%,#000 30%,transparent 75%);
           mask-image:radial-gradient(80rem 60rem at 50% 0%,#000 30%,transparent 75%);}
-.grain{position:fixed;inset:0;z-index:70;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+.grain{position:fixed;inset:0;z-index:70;pointer-events:none;opacity:var(--grain-op);mix-blend-mode:overlay;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+:root[data-theme="light"] .grain{mix-blend-mode:multiply}
 #progress{position:fixed;top:0;left:0;height:2px;width:100%;z-index:80;transform-origin:0 50%;transform:scaleX(0);
   background:linear-gradient(90deg,var(--blue),var(--gold))}
-
-/* intro curtain */
-#curtain{position:fixed;inset:0;z-index:90;background:var(--bg);display:flex;align-items:center;justify-content:center}
-#curtain img{width:6.5rem;opacity:0}
+.no-gsap #headline .w>span{transform:none!important}
 
 .wrap{position:relative;z-index:1;max-width:76rem;margin:0 auto;padding:0 1.5rem}
 
+/* theme-aware images */
+.only-dark{display:block}.only-light{display:none}
+:root[data-theme="light"] .only-dark{display:none}
+:root[data-theme="light"] .only-light{display:block}
+
+/* kickers — git/terminal flavoured labels */
+.kicker{display:flex;align-items:center;gap:.6rem;font-family:var(--font-m);font-size:.74rem;
+  letter-spacing:.06em;color:var(--dim)}
+.kicker .dot{width:.5rem;height:.5rem;border-radius:99px;background:var(--blue-hi);
+  box-shadow:0 0 10px var(--blue-hi);animation:pulse 2.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+.kicker b{color:var(--ink);font-weight:500}
+.kicker .sep{color:var(--faint)}
+.sk{font-family:var(--font-m);font-size:.74rem;letter-spacing:.06em;color:var(--dim)}
+.sk i{font-style:normal;color:var(--blue-hi);margin-right:.5rem}
+.sk.gold i{color:var(--gold-hi)}
+
 /* nav */
 nav{position:fixed;top:1.25rem;left:50%;transform:translateX(-50%);z-index:50;
-  display:flex;align-items:center;gap:1.6rem;padding:.55rem .6rem .55rem .9rem;
-  background:rgba(6,14,31,.62);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
+  display:flex;align-items:center;gap:1.5rem;padding:.55rem .6rem .55rem .9rem;
+  background:var(--nav-bg);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
   border:1px solid var(--hair);border-radius:999px;white-space:nowrap;
-  box-shadow:0 12px 40px -18px rgba(0,0,0,.8), inset 0 1px 0 rgba(148,180,255,.07)}
-nav .mark{width:1.7rem;height:1.7rem;border-radius:.5rem;object-fit:cover;display:block}
-nav .brand{font-family:var(--font-d);font-weight:600;font-size:.95rem;letter-spacing:.01em;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:.6rem}
+  box-shadow:0 12px 40px -18px rgba(4,11,27,.5), inset 0 1px 0 rgba(255,255,255,.06)}
+nav .mark{width:1.7rem;height:1.7rem;border-radius:.5rem;object-fit:cover}
+nav .brand{font-family:var(--font-d);font-weight:600;font-size:.95rem;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:.6rem}
 nav .brand i{font-style:normal;color:var(--blue-hi)}
 nav .links{display:flex;gap:1.4rem}
-nav .links a{position:relative;color:var(--dim);text-decoration:none;font-size:.85rem;font-weight:500;padding:.2rem 0;transition:color .45s var(--ease)}
+nav .links a{position:relative;color:var(--dim);text-decoration:none;font-size:.86rem;font-weight:600;padding:.2rem 0;transition:color .45s var(--ease)}
 nav .links a::after{content:"";position:absolute;left:0;bottom:-2px;height:1px;width:100%;background:var(--blue-hi);
   transform:scaleX(0);transform-origin:100% 50%;transition:transform .5s var(--ease)}
 nav .links a:hover{color:var(--ink)}
 nav .links a:hover::after{transform:scaleX(1);transform-origin:0 50%}
-.pillbtn{display:inline-flex;align-items:center;gap:.55rem;background:var(--ink);color:#071022;text-decoration:none;
+.pillbtn{display:inline-flex;align-items:center;gap:.55rem;background:var(--ink);color:var(--pill-ink);text-decoration:none;
   padding:.45rem .5rem .45rem 1rem;border-radius:999px;font-weight:700;font-size:.84rem;
-  transition:transform .5s var(--ease),box-shadow .5s var(--ease)}
+  transition:transform .5s var(--ease),background .6s var(--ease),color .6s var(--ease)}
 .pillbtn:active{transform:scale(.96)}
-.pillbtn .orb2{width:1.55rem;height:1.55rem;border-radius:999px;background:rgba(4,11,27,.14);
-  display:flex;align-items:center;justify-content:center;transition:transform .5s var(--ease)}
+.pillbtn .orb2{width:1.55rem;height:1.55rem;border-radius:999px;background:rgba(127,127,127,.18);
+  display:flex;align-items:center;justify-content:center;font-size:.72rem;transition:transform .5s var(--ease)}
 .pillbtn:hover .orb2{transform:translate(2px,-2px)}
-.pillbtn svg{width:.7rem;height:.7rem}
-@media(max-width:860px){nav .links{display:none}}
+.tt{position:relative;width:2.2rem;height:2.2rem;border-radius:999px;border:1px solid var(--hair2);
+  background:transparent;cursor:pointer;color:var(--dim);display:flex;align-items:center;justify-content:center;
+  transition:color .4s var(--ease),border-color .4s var(--ease),transform .4s var(--ease)}
+.tt:hover{color:var(--ink);border-color:var(--blue-hi)}
+.tt:active{transform:scale(.9)}
+.tt i{position:absolute;font-size:1rem;transition:opacity .5s var(--ease),transform .6s var(--ease)}
+.tt .i-sun{opacity:0;transform:rotate(-90deg) scale(.5)}
+.tt .i-moon{opacity:1}
+:root[data-theme="light"] .tt .i-sun{opacity:1;transform:rotate(0) scale(1)}
+:root[data-theme="light"] .tt .i-moon{opacity:0;transform:rotate(90deg) scale(.5)}
+/* burger + mobile menu */
+.burger{display:none;position:relative;width:2.2rem;height:2.2rem;border-radius:999px;border:1px solid var(--hair2);
+  background:transparent;cursor:pointer;align-items:center;justify-content:center;flex:none}
+.burger span{position:absolute;left:.6rem;right:.6rem;height:1.5px;background:var(--ink);border-radius:2px;
+  transition:transform .55s var(--ease),top .55s var(--ease)}
+.burger span:nth-child(1){top:.84rem}
+.burger span:nth-child(2){top:1.3rem}
+.menu-open .burger span:nth-child(1){top:1.07rem;transform:rotate(45deg)}
+.menu-open .burger span:nth-child(2){top:1.07rem;transform:rotate(-45deg)}
+#mmenu{position:fixed;inset:0;z-index:45;display:flex;flex-direction:column;justify-content:center;
+  padding:0 2rem;background:var(--nav-bg);backdrop-filter:blur(30px) saturate(1.6);-webkit-backdrop-filter:blur(30px) saturate(1.6);
+  opacity:0;pointer-events:none;transition:opacity .5s var(--ease)}
+.menu-open #mmenu{opacity:1;pointer-events:auto}
+#mmenu a{font-family:var(--font-d);font-weight:600;font-size:clamp(1.9rem,8.5vw,2.7rem);letter-spacing:-.02em;
+  color:var(--ink);text-decoration:none;padding:.6rem 0;display:flex;align-items:center;gap:1rem;
+  border-bottom:1px solid var(--hair);opacity:0;transform:translateY(2rem);
+  transition:opacity .6s var(--ease),transform .6s var(--ease)}
+#mmenu a i{font-size:1.25rem;color:var(--blue-hi)}
+#mmenu a .no{font-family:var(--font-m);font-size:.68rem;color:var(--faint);margin-left:auto;letter-spacing:.1em}
+.menu-open #mmenu a{opacity:1;transform:none}
+.menu-open #mmenu a:nth-child(1){transition-delay:.07s}
+.menu-open #mmenu a:nth-child(2){transition-delay:.13s}
+.menu-open #mmenu a:nth-child(3){transition-delay:.19s}
+.menu-open #mmenu a:nth-child(4){transition-delay:.25s}
+.menu-open #mmenu a:nth-child(5){transition-delay:.31s}
+body.menu-open{overflow:hidden}
+@media(max-width:900px){
+  nav .links{display:none}
+  .burger{display:flex}
+  nav{top:.9rem;left:.9rem;right:.9rem;transform:none;justify-content:space-between;gap:.6rem}
+  nav .pillbtn{display:none}
+}
 
 /* hero */
-header{min-height:100dvh;display:flex;flex-direction:column;justify-content:center;padding:10rem 0 5rem;position:relative}
-.eyebrow{display:inline-flex;align-items:center;gap:.55rem;border:1px solid var(--hair2);
-  border-radius:999px;padding:.4rem 1rem;font-size:.62rem;letter-spacing:.26em;font-weight:700;
-  text-transform:uppercase;color:var(--dim);width:max-content;background:rgba(47,125,225,.06)}
-.eyebrow .dot{width:.42rem;height:.42rem;border-radius:999px;background:var(--blue-hi);box-shadow:0 0 14px rgba(90,162,255,.9)}
-h1{font-family:var(--font-d);font-size:clamp(3rem,8.2vw,6.4rem);line-height:.98;letter-spacing:-.02em;
-  font-weight:600;margin:2rem 0 1.6rem;max-width:15ch}
+header{display:grid;grid-template-columns:1.12fr .88fr;gap:3.5rem;align-items:center;padding:8rem 0 3rem}
+@media(max-width:960px){header{grid-template-columns:1fr;gap:2.75rem;padding:7rem 0 2.5rem}}
+h1{font-family:var(--font-d);font-size:clamp(2.7rem,6.6vw,5rem);line-height:.98;letter-spacing:-.03em;
+  font-weight:700;margin:1.4rem 0 1.2rem;max-width:15ch}
 h1 .accent{color:var(--blue-hi)}
 h1 .w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.08em;margin-bottom:-.08em}
 h1 .w>span{display:inline-block;transform:translateY(110%)}
-.lede{font-size:clamp(1rem,1.55vw,1.2rem);color:var(--dim);max-width:46ch;line-height:1.7;font-weight:500}
+.lede{font-size:clamp(.98rem,1.5vw,1.12rem);color:var(--dim);max-width:44ch;line-height:1.7;font-weight:500}
 .lede b{color:var(--ink);font-weight:700}
-.hero-row{display:flex;flex-wrap:wrap;gap:1rem;margin-top:2.75rem;align-items:center}
+.hero-row{display:flex;flex-wrap:wrap;gap:.9rem;margin-top:1.9rem;align-items:center}
 .btn{position:relative;display:inline-flex;align-items:center;gap:.7rem;text-decoration:none;
-  border-radius:999px;padding:.85rem .6rem .85rem 1.5rem;font-weight:700;font-size:.95rem;will-change:transform}
-.btn .orb2{width:2.05rem;height:2.05rem;border-radius:999px;display:flex;align-items:center;justify-content:center;
-  transition:transform .55s var(--ease)}
+  border-radius:999px;padding:.8rem .55rem .8rem 1.4rem;font-weight:700;font-size:.93rem;will-change:transform}
+.btn .orb2{width:1.95rem;height:1.95rem;border-radius:999px;display:flex;align-items:center;justify-content:center;
+  font-size:.8rem;transition:transform .55s var(--ease)}
 .btn:hover .orb2{transform:translate(3px,-2px) scale(1.05)}
-.btn svg{width:.8rem;height:.8rem}
 .btn-blue{background:linear-gradient(135deg,var(--blue) 0%,#1f5cb0 100%);color:#fff;
   box-shadow:0 14px 34px -14px rgba(47,125,225,.55), inset 0 1px 0 rgba(255,255,255,.22)}
 .btn-blue .orb2{background:rgba(255,255,255,.16)}
-.btn-line{border:1px solid var(--hair2);color:var(--ink);background:rgba(148,180,255,.04)}
-.btn-line .orb2{background:rgba(148,180,255,.1)}
-.btn-line:hover{background:rgba(148,180,255,.08)}
+.btn-line{border:1px solid var(--hair2);color:var(--ink);background:var(--blue-dim)}
+.btn-line .orb2{background:var(--hair)}
+.btn-line:hover{border-color:var(--blue-hi)}
 
-/* terminal install */
-.term{margin-top:3rem;max-width:34rem;border-radius:1.25rem;overflow:hidden;
-  background:rgba(8,18,38,.75);border:1px solid var(--hair);
-  box-shadow:0 30px 70px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(148,180,255,.08)}
-.term-bar{display:flex;align-items:center;gap:.45rem;padding:.8rem 1.1rem;border-bottom:1px solid var(--hair)}
-.term-bar span{width:.68rem;height:.68rem;border-radius:99px;background:#16233f;transition:background .4s var(--ease)}
-.term:hover .term-bar span:nth-child(1){background:#ff5f57}
-.term:hover .term-bar span:nth-child(2){background:#febc2e}
-.term:hover .term-bar span:nth-child(3){background:#28c840}
-.term-bar b{margin-left:.6rem;font-family:var(--font-m);font-weight:400;font-size:.72rem;color:var(--faint);letter-spacing:.06em}
-.term-body{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.05rem 1.2rem;font-family:var(--font-m);font-size:.92rem}
-.term-body .ps{color:var(--gold-hi)}
-.term-body .cmd{color:var(--ink)}
-.term-body .caret{display:inline-block;width:.55em;height:1.1em;background:var(--blue-hi);vertical-align:text-bottom;margin-left:2px;animation:blink 1.1s steps(1) infinite}
+/* code chrome — shared */
+.term,.codewin{border-radius:1.1rem;overflow:hidden;background:#071022;
+  border:1px solid rgba(148,180,255,.14);position:relative;
+  box-shadow:0 24px 60px -28px rgba(4,11,27,.75), inset 0 1px 0 rgba(148,180,255,.08)}
+.term::before,.codewin::before{content:"";position:absolute;top:0;left:10%;right:10%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(90,162,255,.55),transparent)}
+.term{margin-top:2rem;max-width:29rem}
+.term-bar{display:flex;align-items:center;gap:.45rem;padding:.65rem 1rem;
+  border-bottom:1px solid rgba(148,180,255,.1);background:rgba(148,180,255,.03)}
+.term-bar span{width:.6rem;height:.6rem;border-radius:99px;background:#182746;transition:background .4s var(--ease)}
+.term:hover .term-bar span:nth-child(1),.codewin:hover .term-bar span:nth-child(1){background:#ff5f57}
+.term:hover .term-bar span:nth-child(2),.codewin:hover .term-bar span:nth-child(2){background:#febc2e}
+.term:hover .term-bar span:nth-child(3),.codewin:hover .term-bar span:nth-child(3){background:#28c840}
+.term-bar b{margin-left:.6rem;font-family:var(--font-m);font-weight:400;font-size:.7rem;color:rgba(238,242,250,.35);letter-spacing:.06em}
+.term-bar .lang{margin-left:auto;font-family:var(--font-m);font-size:.6rem;letter-spacing:.14em;
+  color:#5aa2ff;background:rgba(47,125,225,.14);border:1px solid rgba(90,162,255,.25);
+  border-radius:.4rem;padding:.16rem .5rem;text-transform:uppercase}
+.term-body{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.85rem 1.05rem;font-family:var(--font-m);font-size:.88rem}
+.term-body .ps{color:#e7b84f}
+.term-body .cmd{color:#eef2fa}
+.term-body .caret{display:inline-block;width:.55em;height:1.1em;background:#5aa2ff;vertical-align:text-bottom;margin-left:2px;animation:blink 1.1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
-.copybtn{border:1px solid var(--hair2);cursor:pointer;background:transparent;color:var(--dim);
-  border-radius:.7rem;padding:.5rem .85rem;font-family:var(--font-b);font-size:.72rem;font-weight:700;
+.copybtn{border:1px solid rgba(148,180,255,.2);cursor:pointer;background:transparent;color:rgba(238,242,250,.55);
+  border-radius:.6rem;padding:.4rem .75rem;font-family:var(--font-b);font-size:.68rem;font-weight:700;
   letter-spacing:.1em;text-transform:uppercase;transition:all .45s var(--ease);white-space:nowrap}
-.copybtn:hover{border-color:var(--blue-hi);color:var(--blue-hi)}
-.copybtn.ok{border-color:var(--gold);color:var(--gold-hi)}
+.copybtn:hover{border-color:#5aa2ff;color:#5aa2ff}
+.copybtn.ok{border-color:#cd982d;color:#e7b84f}
+.term-bar .copybtn{margin-left:.6rem;padding:.3rem .6rem;font-size:.62rem}
 
-/* stats */
-.stats{display:flex;flex-wrap:wrap;gap:0;margin-top:4.5rem;border-top:1px solid var(--hair)}
-.stat{flex:1 1 10rem;padding:1.9rem 1.5rem 0 0;margin-right:1.5rem}
-.stat+.stat{border-left:1px solid var(--hair);padding-left:1.5rem}
-.stat b{display:block;font-family:var(--font-d);font-weight:600;font-size:2rem;letter-spacing:-.02em;color:var(--ink)}
-.stat b em{font-style:normal;color:var(--blue-hi);font-size:1.1rem;vertical-align:.5em}
-.stat.goldy b{color:var(--gold-hi)}
-.stat span{display:block;margin-top:.3rem;color:var(--faint);font-size:.78rem;letter-spacing:.05em;line-height:1.5}
-@media(max-width:700px){.stat+.stat{border-left:0;padding-left:0}}
-
-/* marquee */
-.marquee{position:relative;padding:1.4rem 0;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);
-  overflow:hidden;background:rgba(6,14,31,.4)}
-.marquee::before,.marquee::after{content:"";position:absolute;top:0;bottom:0;width:8rem;z-index:2;pointer-events:none}
-.marquee::before{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
-.marquee::after{right:0;background:linear-gradient(-90deg,var(--bg),transparent)}
-.mq-track{display:flex;gap:3.5rem;width:max-content;will-change:transform}
-.mq-track span{font-family:var(--font-m);font-size:.8rem;color:var(--faint);letter-spacing:.12em;white-space:nowrap}
-.mq-track span i{font-style:normal;color:var(--blue)}
-.mq-track span.gold{color:var(--gold-hi)}
+/* fiscal receipt — the stats */
+.receipt{position:relative;font-family:var(--font-m);background:#faf7ef;color:#2a3040;
+  width:min(21.5rem,100%);margin-left:auto;padding:1.5rem 1.45rem 1.9rem;border-radius:6px 6px 0 0;
+  box-shadow:0 34px 70px -28px rgba(4,11,27,.65), 0 6px 18px -8px rgba(4,11,27,.35);
+  transform:rotate(1.8deg);will-change:transform}
+@media(max-width:960px){.receipt{margin:0 auto}}
+.receipt::after{content:"";position:absolute;top:100%;left:0;right:0;height:12px;
+  background:linear-gradient(45deg,#faf7ef 25%,transparent 25%) 0 0/16px 16px,
+             linear-gradient(-45deg,#faf7ef 25%,transparent 25%) 8px 0/16px 16px}
+.receipt .rc-head{text-align:center;letter-spacing:.18em;font-size:.66rem;color:#6b7180}
+.receipt .rc-title{text-align:center;font-weight:700;font-size:.82rem;letter-spacing:.1em;margin-top:.3rem;color:#1c2333}
+.receipt hr{border:0;border-top:1.5px dashed #c9c2b0;margin:.85rem 0}
+.receipt .row{display:flex;justify-content:space-between;align-items:baseline;font-size:.78rem;padding:.32rem 0;color:#4a5165}
+.receipt .row b{font-size:1.02rem;font-weight:700;color:#1c2333;font-variant-numeric:tabular-nums}
+.receipt .row .dots{flex:1;margin:0 .5rem;border-bottom:1.5px dotted #c9c2b0;transform:translateY(-3px)}
+.receipt .stamp{display:inline-block;margin-top:.35rem;border:2px solid #1e7a42;color:#1e7a42;border-radius:5px;
+  padding:.22rem .6rem;font-weight:700;font-size:.72rem;letter-spacing:.12em;transform:rotate(-3.5deg);
+  -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='40'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.6' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .9 0'/%3E%3CfeComposite operator='in' in2='SourceGraphic'/%3E%3C/filter%3E%3Crect width='120' height='40' filter='url(%23r)'/%3E%3C/svg%3E");
+  -webkit-mask-size:cover}
+.receipt .rc-foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:.5rem}
+.receipt .barcode{height:1.7rem;width:7.5rem;
+  background:repeating-linear-gradient(90deg,#2a3040 0 2px,transparent 2px 4px,#2a3040 4px 7px,transparent 7px 9px,#2a3040 9px 10px,transparent 10px 13px)}
+.receipt .rc-no{font-size:.62rem;color:#6b7180;letter-spacing:.1em;text-align:right;line-height:1.7}
 
 /* sections */
-section{padding:8.5rem 0;position:relative}
-.sec-head{margin-bottom:4rem;display:flex;flex-direction:column;align-items:flex-start}
-h2{font-family:var(--font-d);font-size:clamp(2rem,4.4vw,3.4rem);letter-spacing:-.02em;font-weight:600;line-height:1.05;max-width:20ch;margin-top:1.4rem}
+section{padding:4rem 0;position:relative}
+.sec-head{margin-bottom:2.1rem;display:flex;flex-direction:column;align-items:flex-start}
+h2{font-family:var(--font-d);font-size:clamp(1.9rem,4vw,3rem);letter-spacing:-.02em;font-weight:600;line-height:1.06;max-width:22ch;margin-top:1.1rem}
 h2 .accent{color:var(--blue-hi)}
 h2 .gold{color:var(--gold-hi)}
-.sec-head p{margin-top:1.2rem;color:var(--dim);max-width:54ch;line-height:1.7;font-size:1.02rem}
+.sec-head p{margin-top:1rem;color:var(--dim);max-width:56ch;line-height:1.65;font-size:.98rem;font-weight:500}
 
 /* bento */
-.bento{display:grid;grid-template-columns:repeat(12,1fr);gap:1.1rem}
-.card{position:relative;grid-column:span 4;border-radius:1.6rem;padding:1px;overflow:hidden;
-  background:linear-gradient(160deg,rgba(148,180,255,.14),rgba(148,180,255,.04) 40%,rgba(148,180,255,.02));will-change:transform}
+.bento{display:grid;grid-template-columns:repeat(12,1fr);gap:.9rem}
+.card{position:relative;grid-column:span 4;border-radius:1.35rem;padding:1px;overflow:hidden;
+  background:var(--card-edge);will-change:transform}
 .card::before{content:"";position:absolute;inset:0;border-radius:inherit;opacity:0;transition:opacity .6s var(--ease);
-  background:radial-gradient(16rem 16rem at var(--mx,50%) var(--my,50%),rgba(90,162,255,.35),transparent 65%)}
+  background:radial-gradient(16rem 16rem at var(--mx,50%) var(--my,50%),rgba(90,162,255,.4),transparent 65%)}
 .card:hover::before{opacity:1}
-.card-in{position:relative;z-index:1;height:100%;border-radius:calc(1.6rem - 1px);padding:1.9rem;
-  background:linear-gradient(180deg,var(--panel2),var(--panel));display:flex;flex-direction:column;gap:1rem;
-  box-shadow:inset 0 1px 0 rgba(148,180,255,.07)}
-.card-in::after{content:"";position:absolute;inset:0;border-radius:inherit;opacity:0;pointer-events:none;
-  transition:opacity .6s var(--ease);
-  background:radial-gradient(20rem 14rem at var(--mx,50%) var(--my,50%),rgba(90,162,255,.06),transparent 60%)}
-.card:hover .card-in::after{opacity:1}
-.card.w7{grid-column:span 7}.card.w5{grid-column:span 5}.card.w6{grid-column:span 6}
-@media(max-width:860px){.card,.card.w7,.card.w5,.card.w6{grid-column:span 12}}
-.ico{width:2.7rem;height:2.7rem;border-radius:.85rem;background:var(--blue-dim);color:var(--blue-hi);
-  display:flex;align-items:center;justify-content:center;transition:transform .55s var(--ease)}
-.card:hover .ico{transform:translateY(-3px) rotate(-4deg)}
+.card-in{position:relative;z-index:1;height:100%;border-radius:calc(1.35rem - 1px);padding:1.4rem;
+  background:var(--card-face);display:flex;flex-direction:column;gap:.7rem;box-shadow:var(--card-inset)}
+.card.w7{grid-column:span 7}.card.w5{grid-column:span 5}
+@media(max-width:860px){.card,.card.w7,.card.w5{grid-column:span 12}}
+.ico{width:2.4rem;height:2.4rem;border-radius:.75rem;background:var(--blue-dim);color:var(--blue-hi);
+  display:flex;align-items:center;justify-content:center;font-size:1.25rem;transition:transform .55s var(--ease)}
+.card:hover .ico{transform:translateY(-3px) rotate(-5deg)}
 .ico.gold{background:var(--gold-dim);color:var(--gold-hi)}
-.ico svg{width:1.25rem;height:1.25rem;stroke-width:1.4}
-.card h3{font-family:var(--font-d);font-size:1.18rem;font-weight:600;letter-spacing:-.01em}
-.card p{color:var(--dim);font-size:.93rem;line-height:1.7}
-.card code{font-family:var(--font-m);font-size:.8rem;color:var(--gold-hi);background:var(--gold-dim);
-  border-radius:.35rem;padding:.08rem .4rem}
+.card h3{font-family:var(--font-d);font-size:1.12rem;font-weight:600}
+.card p{color:var(--dim);font-size:.9rem;line-height:1.65;font-weight:500}
+.card code{font-family:var(--font-m);font-size:.78rem;color:var(--gold-hi);background:var(--gold-dim);
+  border-radius:.35rem;padding:.06rem .38rem}
 
 /* code section */
-.code-split{display:grid;grid-template-columns:5fr 7fr;gap:3.5rem;align-items:start}
-@media(max-width:960px){.code-split{grid-template-columns:1fr}}
-.code-copy .step{display:flex;gap:1.1rem;padding:1.4rem 0;border-bottom:1px solid var(--hair)}
+.code-split{display:grid;grid-template-columns:5fr 7fr;gap:2.75rem;align-items:start}
+@media(max-width:960px){.code-split{grid-template-columns:1fr;gap:1.75rem}}
+.code-copy .step{display:flex;gap:1rem;padding:1.15rem 0;border-bottom:1px solid var(--hair)}
 .code-copy .step:last-child{border-bottom:0}
-.code-copy .n{font-family:var(--font-m);font-size:.75rem;color:var(--blue-hi);padding-top:.25rem}
-.code-copy b{display:block;font-family:var(--font-d);font-weight:600;font-size:1.02rem;margin-bottom:.3rem}
-.code-copy p{color:var(--dim);font-size:.9rem;line-height:1.65}
-.codewin{border-radius:1.4rem;overflow:hidden;background:rgba(8,18,38,.8);border:1px solid var(--hair);
-  box-shadow:0 40px 90px -40px rgba(0,0,0,.95), inset 0 1px 0 rgba(148,180,255,.08)}
-.codewin .term-bar b{color:var(--faint)}
-.codewin pre{padding:1.8rem 1.9rem;overflow-x:auto}
-.codewin code{font-family:var(--font-m);font-size:.86rem;line-height:1.85;color:#c7d3ec;display:block}
-.ln{display:block}
+.code-copy .n{font-family:var(--font-m);font-size:.72rem;color:var(--blue-hi);padding-top:.25rem}
+.code-copy b{display:block;font-family:var(--font-d);font-weight:600;font-size:1.02rem;margin-bottom:.25rem}
+.code-copy p{color:var(--dim);font-size:.88rem;line-height:1.6;font-weight:500}
+.codewin pre{padding:1rem 0 1.15rem;overflow-x:auto;counter-reset:cl}
+.codewin code{font-family:var(--font-m);font-size:.83rem;line-height:1.9;color:#c7d3ec;display:block;min-width:max-content}
+.ln{display:block;position:relative;padding:0 1.4rem 0 3.5rem;counter-increment:cl;border-left:2px solid transparent}
+.ln::before{content:counter(cl);position:absolute;left:0;width:2.5rem;text-align:right;
+  color:rgba(199,211,236,.22);font-size:.7rem;line-height:inherit;user-select:none}
+.ln.hl{background:rgba(47,125,225,.09);border-left-color:#2f7de1}
+.ln.hl::before{color:#5aa2ff}
 .tk{color:#6fb3ff}.ts{color:#e7b84f}.tc{color:rgba(199,211,236,.38)}.tf{color:#9ecbff}.tn{color:#eef2fa}
 
 /* field notes */
 .notes{counter-reset:note;display:flex;flex-direction:column}
-.note{position:relative;display:grid;grid-template-columns:7rem 1fr;gap:2rem;padding:2.6rem 0;
-  border-bottom:1px solid var(--hair);transition:background .5s var(--ease)}
+.note{position:relative;display:grid;grid-template-columns:5.5rem 1fr;gap:1.4rem;padding:1.6rem 0;border-bottom:1px solid var(--hair)}
 .note:first-child{border-top:1px solid var(--hair)}
 .note::before{counter-increment:note;content:"0" counter(note);
-  font-family:var(--font-d);font-weight:600;font-size:2.6rem;letter-spacing:-.03em;
-  color:transparent;-webkit-text-stroke:1px rgba(148,180,255,.28);transition:all .5s var(--ease)}
+  font-family:var(--font-d);font-weight:700;font-size:2.2rem;letter-spacing:-.03em;
+  color:transparent;-webkit-text-stroke:1px var(--numeral);transition:all .5s var(--ease)}
 .note:hover::before{color:var(--blue-hi);-webkit-text-stroke:1px transparent}
-.note b{display:block;font-family:var(--font-d);font-weight:600;font-size:1.25rem;margin-bottom:.55rem;letter-spacing:-.01em}
-.note b code{font-family:var(--font-m);font-size:1.02rem;color:var(--gold-hi)}
-.note p{color:var(--dim);max-width:62ch;line-height:1.7;font-size:.95rem}
-@media(max-width:700px){.note{grid-template-columns:1fr;gap:.6rem}.note::before{font-size:1.8rem}}
+.note b{display:block;font-family:var(--font-d);font-weight:600;font-size:1.15rem;margin-bottom:.4rem}
+.note b code{font-family:var(--font-m);font-size:.95rem;color:var(--gold-hi)}
+.note p{color:var(--dim);max-width:62ch;line-height:1.65;font-size:.92rem;font-weight:500}
+@media(max-width:700px){.note{grid-template-columns:1fr;gap:.5rem}.note::before{font-size:1.6rem}}
 
 /* goko band */
-.goko{position:relative;border-radius:2rem;overflow:hidden;border:1px solid rgba(205,152,45,.22);
-  background:
-    radial-gradient(40rem 22rem at 85% 0%,rgba(205,152,45,.13),transparent 60%),
-    radial-gradient(30rem 20rem at 0% 100%,rgba(47,125,225,.12),transparent 60%),
-    linear-gradient(180deg,#0a1428,#071022)}
-.goko-in{padding:clamp(2.75rem,6vw,5rem);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:2.5rem}
+.goko{position:relative;border-radius:1.6rem;overflow:hidden;border:1px solid var(--hair2);background:var(--goko)}
+.goko-in{padding:clamp(1.9rem,4vw,3.25rem);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1.9rem}
 .goko-in h2{max-width:17ch}
-.goko-in p{color:var(--dim);margin-top:1.2rem;max-width:46ch;line-height:1.7}
-.btn-gold{background:linear-gradient(135deg,var(--gold-hi),#b57f1d);color:#1d1503;
+.goko-in p{color:var(--dim);margin-top:1rem;max-width:46ch;line-height:1.65;font-weight:500}
+.btn-gold{background:linear-gradient(135deg,#e7b84f,#b57f1d);color:#1d1503;
   box-shadow:0 14px 34px -14px rgba(205,152,45,.5), inset 0 1px 0 rgba(255,255,255,.35)}
 .btn-gold .orb2{background:rgba(0,0,0,.14)}
 
 /* footer */
-footer{padding:4.5rem 0 3rem;border-top:1px solid var(--hair);margin-top:5rem}
-.foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1.5rem}
-.foot img{width:8.5rem;opacity:.9}
-.foot .links a{color:var(--dim);text-decoration:none;margin-left:1.6rem;font-size:.85rem;transition:color .4s var(--ease)}
+footer{padding:2.5rem 0 2rem;border-top:1px solid var(--hair);margin-top:2rem}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1.25rem}
+.foot img{width:8rem}
+.foot .links a{color:var(--dim);text-decoration:none;margin-left:1.5rem;font-size:.84rem;font-weight:600;transition:color .4s var(--ease)}
 .foot .links a:hover{color:var(--ink)}
-.foot .fine{width:100%;margin-top:2rem;color:var(--faint);font-size:.78rem;line-height:1.7;max-width:64ch}
-@media(prefers-reduced-motion:reduce){
-  *{animation:none!important;transition:none!important}
-}
+.foot .fine{width:100%;margin-top:1.5rem;color:var(--faint);font-size:.76rem;line-height:1.65;max-width:64ch;font-weight:500}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 
-<div id="curtain"><img src="img/mark.png" alt=""></div>
 <div id="progress"></div>
 <div class="mesh"><div class="orb orb-a"></div><div class="orb orb-b"></div><div class="orb orb-c"></div></div>
 <div class="grid-lines"></div>
 <div class="grain"></div>
 
 <nav id="nav">
-  <a class="brand" href="#top"><img class="mark" src="img/mark.png" alt="">zimra-<i>fdms</i></a>
+  <a class="brand" href="#top">
+    <img class="mark only-dark" src="img/mark.png" alt="">
+    <img class="mark only-light" src="img/mark-light.png" alt="">
+    zimra-<i>fdms</i></a>
   <div class="links">
     <a href="#features">Features</a>
     <a href="#code">Code</a>
     <a href="#notes">Field notes</a>
     <a href="https://www.npmjs.com/package/zimra-fdms">npm</a>
   </div>
+  <button class="tt" id="tt" type="button" aria-label="Toggle theme">
+    <i class="ph-light ph-moon i-moon"></i><i class="ph-light ph-sun i-sun"></i>
+  </button>
   <a class="pillbtn magnet" href="https://github.com/munashe-chivandire/zimra-fdms">GitHub
-    <span class="orb2"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 10L10 2M4 2h6v6"/></svg></span></a>
+    <span class="orb2"><i class="ph ph-arrow-up-right"></i></span></a>
+  <button class="burger" id="burger" type="button" aria-label="Menu"><span></span><span></span></button>
 </nav>
+
+<div id="mmenu">
+  <a href="#features"><i class="ph-light ph-squares-four"></i>Features<span class="no">01</span></a>
+  <a href="#code"><i class="ph-light ph-code"></i>Code<span class="no">02</span></a>
+  <a href="#notes"><i class="ph-light ph-notebook"></i>Field notes<span class="no">03</span></a>
+  <a href="https://www.npmjs.com/package/zimra-fdms"><i class="ph-light ph-package"></i>npm<span class="no">04</span></a>
+  <a href="https://github.com/munashe-chivandire/zimra-fdms"><i class="ph-light ph-github-logo"></i>GitHub<span class="no">05</span></a>
+</div>
 
 <div class="wrap" id="top">
 
 <header>
-  <span class="eyebrow" data-intro><span class="dot"></span>Open source · MIT · Built in Zimbabwe</span>
-  <h1 id="headline">
-    <span class="w"><span>Fiscalisation,</span></span><br>
-    <span class="w"><span>solved&nbsp;<em class="accent" style="font-style:normal">once.</em></span></span>
-  </h1>
-  <p class="lede" data-intro>The open-source TypeScript SDK for ZIMRA's Fiscalisation Data Management
-  System. Talk <b>directly</b> to FDMS with your own device certificates —
-  <b>no middleware, no per-receipt rent.</b></p>
-  <div class="hero-row" data-intro>
-    <a class="btn btn-blue magnet" href="https://github.com/munashe-chivandire/zimra-fdms">View on GitHub
-      <span class="orb2"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 10L10 2M4 2h6v6"/></svg></span></a>
-    <a class="btn btn-line magnet" href="https://github.com/munashe-chivandire/zimra-fdms#quick-start">Quick start
-      <span class="orb2"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 6h10M7 2l4 4-4 4"/></svg></span></a>
-  </div>
-  <div class="term" data-intro>
-    <div class="term-bar"><span></span><span></span><span></span><b>zsh — pos</b></div>
-    <div class="term-body">
-      <div><span class="ps">➜</span> <span class="cmd" id="typed"></span><span class="caret"></span></div>
-      <button class="copybtn" id="copy" type="button">Copy</button>
+  <div>
+    <div class="kicker" data-intro><span class="dot"></span><b>main</b><span class="sep">—</span>v0.1.0
+      <span class="sep">·</span>MIT<span class="sep">·</span>Harare, Zimbabwe</div>
+    <h1 id="headline">
+      <span class="w"><span>Fiscalisation,</span></span><br>
+      <span class="w"><span>solved&nbsp;<em class="accent" style="font-style:normal">once.</em></span></span>
+    </h1>
+    <p class="lede" data-intro>The open-source TypeScript SDK for ZIMRA's Fiscalisation Data Management
+    System. Talk <b>directly</b> to FDMS with your own device certificates —
+    <b>no middleware, no per-receipt rent.</b></p>
+    <div class="hero-row" data-intro>
+      <a class="btn btn-blue magnet" href="https://github.com/munashe-chivandire/zimra-fdms">View on GitHub
+        <span class="orb2"><i class="ph ph-arrow-up-right"></i></span></a>
+      <a class="btn btn-line magnet" href="https://github.com/munashe-chivandire/zimra-fdms#quick-start">Quick start
+        <span class="orb2"><i class="ph ph-arrow-right"></i></span></a>
+    </div>
+    <div class="term" data-intro>
+      <div class="term-bar"><span></span><span></span><span></span><b>zsh — pos</b>
+        <button class="copybtn" id="copy" type="button">Copy</button></div>
+      <div class="term-body">
+        <div><span class="ps">➜</span> <span class="cmd" id="typed"></span><span class="caret"></span></div>
+      </div>
     </div>
   </div>
-  <div class="stats" data-intro>
-    <div class="stat goldy"><b data-count="0">0</b><span>validation errors on ZIMRA's live test API</span></div>
-    <div class="stat"><b><span data-count="23">0</span></b><span>regression tests pinning the signing rules</span></div>
-    <div class="stat"><b><span data-count="72">0</span><em>h</em></b><span>offline grace window, queued &amp; replayed in order</span></div>
-    <div class="stat"><b><span data-count="1">0</span></b><span>runtime dependency in the entire package</span></div>
-  </div>
-</header>
-</div>
 
-<div class="marquee" aria-hidden="true">
-  <div class="mq-track" id="mq">
-    <span>registerDevice()<i> → certificate issued</i></span>
-    <span>getConfig()<i> → tax tables loaded</i></span>
-    <span>openDay()<i> → fiscal day 3</i></span>
-    <span>submitReceipt()<i> → hash chained</i></span>
-    <span class="gold">✓ Invoice is valid — fdms.zimra.co.zw</span>
-    <span>closeDay()<i> → counters signed</i></span>
-  </div>
+  <aside class="receipt" id="receipt" aria-label="Live test results">
+    <div class="rc-head">ZIMRA FDMS · TEST ENVIRONMENT</div>
+    <div class="rc-title">FISCAL VERIFICATION</div>
+    <hr>
+    <div class="row"><span>Validation errors</span><span class="dots"></span><b data-count="0">0</b></div>
+    <div class="row"><span>Regression tests</span><span class="dots"></span><b data-count="23">0</b></div>
+    <div class="row"><span>Offline window</span><span class="dots"></span><b><span data-count="72">0</span>h</b></div>
+    <div class="row"><span>Runtime deps</span><span class="dots"></span><b data-count="1">0</b></div>
+    <hr>
+    <div class="row"><span>Device</span><span class="dots"></span><span>GOKOSDK001</span></div>
+    <div class="row"><span>Signature</span><span class="dots"></span><span>ECDSA · DER</span></div>
+    <span class="stamp">INVOICE IS VALID ✓</span>
+    <div class="rc-foot">
+      <div class="barcode" aria-hidden="true"></div>
+      <div class="rc-no">FDN 0000037367<br>29.07.2026</div>
+    </div>
+  </aside>
+</header>
 </div>
 
 <div class="wrap">
 
 <section id="features">
   <div class="sec-head">
-    <span class="eyebrow" data-rv>What it handles</span>
+    <span class="sk" data-rv><i>///</i>what-it-handles</span>
     <h2 data-rv>The parts every DIY<br>integration <span class="accent">gets wrong</span></h2>
     <p data-rv>Every Zimbabwean POS, invoicing and accounting product has to integrate FDMS. The spec is
     stateful, cryptographic and unforgiving — this SDK does the hard parts once, in the open.</p>
   </div>
   <div class="bento">
-    <div class="card w7" data-rv><div class="card-in">
-      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 12a3.5 3.5 0 013.5-3.5h2A3.5 3.5 0 0118 12a3.5 3.5 0 01-3.5 3.5H13"/><path d="M15 12a3.5 3.5 0 01-3.5 3.5h-2A3.5 3.5 0 016 12a3.5 3.5 0 013.5-3.5H11"/></svg></span>
+    <div class="card w7"><div class="card-in">
+      <span class="ico"><i class="ph-light ph-link"></i></span>
       <h3>Hash-chained receipt signing</h3>
       <p>Canonical signing strings, cents-exact rounding, tax concatenation and the receipt-to-receipt
       hash chain — computed and DER-signed for you. Get one byte wrong on your own and FDMS answers
       with <code>RCPT020</code> and no further explanation.</p>
     </div></div>
-    <div class="card w5" data-rv><div class="card-in">
-      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 10-4-2.5-7-5.5-7-10V6l7-3z"/><path d="M9.5 12l2 2 3.5-4"/></svg></span>
+    <div class="card w5"><div class="card-in">
+      <span class="ico"><i class="ph-light ph-shield-check"></i></span>
       <h3>Registration &amp; certificates</h3>
       <p>ECDSA P-256 keys, the exact CSR subject ZIMRA requires, activation-key registration and
       renewal before expiry.</p>
     </div></div>
-    <div class="card w5" data-rv><div class="card-in">
-      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg></span>
+    <div class="card w5"><div class="card-in">
+      <span class="ico"><i class="ph-light ph-sun-horizon"></i></span>
       <h3>Fiscal day lifecycle</h3>
       <p>Open, accumulate, close. Counters tracked per tax, currency and money type — then sorted and
       signed exactly the way the backend verifies them.</p>
     </div></div>
-    <div class="card w7" data-rv><div class="card-in">
-      <span class="ico gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 9c5.5-5.5 14.5-5.5 20 0M5.5 12.5c3.6-3.6 9.4-3.6 13 0M9 16a4.24 4.24 0 016 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor" stroke="none"/><path d="M4 4l16 16" stroke-dasharray="0"/></svg></span>
+    <div class="card w7"><div class="card-in">
+      <span class="ico gold"><i class="ph-light ph-cell-signal-slash"></i></span>
       <h3>Offline queue — built for real infrastructure</h3>
       <p>Power cuts and dead links don't stop sales. Receipts sign and number locally, queue in order,
       and flush when connectivity returns — inside FDMS's 72-hour grace window, with pluggable storage.</p>
     </div></div>
-    <div class="card" data-rv><div class="card-in">
-      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 20h1M20 14h1"/></svg></span>
+    <div class="card"><div class="card-in">
+      <span class="ico"><i class="ph-light ph-qr-code"></i></span>
       <h3>Verification QR codes</h3>
       <p>The exact data string ZIMRA's validation portal expects, ready to print on every receipt.</p>
     </div></div>
-    <div class="card" data-rv><div class="card-in">
-      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 8v5M12 16.5v.5"/><path d="M10.3 3.8L2.6 17a2 2 0 001.7 3h15.4a2 2 0 001.7-3L13.7 3.8a2 2 0 00-3.4 0z"/></svg></span>
+    <div class="card"><div class="card-in">
+      <span class="ico"><i class="ph-light ph-warning-diamond"></i></span>
       <h3>Errors that explain themselves</h3>
       <p>Typed errors with plain-language hints for FDMS's cryptic codes — <code>DEV01</code>,
       <code>FISC01</code>, <code>RCPT010</code> and friends.</p>
     </div></div>
-    <div class="card" data-rv><div class="card-in">
-      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/><circle cx="12" cy="15" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+    <div class="card"><div class="card-in">
+      <span class="ico"><i class="ph-light ph-lock-key"></i></span>
       <h3>mTLS, zero dependencies</h3>
       <p>Mutual TLS on plain <code>node:https</code>. One runtime dependency in the whole package.</p>
     </div></div>
@@ -359,8 +453,8 @@ footer{padding:4.5rem 0 3rem;border-top:1px solid var(--hair);margin-top:5rem}
 
 <section id="code">
   <div class="sec-head">
-    <span class="eyebrow" data-rv>Developer experience</span>
-    <h2 data-rv>A full fiscal day<br>in a <span class="accent">screenful</span></h2>
+    <span class="sk" data-rv><i>///</i>developer-experience</span>
+    <h2 data-rv>A full fiscal day in a <span class="accent">screenful</span></h2>
   </div>
   <div class="code-split">
     <div class="code-copy">
@@ -372,7 +466,9 @@ footer{padding:4.5rem 0 3rem;border-top:1px solid var(--hair);margin-top:5rem}
         <p>Day counters are accumulated, sorted and signed the way FDMS verifies them. No spreadsheet reconciliation at midnight.</p></div></div>
     </div>
     <div class="codewin" data-rv>
-      <div class="term-bar"><span></span><span></span><span></span><b>pos.ts</b></div>
+      <div class="term-bar"><span></span><span></span><span></span><b>pos.ts</b>
+        <span class="lang">TypeScript</span>
+        <button class="copybtn" id="copycode" type="button">Copy</button></div>
 <pre><code id="codeblock"><span class="ln"><span class="tk">import</span> { FiscalDevice } <span class="tk">from</span> <span class="ts">"zimra-fdms"</span>;</span>
 <span class="ln">&nbsp;</span>
 <span class="ln"><span class="tk">const</span> device = <span class="tk">new</span> <span class="tf">FiscalDevice</span>(identity, credentials);</span>
@@ -380,12 +476,12 @@ footer{padding:4.5rem 0 3rem;border-top:1px solid var(--hair);margin-top:5rem}
 <span class="ln"><span class="tk">await</span> device.<span class="tf">getConfig</span>();   <span class="tc">// tax tables, QR base URL</span></span>
 <span class="ln"><span class="tk">await</span> device.<span class="tf">openDay</span>();</span>
 <span class="ln">&nbsp;</span>
-<span class="ln"><span class="tk">const</span> sale = <span class="tk">await</span> device.<span class="tf">submitReceipt</span>({</span>
-<span class="ln">  currency: <span class="ts">"USD"</span>,</span>
-<span class="ln">  invoiceNo: <span class="ts">"INV-0001"</span>,</span>
-<span class="ln">  lines: [{ name: <span class="ts">"Consulting"</span>, price: <span class="tn">115</span>, quantity: <span class="tn">1</span>, taxId: <span class="tn">513</span>, taxPercent: <span class="tn">0</span> }],</span>
-<span class="ln">  payments: [{ moneyType: <span class="ts">"Cash"</span>, amount: <span class="tn">115</span> }],</span>
-<span class="ln">});</span>
+<span class="ln hl"><span class="tk">const</span> sale = <span class="tk">await</span> device.<span class="tf">submitReceipt</span>({</span>
+<span class="ln hl">  currency: <span class="ts">"USD"</span>,</span>
+<span class="ln hl">  invoiceNo: <span class="ts">"INV-0001"</span>,</span>
+<span class="ln hl">  lines: [{ name: <span class="ts">"Consulting"</span>, price: <span class="tn">115</span>, quantity: <span class="tn">1</span>, taxId: <span class="tn">513</span> }],</span>
+<span class="ln hl">  payments: [{ moneyType: <span class="ts">"Cash"</span>, amount: <span class="tn">115</span> }],</span>
+<span class="ln hl">});</span>
 <span class="ln"><span class="tc">// counters, global numbers, hash chain, signature, QR — handled</span></span>
 <span class="ln">console.<span class="tf">log</span>(sale.qrData);</span>
 <span class="ln">&nbsp;</span>
@@ -396,7 +492,7 @@ footer{padding:4.5rem 0 3rem;border-top:1px solid var(--hair);margin-top:5rem}
 
 <section id="notes">
   <div class="sec-head">
-    <span class="eyebrow" data-rv>Field notes</span>
+    <span class="sk gold" data-rv><i>///</i>field-notes</span>
     <h2 data-rv>Documented <span class="gold">nowhere else</span></h2>
     <p data-rv>Knowledge that cost real fiscal days to earn — shipped as defaults, pinned by a regression suite.</p>
   </div>
@@ -419,20 +515,21 @@ footer{padding:4.5rem 0 3rem;border-top:1px solid var(--hair);margin-top:5rem}
 <section>
   <div class="goko" data-rv><div class="goko-in">
     <div>
-      <span class="eyebrow" style="border-color:rgba(205,152,45,.3);background:var(--gold-dim);color:var(--gold-hi)">Going to production?</span>
+      <span class="sk gold"><i>///</i>going-to-production</span>
       <h2>The code is solved.<br>The <span class="gold">paperwork</span> is human.</h2>
       <p>Live fiscalisation still needs ZIMRA onboarding: sample-document approval, live device
       registration, ITF263, ongoing compliance. Goko Consultancy &amp; Training Services handles that
       path end-to-end.</p>
     </div>
     <a class="btn btn-gold magnet" href="mailto:shaunchivandire@gmail.com?subject=ZIMRA%20fiscalisation%20onboarding">Talk to Goko
-      <span class="orb2"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 10L10 2M4 2h6v6"/></svg></span></a>
+      <span class="orb2"><i class="ph ph-arrow-up-right"></i></span></a>
   </div></div>
 </section>
 
 <footer>
   <div class="foot">
-    <img src="img/logo-dark.webp" alt="zimra-fdms">
+    <img class="only-dark" src="img/logo-dark.webp" alt="zimra-fdms">
+    <img class="only-light" src="img/logo-light.webp" alt="zimra-fdms">
     <span class="links">
       <a href="https://github.com/munashe-chivandire/zimra-fdms">GitHub</a>
       <a href="https://www.npmjs.com/package/zimra-fdms">npm</a>
@@ -449,85 +546,88 @@ footer{padding:4.5rem 0 3rem;border-top:1px solid var(--hair);margin-top:5rem}
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script>
+/* theme toggle */
+document.getElementById('tt').addEventListener('click',()=>{
+  const root=document.documentElement;
+  const next=root.getAttribute('data-theme')==='dark'?'light':'dark';
+  root.setAttribute('data-theme',next);
+  try{localStorage.setItem('zf-theme',next)}catch(e){}
+});
+/* mobile menu */
+const burger=document.getElementById('burger');
+burger.addEventListener('click',()=>document.body.classList.toggle('menu-open'));
+document.querySelectorAll('#mmenu a').forEach(a=>a.addEventListener('click',()=>document.body.classList.remove('menu-open')));
+
+if(!window.gsap){document.documentElement.classList.add('no-gsap')}
+
+if(window.gsap&&window.ScrollTrigger){
 gsap.registerPlugin(ScrollTrigger);
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* ---------- intro ---------- */
-const intro = gsap.timeline({defaults:{ease:'power4.out'}});
-if (reduced){
-  gsap.set('#curtain',{display:'none'});
-  gsap.set('#headline .w>span,[data-intro],#nav',{opacity:1,y:0});
-} else {
-  intro
-    .to('#curtain img',{opacity:1,scale:1.06,duration:.55,ease:'power2.out'})
-    .to('#curtain img',{opacity:0,scale:.96,duration:.4,delay:.25,ease:'power2.in'})
-    .to('#curtain',{yPercent:-100,duration:.85,ease:'power4.inOut'})
-    .set('#curtain',{display:'none'})
-    .from('#nav',{y:-24,opacity:0,duration:.8},'-=.45')
-    .to('#headline .w>span',{y:0,duration:1.05,stagger:.12,ease:'power4.out'},'-=.55')
-    .from('[data-intro]',{y:34,opacity:0,duration:.9,stagger:.09},'-=.7');
-}
+/* intro */
 gsap.set('#headline .w>span',{y:reduced?0:'110%'});
-if(!reduced){ gsap.to('#headline .w>span',{y:0,duration:1.05,stagger:.12,ease:'power4.out',delay:1.65}); }
+if (reduced){
+  gsap.set('#headline .w>span,[data-intro],#nav,#receipt',{opacity:1,y:0});
+} else {
+  gsap.timeline({defaults:{ease:'power4.out'}})
+    .from('#nav',{y:-24,opacity:0,duration:.8},.1)
+    .to('#headline .w>span',{y:0,duration:1.05,stagger:.12},'-=.5')
+    .from('[data-intro]',{y:30,opacity:0,duration:.85,stagger:.08},'-=.7')
+    .from('#receipt',{y:60,opacity:0,rotate:7,duration:1.2,ease:'power4.out'},'-=.9');
+}
 
-/* ---------- scroll progress ---------- */
+/* receipt float on scroll */
+if(!reduced){
+  gsap.to('#receipt',{y:-26,rotate:.6,ease:'none',
+    scrollTrigger:{trigger:'header',start:'top top',end:'bottom top',scrub:1.1}});
+}
+
+/* scroll progress */
 gsap.to('#progress',{scaleX:1,ease:'none',scrollTrigger:{start:0,end:'max',scrub:.3}});
 
-/* ---------- nav hide/show ---------- */
+/* nav hide/show */
 let lastY=0;
 ScrollTrigger.create({start:0,end:'max',onUpdate:s=>{
   const y=s.scroll();
-  gsap.to('#nav',{yPercent:(y>120&&y>lastY)?-160:0,duration:.5,ease:'power3.out',overwrite:'auto'});
+  if(!document.body.classList.contains('menu-open')){
+    gsap.to('#nav',{yPercent:(y>120&&y>lastY)?-180:0,duration:.5,ease:'power3.out',overwrite:'auto'});
+  }
   lastY=y;
 }});
 
-/* ---------- ambient parallax ---------- */
+/* ambient parallax */
 if(!reduced){
   gsap.to('.orb-a',{yPercent:28,ease:'none',scrollTrigger:{start:0,end:'max',scrub:1.2}});
   gsap.to('.orb-b',{yPercent:-20,ease:'none',scrollTrigger:{start:0,end:'max',scrub:1.6}});
   gsap.to('.orb-c',{yPercent:-32,ease:'none',scrollTrigger:{start:0,end:'max',scrub:1}});
 }
 
-/* ---------- scroll reveals ---------- */
+/* reveals */
 document.querySelectorAll('[data-rv]:not(.card)').forEach(el=>{
   gsap.fromTo(el,
-    {y:reduced?0:56,opacity:reduced?1:0,filter:reduced?'none':'blur(8px)'},
-    {y:0,opacity:1,filter:'blur(0px)',duration:1.1,ease:'power4.out',clearProps:'filter',
-     scrollTrigger:{trigger:el,start:'top 88%'}});
+    {y:reduced?0:48,opacity:reduced?1:0},
+    {y:0,opacity:1,duration:1,ease:'power4.out',scrollTrigger:{trigger:el,start:'top 88%'}});
 });
-/* bento cards: stagger as a batch with slight rotation settle */
-gsap.set('.bento .card',{y:reduced?0:70,opacity:reduced?1:0});
+gsap.set('.bento .card',{y:reduced?0:60,opacity:reduced?1:0});
 ScrollTrigger.batch('.bento .card',{start:'top 90%',onEnter:b=>{
-  gsap.to(b,{y:0,opacity:1,duration:1.15,stagger:.1,ease:'power4.out',overwrite:true});
+  gsap.to(b,{y:0,opacity:1,duration:1.05,stagger:.09,ease:'power4.out',overwrite:true});
 }});
-/* code lines type-reveal on scroll */
-gsap.from('#codeblock .ln',{opacity:0,x:reduced?0:-14,duration:.5,stagger:.055,ease:'power2.out',
-  scrollTrigger:{trigger:'.codewin',start:'top 78%'}});
-/* notes: numeral wipe */
+gsap.from('#codeblock .ln',{opacity:0,x:reduced?0:-14,duration:.5,stagger:.05,ease:'power2.out',
+  scrollTrigger:{trigger:'.codewin',start:'top 80%'}});
 document.querySelectorAll('.note').forEach(n=>{
-  gsap.from(n,{clipPath:reduced?'none':'inset(0 100% 0 0)',duration:1.1,ease:'power4.inOut',
-    scrollTrigger:{trigger:n,start:'top 90%'}});
+  gsap.from(n,{clipPath:reduced?'none':'inset(0 100% 0 0)',duration:1,ease:'power4.inOut',
+    scrollTrigger:{trigger:n,start:'top 92%'}});
 });
 
-/* ---------- stat counters ---------- */
+/* receipt counters */
 document.querySelectorAll('[data-count]').forEach(el=>{
   const end=+el.dataset.count;
-  ScrollTrigger.create({trigger:el,start:'top 92%',once:true,onEnter:()=>{
-    gsap.fromTo(el,{innerText:0},{innerText:end,duration:1.4,ease:'power2.out',snap:{innerText:1}});
+  ScrollTrigger.create({trigger:el,start:'top 95%',once:true,onEnter:()=>{
+    gsap.fromTo(el,{innerText:0},{innerText:end,duration:1.6,delay:.6,ease:'power2.out',snap:{innerText:1}});
   }});
 });
 
-/* ---------- marquee ---------- */
-(()=>{
-  const track=document.getElementById('mq');
-  track.innerHTML+=track.innerHTML;      // duplicate for seamless loop
-  const w=track.scrollWidth/2;
-  const tween=gsap.to(track,{x:-w,duration:34,ease:'none',repeat:-1});
-  track.parentElement.addEventListener('mouseenter',()=>gsap.to(tween,{timeScale:.25,duration:.6}));
-  track.parentElement.addEventListener('mouseleave',()=>gsap.to(tween,{timeScale:1,duration:.6}));
-})();
-
-/* ---------- spotlight cards ---------- */
+/* spotlight cards */
 document.querySelectorAll('.card').forEach(card=>{
   card.addEventListener('pointermove',e=>{
     const r=card.getBoundingClientRect();
@@ -536,7 +636,7 @@ document.querySelectorAll('.card').forEach(card=>{
   });
 });
 
-/* ---------- magnetic buttons ---------- */
+/* magnetic buttons */
 if(matchMedia('(pointer:fine)').matches && !reduced){
   document.querySelectorAll('.magnet').forEach(btn=>{
     const xTo=gsap.quickTo(btn,'x',{duration:.6,ease:'elastic.out(1,.45)'});
@@ -550,25 +650,31 @@ if(matchMedia('(pointer:fine)').matches && !reduced){
   });
 }
 
-/* ---------- terminal typing ---------- */
+/* terminal typing */
 (()=>{
   const el=document.getElementById('typed'), cmd='npm install zimra-fdms';
   let i=0;
   ScrollTrigger.create({trigger:'.term',start:'top 95%',once:true,onEnter:()=>{
     if(reduced){el.textContent=cmd;return;}
-    const t=setInterval(()=>{
-      el.textContent=cmd.slice(0,++i);
-      if(i>=cmd.length)clearInterval(t);
-    },55);
+    const t=setInterval(()=>{el.textContent=cmd.slice(0,++i);if(i>=cmd.length)clearInterval(t)},55);
   }});
 })();
+} else {
+  document.getElementById('typed').textContent='npm install zimra-fdms';
+}
 
-/* ---------- copy ---------- */
-document.getElementById('copy').addEventListener('click',async e=>{
-  await navigator.clipboard.writeText('npm install zimra-fdms');
-  const b=e.currentTarget;b.textContent='Copied ✓';b.classList.add('ok');
-  setTimeout(()=>{b.textContent='Copy';b.classList.remove('ok')},1700);
-});
+/* copy buttons */
+function wireCopy(id,text){
+  const b=document.getElementById(id);
+  if(!b)return;
+  b.addEventListener('click',async()=>{
+    await navigator.clipboard.writeText(text);
+    b.textContent='Copied ✓';b.classList.add('ok');
+    setTimeout(()=>{b.textContent='Copy';b.classList.remove('ok')},1700);
+  });
+}
+wireCopy('copy','npm install zimra-fdms');
+wireCopy('copycode',document.getElementById('codeblock').innerText);
 </script>
 </body>
 </html>
