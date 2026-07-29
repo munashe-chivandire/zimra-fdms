@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/munashe-chivandire/zimra-fdms/assets/assets/logoDark.png">
+    <img alt="zimra-fdms" src="https://raw.githubusercontent.com/munashe-chivandire/zimra-fdms/assets/assets/logoLight.png" width="360">
+  </picture>
+</p>
+
 # zimra-fdms
 
 TypeScript SDK for the ZIMRA Fiscalisation Data Management System (FDMS) —
