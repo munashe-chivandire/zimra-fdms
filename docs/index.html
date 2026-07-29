@@ -98,7 +98,8 @@ body{color:var(--ink);font-family:var(--font-b);-webkit-font-smoothing:antialias
 .sk.gold i{color:var(--gold-hi)}
 
 /* nav */
-nav{position:fixed;top:1.25rem;left:50%;transform:translateX(-50%);z-index:50;
+.navwrap{position:fixed;top:1.25rem;left:0;right:0;z-index:50;display:flex;justify-content:center;pointer-events:none}
+nav{position:relative;pointer-events:auto;
   display:flex;align-items:center;gap:1.5rem;padding:.55rem .6rem .55rem .9rem;
   background:var(--nav-bg);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
   border:1px solid var(--hair);border-radius:999px;white-space:nowrap;
@@ -158,7 +159,8 @@ body.menu-open{overflow:hidden}
 @media(max-width:900px){
   nav .links{display:none}
   .burger{display:flex}
-  nav{top:.9rem;left:.9rem;right:.9rem;transform:none;justify-content:space-between;gap:.6rem}
+  .navwrap{top:.9rem;padding:0 .9rem}
+  nav{width:100%;justify-content:space-between;gap:.6rem}
   nav .pillbtn{display:none}
 }
 
@@ -322,7 +324,7 @@ footer{padding:2.5rem 0 2rem;border-top:1px solid var(--hair);margin-top:2rem}
 <div class="grid-lines"></div>
 <div class="grain"></div>
 
-<nav id="nav">
+<div class="navwrap"><nav id="nav">
   <a class="brand" href="#top">
     <img class="mark only-dark" src="img/mark.png" alt="">
     <img class="mark only-light" src="img/mark-light.png" alt="">
@@ -339,7 +341,7 @@ footer{padding:2.5rem 0 2rem;border-top:1px solid var(--hair);margin-top:2rem}
   <a class="pillbtn magnet" href="https://github.com/munashe-chivandire/zimra-fdms">GitHub
     <span class="orb2"><i class="ph ph-arrow-up-right"></i></span></a>
   <button class="burger" id="burger" type="button" aria-label="Menu"><span></span><span></span></button>
-</nav>
+</nav></div>
 
 <div id="mmenu">
   <a href="#features"><i class="ph-light ph-squares-four"></i>Features<span class="no">01</span></a>
