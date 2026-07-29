@@ -1,0 +1,755 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Fiscal backend FiscalDeviceApi Build:1.0.0.0",
+    "version": "1.0"
+  },
+  "paths": {
+    "/Public/v1/{deviceID}/RegisterDevice": {
+      "post": {
+        "tags": [
+          "Public"
+        ],
+        "description": "Endpoint is used to get device certificate and register device in Fiscalisation Backend (link device with Fiscalisation Backend).",
+        "parameters": [
+          {
+            "name": "deviceID",
+            "in": "path",
+            "description": "Sold or active device ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/RegisterDeviceRequest"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                },
+                "example": {
+                  "errorCode": "DEV01",
+                  "type": "https://httpstatuses.io/422",
+                  "title": "Unprocessable Entity",
+                  "status": 422,
+                  "detail": "Device not found or not active",
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterDeviceResponse"
+                },
+                "example": {
+                  "operationID": "0HMPH9AF0QKKE:00000005",
+                  "certificate": "-----BEGIN CERTIFICATE-----\nMIIC6TCCAdGgAwIBAgIFAKsSzWowDQYJKoZIhvcNAQELBQAwZDELMAkGA1UEBhMC\nTFQxETAPBgNVBAoMCEdvb2QgTHRkMScwJQYDVQQLDB5Hb29kIEx0ZCBDZXJ0aWZp\nY2F0ZSBBdXRob3JpdHkxGTAXBgNVBAMMEEdvb2QgTHRkIFJvb3QgQ0EwHhcNMTkx\nMDAzMTU1NzA1WhcNMjAxMDEyMTU1NzA1WjBfMQswCQYDVQQGEwJUWjERMA8GA1UE\nCAwIWmFuemliYXIxHzAdBgNVBAoMFlphbnppYmFyIFJldmVudWUgQm9hcmQxHDAa\nBgNVBAMME1pSQi1lVkZELTAwMDAwMDAwNDIwWTATBgcqhkjOPQIBBggqhkjOPQMB\nBwNCAAT7v3DvY7pRg4lz2Z87wSMwSX27KwlpYnSRV6WUiPjpq2XsUAbg2lhUN7q3\nmlNJaUzqoKPmop5qURIpqUydXfapo3IwcDAJBgNVHRMEAjAAMB8GA1UdIwQYMBaA\nFK1RXHm1plvaintqlWaXDs1X3LX+MB0GA1UdDgQWBBRqr96XrCUbuwCQawxO0//n\nTOCoNTAOBgNVHQ8BAf8EBAMCBeAwEwYDVR0lBAwwCgYIKwYBBQUHAwIwDQYJKoZI\nhvcNAQELBQADggEBANr1Wk1cVZB96yobFgK3rQQv9oXW+Jle7Jh36J2o4wSSB+RH\nlfMojDrqKVQCLrFDcF+8JIA3RTRKdduIXgBAr13xQ8JkHd1/o23yN6a2DaYgh0wr\nDrndlR6y1yG0vQuurJ3IgXmC0ldM5+VhalgmoCKFV9JsUD+GhOyJ6NWlc0SqvJCs\n3RZLYwZ4MNViPbRy0Kbp0ufY1zTbh02Gw9aVfFzUwL8GS00iMb4MnSav1xur7wQh\nBoF3PpNvu003P7f1eVJ62qVD2LWWntfn0mL1aRmDe2wpMQKAKhxto+sDb2mfJ6G6\nPFtwMHe7BUfiwTzGYqav21h1w/amPkxNVQ7Li4M=\n-----END CERTIFICATE-----"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Public/v1/GetServerCertificate": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "description": "Endpoint is used to retrieve Fiscalisation Backend certificate for Fiscalisation Backend signature validation. Despite of the parameter is provided or not, and despite what certificate in the chain thumbprint indicates (first, second or third level certificate), full certificate chain is returned",
+        "parameters": [
+          {
+            "name": "thumbprint",
+            "in": "query",
+            "description": "Thumbprint of Fiscalisation Backend certificate which should be returned. If field is not provided, currently active Fiscalisation Backend signing certificate is returned",
+            "schema": {
+              "maxLength": 40,
+              "minLength": 0,
+              "type": "string"
+            },
+            "example": "b785a0b4d8a734a55ba595d143b4cf72834cd88d"
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                },
+                "example": {
+                  "errorCode": "DEV01",
+                  "type": "https://httpstatuses.io/422",
+                  "title": "Unprocessable Entity",
+                  "status": 422,
+                  "detail": "Device not found or not active",
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetServerCertificateResponse"
+                },
+                "example": {
+                  "operationID": "0HMPHA0KCMPHN:00000005",
+                  "certificate": [
+                    "-----BEGIN CERTIFICATE-----\nMIIDQTCCAikCFFLwDNnN3ZnAriN4wanJF439cX53MA0GCSqGSIb3DQEBCwUAMF0x\nCzAJBgNVBAYTAkxUMRMwEQYDVQQIDApFTEVLVFJFTkFJMRMwEQYDVQQHDApFTEVL\nVFJFTkFJMREwDwYDVQQKDAhldHJvbmlrYTERMA8GA1UEAwwIemltcmFfQ0EwHhcN\nMjMwMzE2MTA1NDAxWhcNMzMwMzEzMTA1NDAxWjBdMQswCQYDVQQGEwJMVDETMBEG\nA1UECAwKRUxFS1RSRU5BSTETMBEGA1UEBwwKRUxFS1RSRU5BSTERMA8GA1UECgwI\nZXRyb25pa2ExETAPBgNVBAMMCHppbXJhX0NBMIIBIjANBgkqhkiG9w0BAQEFAAOC\nAQ8AMIIBCgKCAQEA30dU24HCzSd+y4/ho41at23gh1g2Yjhk8SnUNo5PLn2uoUvj\nUemQNuJFjg14LvBPoubcIfOZW6cp9TCGy8KqG3WyVrT9z9sEl4fQMlEsCegmCEIE\nng7PvtsdJL9CaC7x11KK4az5UpzqUQ2gyYOryF6M8BT6wH5U61og2SWfv4M5ttQc\nbBDFbReeCYBLvSzFisI1CAVnc3CLqLhBN5jHxfraeZyAvLzBFnbYj7RBcv28iGRz\ny6LXtgE9yDeRdtCk8UqrgyMe//LWmlu+mmLb2IdIeD66GkD637FURa9lAcDJksUP\nUep2TyXq44JjMeNz7CyPbJ0wlV49cUlKc+/ZVQIDAQABMA0GCSqGSIb3DQEBCwUA\nA4IBAQAPVhhMAvjpQRm9OqZz3k97/yygqxeNKdTjxc/zVO8gj0pRBclVhxCnfj+P\nA1wc1nBEHvZ0oh03JviGQ8wxTLWUc0vWlZICmST7heC3DeA+xh90mLZOb2kK3cko\nY7kTAQ8cLV+ddI4UI46WQ6q/bhueOZQjMf1K2IP0fUhXxgFtrPXXrlkiUNX4tisg\ncy986/JjIHk2sY3OyBqYeFwq5J6DO2kMfLgHzwlaVWnTiXJ/etK17fynETImldZU\n9qSHYEyURqKuDyjELRThDLDTGwnsL5HU31+RCmGCZuNpjqkdne8hedNISdyCsMvD\ndDY0A7Vf+2WmfxWzg0wbhf6cIjxS\n-----END CERTIFICATE-----",
+                    "-----BEGIN CERTIFICATE-----\nMIIDcDCCAligAwIBAgIISVJfo63v2tswDQYJKoZIhvcNAQELBQAwXTELMAkGA1UE\nBhMCTFQxEzARBgNVBAgMCkVMRUtUUkVOQUkxEzARBgNVBAcMCkVMRUtUUkVOQUkx\nETAPBgNVBAoMCGV0cm9uaWthMREwDwYDVQQDDAh6aW1yYV9DQTAeFw0yMzAzMjAx\nOTM5NTVaFw0yNjAzMjAyMTIzMTBaMGwxCzAJBgNVBAYTAlpXMREwDwYDVQQIDAha\naW1iYWJ3ZTEsMCoGA1UECgwjWmltYmFid2UgRmlzY2FsaXNhdGlvbiBPcmdhbml6\nYXRpb24xHDAaBgNVBAMME1pSQi1lVkZELTAwMDAwMDAwNDIwWTATBgcqhkjOPQIB\nBggqhkjOPQMBBwNCAAT7v3DvY7pRg4lz2Z87wSMwSX27KwlpYnSRV6WUiPjpq2Xs\nUAbg2lhUN7q3mlNJaUzqoKPmop5qURIpqUydXfapo4HvMIHsMAkGA1UdEwQCMAAw\nHQYDVR0OBBYEFGqv3pesJRu7AJBrDE7T/+dM4Kg1MIGaBgNVHSMEgZIwgY+AFIKH\n58WkIDv0AUhEr+O0qvs6Dk7VoWGkXzBdMQswCQYDVQQGEwJMVDETMBEGA1UECAwK\nRUxFS1RSRU5BSTETMBEGA1UEBwwKRUxFS1RSRU5BSTERMA8GA1UECgwIZXRyb25p\na2ExETAPBgNVBAMMCHppbXJhX0NBghRS8AzZzd2ZwK4jeMGpyReN/XF+dzAOBgNV\nHQ8BAf8EBAMCBeAwEwYDVR0lBAwwCgYIKwYBBQUHAwIwDQYJKoZIhvcNAQELBQAD\nggEBAMkQykLAfhUGYaMR71kdwgFShstjK12v0sg69ruNtnlIajs3H9vaYoZRvPOV\n5jkdKlzF4Erp8D9URTJQD9aNCHqOZg1wSytuQqxedoThaWSYL3eiUf3Rig+II/fG\n/F+sr0pC6QrriJKRHH8aeAUF2jXD/CyI/GcftBIMTr91egV5Bn3Pjwfh8aEFzq7R\nqF4p0p8UBPwJtFUSqC4JkwLkpfG8bMpNHYic97+PRRLlrqiSPrQF/rlLQDC4IpMc\n9oMHuYHi2CmMcpnXLNZhgeFhHpILKOloU/AGtsExDS4gHCm/LfkUAz3p0KTIxnfx\nj5QjByFH8P3rY05BmSdE4aFUnxM=\n-----END CERTIFICATE-----"
+                  ],
+                  "certificateValidTill": "2026-03-20T21:23:10"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Certificate requested by thumbprint not found",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/404",
+                  "title": "Not Found",
+                  "status": 400,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Public/v1/{deviceID}/VerifyTaxpayerInformation": {
+      "post": {
+        "tags": [
+          "Public"
+        ],
+        "description": "Endpoint is used to retrieve taxpayer information from system before device registration (in order user could double check if device is going to be registered to correct taxpayer).",
+        "parameters": [
+          {
+            "name": "deviceID",
+            "in": "path",
+            "description": "Sold or active device ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/VerifyTaxpayerInformationRequest"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                },
+                "example": {
+                  "errorCode": "DEV01",
+                  "type": "https://httpstatuses.io/422",
+                  "title": "Unprocessable Entity",
+                  "status": 422,
+                  "detail": "Device not found or not active",
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyTaxpayerInformationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AddressDto": {
+        "type": "object",
+        "properties": {
+          "province": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "street": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "houseNo": {
+            "maxLength": 250,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "district": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApiProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "ContactsDto": {
+        "type": "object",
+        "properties": {
+          "phoneNo": {
+            "maxLength": 20,
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetServerCertificateResponse": {
+        "required": [
+          "certificateValidTill",
+          "operationID"
+        ],
+        "type": "object",
+        "properties": {
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          },
+          "certificate": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Fiscalisation Backend certificate chain (according x.509 standard) to validate Fiscalisation Backend signatures.",
+            "nullable": true
+          },
+          "certificateValidTill": {
+            "type": "string",
+            "description": "Date till when Fiscalisation Backend signing certificate is valid (despite that in the certificate parameter all the certificate chain is returned, this field shows validity time of the child certificate in the chain). Times is provided in UTC time.",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "RegisterDeviceRequest": {
+        "required": [
+          "activationKey",
+          "certificateRequest"
+        ],
+        "type": "object",
+        "properties": {
+          "certificateRequest": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Certificate signing request (CSR) for which certificate will be generated (in PEM format).\r\nAssigned by Tax Authority device name (format: [CLIENT]-[Fiscal_device_serial_no]-[zero_padded_10_digit_deviceId]) should be provided in CSR`s Subject CN.\r\nSupported algorithms and key types (in order of suggested preference):\r\n1)\tECC ECDSA on SECG secp256r1 curve (also named as ANSI prime256v1, NIST P-256); Signature Algorithm: ecdsa-with-SHA256.\r\n2)\tRSA 2048; Signature Algorithm - SHA256WithRSA.",
+            "example": "-----BEGIN CERTIFICATE REQUEST-----\\nMIHYMIGAAgEAMB4xHDAaBgNVBAMME1pSQi1lVkZELTAwMDAwMDAwNDIwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAT7v3DvY7pRg4lz2Z87wSMwSX27KwlpYnSRV6WU\\niPjpq2XsUAbg2lhUN7q3mlNJaUzqoKPmop5qURIpqUydXfapoAAwCgYIKoZIzj0E\\nAwIDRwAwRAIgLMEJQDh18bUE9waT2UXzP0+8FcGukpcIegMxd1A4JaQCIAZkzmEH\\ne0aaZ2jIcZArZo+rWzI4IwnSXtJqXLrpGUML\\n-----END CERTIFICATE REQUEST-----"
+          },
+          "activationKey": {
+            "maxLength": 8,
+            "minLength": 0,
+            "type": "string",
+            "description": "Case insensitive 8 symbols key",
+            "example": "12AXC178"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegisterDeviceResponse": {
+        "required": [
+          "certificate",
+          "operationID"
+        ],
+        "type": "object",
+        "properties": {
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          },
+          "certificate": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "VerifyTaxpayerInformationRequest": {
+        "required": [
+          "activationKey",
+          "deviceSerialNo"
+        ],
+        "type": "object",
+        "properties": {
+          "activationKey": {
+            "maxLength": 8,
+            "minLength": 1,
+            "type": "string",
+            "description": "Case insensitive 8 symbols key",
+            "example": "12AXC178"
+          },
+          "deviceSerialNo": {
+            "maxLength": 20,
+            "minLength": 1,
+            "type": "string",
+            "description": "Device serial number assigned by manufacturer.",
+            "example": "SN-001"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VerifyTaxpayerInformationResponse": {
+        "required": [
+          "deviceBranchAddress",
+          "deviceBranchName",
+          "operationID",
+          "taxPayerName",
+          "taxPayerTIN",
+          "vatNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          },
+          "taxPayerName": {
+            "maxLength": 250,
+            "minLength": 1,
+            "type": "string"
+          },
+          "taxPayerTIN": {
+            "maxLength": 10,
+            "minLength": 1,
+            "type": "string"
+          },
+          "vatNumber": {
+            "maxLength": 9,
+            "minLength": 1,
+            "type": "string"
+          },
+          "deviceBranchName": {
+            "maxLength": 250,
+            "minLength": 1,
+            "type": "string"
+          },
+          "deviceBranchAddress": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AddressDto"
+              }
+            ]
+          },
+          "deviceBranchContacts": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContactsDto"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Public",
+      "description": "Public endpoints do not require client certificate to authenticate."
+    }
+  ]
+}

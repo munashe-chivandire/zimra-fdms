@@ -1,0 +1,701 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Fiscal backend FiscalDeviceApi Build:1.0.0.0",
+    "version": "1.0"
+  },
+  "paths": {
+    "/ProductsStock/v1/{deviceID}/Search": {
+      "get": {
+        "tags": [
+          "ProductsStock"
+        ],
+        "summary": "Gets warehouse product quantities list",
+        "parameters": [
+          {
+            "name": "BranchId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "HsCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "GoodName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/GetListGoodsEnum"
+                }
+              ]
+            }
+          },
+          {
+            "name": "Order",
+            "in": "query",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ListRequestOrderEnum"
+                }
+              ]
+            }
+          },
+          {
+            "name": "Offset",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Limit",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Operator",
+            "in": "query",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/LogicalOperatorEnum"
+                }
+              ]
+            }
+          },
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductsStockGetListDtoListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Operation failed because content is not provided.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/422",
+                  "title": "Bad request",
+                  "status": 400,
+                  "detail": "Content is empty"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Operation failed because no device were found with provided device id.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/404",
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "Not existing device with provided device id"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because fiscal day status must be FiscalDayClosed.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/422",
+                  "title": "Unprocessable Entity",
+                  "status": 422,
+                  "detail": "Device fiscal day status must be FiscalDayClosed"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AddGoodToStockRequest": {
+        "required": [
+          "hsCode",
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "hsCode": {
+            "maxLength": 8,
+            "minLength": 0,
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "branchId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApiProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "ChangeGoodQuantityInStockRequest": {
+        "required": [
+          "hsCode",
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "hsCode": {
+            "maxLength": 8,
+            "minLength": 0,
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "branchId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetListGoodsEnum": {
+        "enum": [
+          "HsCode",
+          "GoodName",
+          "BranchName"
+        ],
+        "type": "string"
+      },
+      "HarmonizedSystemCodeDto": {
+        "required": [
+          "harmonizedSystemCode",
+          "name",
+          "validFrom"
+        ],
+        "type": "object",
+        "properties": {
+          "harmonizedSystemCode": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "validTo": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "HarmonizedSystemCodeDtoListResponse": {
+        "required": [
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HarmonizedSystemCodeDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "HarmonizedSystemCodeListEnum": {
+        "enum": [
+          "HarmonizedSystemCode",
+          "Name",
+          "ValidFrom"
+        ],
+        "type": "string"
+      },
+      "ListRequestOrderEnum": {
+        "enum": [
+          "asc",
+          "desc"
+        ],
+        "type": "string"
+      },
+      "LogicalOperatorEnum": {
+        "enum": [
+          "And",
+          "Or"
+        ],
+        "type": "string"
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "ProductsStockGetListDto": {
+        "required": [
+          "goodName",
+          "hsCode",
+          "quantity",
+          "taxPayerId",
+          "taxPayerName",
+          "taxPayerTIN"
+        ],
+        "type": "object",
+        "properties": {
+          "hsCode": {
+            "maxLength": 8,
+            "minLength": 1,
+            "type": "string"
+          },
+          "goodName": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "taxPayerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "taxPayerTIN": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "taxPayerName": {
+            "maxLength": 250,
+            "minLength": 1,
+            "type": "string"
+          },
+          "branchId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "branchName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProductsStockGetListDtoListResponse": {
+        "required": [
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductsStockGetListDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TransactionChangeGoodBranchRequest": {
+        "required": [
+          "hsCode",
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "hsCode": {
+            "maxLength": 8,
+            "minLength": 0,
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "branchId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "newBranchId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TransactionGetListDto": {
+        "required": [
+          "goodName",
+          "hsCode",
+          "quantity",
+          "taxPayerId",
+          "taxPayerName",
+          "taxPayerTIN",
+          "transactionDate",
+          "transactionType"
+        ],
+        "type": "object",
+        "properties": {
+          "hsCode": {
+            "maxLength": 8,
+            "minLength": 1,
+            "type": "string"
+          },
+          "goodName": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "transactionDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "transactionType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TransactionTypeEnum"
+              }
+            ]
+          },
+          "taxPayerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "taxPayerTIN": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "taxPayerName": {
+            "maxLength": 250,
+            "minLength": 1,
+            "type": "string"
+          },
+          "branchId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "branchName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TransactionGetListDtoListResponse": {
+        "required": [
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransactionGetListDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TransactionGetListEnum": {
+        "enum": [
+          "HsCode",
+          "Quantity",
+          "GoodName",
+          "TransactionDate",
+          "BranchName",
+          "TaxPayerName",
+          "TaxPayerTIN"
+        ],
+        "type": "string"
+      },
+      "TransactionTypeEnum": {
+        "enum": [
+          "Imported",
+          "Exported",
+          "MovedBetweenBranches",
+          "Credited",
+          "Debited",
+          "Sold",
+          "Purchased",
+          "Inventory"
+        ],
+        "type": "string"
+      },
+      "ValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "ProductsStock",
+      "description": "Goods management"
+    }
+  ]
+}

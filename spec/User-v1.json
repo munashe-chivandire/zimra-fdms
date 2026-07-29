@@ -1,0 +1,2935 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Fiscal backend FiscalDeviceApi Build:1.0.0.0",
+    "version": "1.0"
+  },
+  "paths": {
+    "/User/v1/{deviceID}/GetUsersList": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "description": "Endpoint is used to get taxpayer users saved in Device management sistem list.",
+        "parameters": [
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/GetUsersListEnum"
+                }
+              ]
+            }
+          },
+          {
+            "name": "Order",
+            "in": "query",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ListRequestOrderEnum"
+                }
+              ]
+            }
+          },
+          {
+            "name": "Offset",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Limit",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Operator",
+            "in": "query",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/LogicalOperatorEnum"
+                }
+              ]
+            }
+          },
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetUsersResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/User/v1/{deviceID}/SendSecurityCodeToTaxpayer": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "description": "Endpoint is responsible for security code sending to taxpayer and branch where device registered emails.",
+        "parameters": [
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/SendSecurityCodeToTaxpayerRequest"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendSecurityCodeToTaxpayerResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/User/v1/{deviceID}/CreateUser": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "description": "Creates new pos user or updates allready existing not comfirmed tenant user",
+        "parameters": [
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateUserRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateUserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/User/v1/{deviceID}/Login": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "description": "Endpoint is used to check if sent username and password credentials are correct and user can login to POS.",
+        "parameters": [
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/LoginRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/User/v1/{deviceID}/SendSecurityCodeToUserEmail": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "description": "Sends security code to confirm user email",
+        "parameters": [
+          {
+            "name": "Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/SendSecurityCodeToUserEmailRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendSecurityCodeToUserEmailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/User/v1/{deviceID}/SendSecurityCodeToUserPhone": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "description": "Sends security code to confirm user phone",
+        "parameters": [
+          {
+            "name": "Token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/SendSecurityCodeToUserPhoneRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendSecurityCodeToUserPhoneResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/User/v1/{deviceID}/ConfirmUser": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "description": "Endpoint is user creation confirmation by taxpayer.",
+        "parameters": [
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ConfirmUserRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/User/v1/{deviceID}/ChangePassword": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "description": "Endpoint is used to change user password.",
+        "parameters": [
+          {
+            "name": "Token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ChangePasswordRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/User/v1/{deviceID}/ResetPassword": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "description": "Endpoint is used to change user password.",
+        "parameters": [
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ResetPasswordRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetPasswordResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/User/v1/{deviceID}/ConfirmContact": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "description": "Endpoint is used for user contact change confirmation.",
+        "parameters": [
+          {
+            "name": "Token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ConfirmContactRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmContactResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/User/v1/{deviceID}/Update": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "description": "Endpoint is used to update user.",
+        "parameters": [
+          {
+            "name": "Token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/UpdateUserRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/User/v1/{deviceID}/Block/{userName}": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "description": "Endpoint is used to block user.",
+        "parameters": [
+          {
+            "name": "userName",
+            "in": "path",
+            "description": "userName who must be blocked",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/User/v1/{deviceID}/Unblock/{userName}": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "description": "Endpoint is used to unblock user.",
+        "parameters": [
+          {
+            "name": "userName",
+            "in": "path",
+            "description": "userName who must be unblocked",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Token",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/User/v1/{deviceID}/ConfirmPasswordReset": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Endpoint for confirming password reset",
+        "parameters": [
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/ConfirmPasswordResetRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ApiProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "ChangePasswordRequest": {
+        "required": [
+          "newPassword",
+          "oldPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "oldPassword": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "newPassword": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfirmContactRequest": {
+        "required": [
+          "channel",
+          "securityCode"
+        ],
+        "type": "object",
+        "properties": {
+          "securityCode": {
+            "maxLength": 10,
+            "minLength": 1,
+            "type": "string"
+          },
+          "channel": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SendSecurityCodeToEnum"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfirmContactResponse": {
+        "required": [
+          "operationID",
+          "user"
+        ],
+        "type": "object",
+        "properties": {
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          },
+          "user": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserDto"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfirmPasswordResetRequest": {
+        "required": [
+          "newPassword",
+          "securityCode",
+          "userName"
+        ],
+        "type": "object",
+        "properties": {
+          "userName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "securityCode": {
+            "maxLength": 10,
+            "minLength": 1,
+            "type": "string"
+          },
+          "newPassword": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ConfirmUserRequest": {
+        "required": [
+          "password",
+          "securityCode",
+          "userName"
+        ],
+        "type": "object",
+        "properties": {
+          "userName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "securityCode": {
+            "maxLength": 10,
+            "minLength": 1,
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateUserRequest": {
+        "required": [
+          "personName",
+          "personSurname",
+          "userName",
+          "userRole"
+        ],
+        "type": "object",
+        "properties": {
+          "userName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "personName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "personSurname": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "userRole": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateUserResponse": {
+        "required": [
+          "operationID"
+        ],
+        "type": "object",
+        "properties": {
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetUsersListEnum": {
+        "enum": [
+          "UserName",
+          "PersonName",
+          "PersonSurname",
+          "UserRole",
+          "Email",
+          "PhoneNo",
+          "UserStatus"
+        ],
+        "type": "string"
+      },
+      "GetUsersResponse": {
+        "required": [
+          "operationID",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UsersListDto"
+            },
+            "nullable": true
+          },
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ListRequestOrderEnum": {
+        "enum": [
+          "asc",
+          "desc"
+        ],
+        "type": "string"
+      },
+      "LogicalOperatorEnum": {
+        "enum": [
+          "And",
+          "Or"
+        ],
+        "type": "string"
+      },
+      "LoginRequest": {
+        "required": [
+          "password",
+          "userName"
+        ],
+        "type": "object",
+        "properties": {
+          "userName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LoginResponse": {
+        "required": [
+          "operationID",
+          "token",
+          "user"
+        ],
+        "type": "object",
+        "properties": {
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          },
+          "user": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserDto"
+              }
+            ]
+          },
+          "token": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PosUserStatusEnum": {
+        "enum": [
+          "NotConfirmed",
+          "Active",
+          "Blocked"
+        ],
+        "type": "string"
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "ResetPasswordRequest": {
+        "required": [
+          "channel",
+          "userName"
+        ],
+        "type": "object",
+        "properties": {
+          "userName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "channel": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SendSecurityCodeToEnum"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResetPasswordResponse": {
+        "required": [
+          "operationID"
+        ],
+        "type": "object",
+        "properties": {
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SendSecurityCodeToEnum": {
+        "enum": [
+          "Email",
+          "PhoneNo"
+        ],
+        "type": "string"
+      },
+      "SendSecurityCodeToTaxpayerRequest": {
+        "required": [
+          "userName"
+        ],
+        "type": "object",
+        "properties": {
+          "userName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SendSecurityCodeToTaxpayerResponse": {
+        "required": [
+          "operationID"
+        ],
+        "type": "object",
+        "properties": {
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SendSecurityCodeToUserEmailRequest": {
+        "required": [
+          "userEmail"
+        ],
+        "type": "object",
+        "properties": {
+          "userEmail": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SendSecurityCodeToUserEmailResponse": {
+        "required": [
+          "operationID"
+        ],
+        "type": "object",
+        "properties": {
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SendSecurityCodeToUserPhoneRequest": {
+        "required": [
+          "phoneNo"
+        ],
+        "type": "object",
+        "properties": {
+          "phoneNo": {
+            "maxLength": 20,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SendSecurityCodeToUserPhoneResponse": {
+        "required": [
+          "operationID"
+        ],
+        "type": "object",
+        "properties": {
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateUserRequest": {
+        "required": [
+          "personName",
+          "personSurname",
+          "userName",
+          "userRole"
+        ],
+        "type": "object",
+        "properties": {
+          "userName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "personName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "personSurname": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "userRole": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UserDto": {
+        "required": [
+          "email",
+          "personName",
+          "personSurname",
+          "phoneNo",
+          "userName",
+          "userRole"
+        ],
+        "type": "object",
+        "properties": {
+          "userName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "personName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "personSurname": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "userRole": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "phoneNo": {
+            "maxLength": 20,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UsersListDto": {
+        "required": [
+          "personName",
+          "personSurname",
+          "userName",
+          "userRole",
+          "userStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "userName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "personName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "personSurname": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "userRole": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          },
+          "phoneNo": {
+            "maxLength": 20,
+            "type": "string",
+            "nullable": true
+          },
+          "userStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PosUserStatusEnum"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "User",
+      "description": "All methods are synchronous.\r\nFiscal Device Gateway uses mutual TLS authentication (https://en.wikipedia.org/wiki/Mutual_authentication) to authenticate device using device certificate. Device certificate is validated against issuing certificate to allow or deny access to API endpoints.\r\nAfter authentication provided device certificate is checked against issued certificate (see registerDevice and issueCertificate methods for device certificate issuing) to check if the device certificate was issued to calling device (by method parameter deviceId) and the device certificate was not revoked"
+    }
+  ]
+}

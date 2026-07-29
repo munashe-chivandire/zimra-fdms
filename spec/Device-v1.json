@@ -1,0 +1,3445 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Fiscal backend FiscalDeviceApi Build:1.0.0.0",
+    "version": "1.0"
+  },
+  "paths": {
+    "/Device/v1/{deviceID}/GetConfig": {
+      "get": {
+        "tags": [
+          "Device"
+        ],
+        "description": "Endpoint is used to retrieve taxpayers and device information and configuration.",
+        "parameters": [
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetConfigResponse"
+                },
+                "example": {
+                  "operationID": "0HMPH89RT4FP8:00000004",
+                  "taxPayerName": "Nienow, Hara and Schinner",
+                  "taxPayerTIN": "3796605707",
+                  "vatNumber": "3899488439",
+                  "deviceSerialNo": "SN-1",
+                  "deviceBranchName": "Shoes",
+                  "deviceBranchAddress": {
+                    "province": "Harare",
+                    "street": "Torey Lakes",
+                    "houseNo": "566",
+                    "city": "Harare"
+                  },
+                  "deviceBranchContacts": {
+                    "phoneNo": "(320) 238-4248",
+                    "email": "Leland_Gutmann@yahoo.com"
+                  },
+                  "deviceOperatingMode": "Online",
+                  "taxPayerDayMaxHrs": 24,
+                  "applicableTaxes": [
+                    {
+                      "taxPercent": 15,
+                      "taxName": "15%"
+                    },
+                    {
+                      "taxPercent": 0,
+                      "taxName": "0%"
+                    },
+                    {
+                      "taxName": "exempt"
+                    }
+                  ],
+                  "certificateValidTill": "2026-03-30T17:15:40",
+                  "qrUrl": "www.qrUrl.com",
+                  "taxpayerDayEndNotificationHrs": 20
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Device/v1/{deviceID}/GetStatus": {
+      "get": {
+        "tags": [
+          "Device"
+        ],
+        "description": "Endpoint is used to get fiscal day status.",
+        "parameters": [
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetStatusResponse"
+                },
+                "example": {
+                  "operationID": "0HMPH8CBL0I62:00000001",
+                  "fiscalDayStatus": "FiscalDayClosed",
+                  "fiscalDayReconciliationMode": "Auto",
+                  "fiscalDayServerSignature": {
+                    "certificateThumbprint": "b785a0b4d8a734a55ba595d143b4cf72834cd88d",
+                    "hash": "//To59fLHvuoRe2slUpN2grJu5adaodOW6kW1OYvf/c=",
+                    "signature": "YyXTSizBBrMjMk4VQL+sCNr+2AC6aQbDAn9JMV2rk3yJ6MDZwie0wqQW3oisNWrMkeZsuAyFSnFkU2A+pKm91sOHVdjeRBebjQgAQQIMTCVIcYrx+BizQ7Ib9iCdsVI+Jel2nThqQiQzfRef6EgtgsaIAN+PV55xSrHvPkIe+Bc="
+                  },
+                  "fiscalDayClosed": "2023-03-30T20:15:40",
+                  "lastFiscalDayNo": 101,
+                  "lastReceiptGlobalNo": 9931
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Device/v1/{deviceID}/OpenDay": {
+      "post": {
+        "tags": [
+          "Device"
+        ],
+        "description": "Endpoint is used to open a new fiscal day. Opening of new fiscal day is possible only when previous fiscal day is successfully closed (fiscal day status is “FiscalDayClosed”).",
+        "parameters": [
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/OpenDayRequest"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenDayResponse"
+                },
+                "example": {
+                  "operationID": "0HMPH9AF0QKKE:00000005",
+                  "fiscalDayNo": 102
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Device/v1/{deviceID}/CloseDay": {
+      "post": {
+        "tags": [
+          "Device"
+        ],
+        "description": "Endpoint is used to initiate fiscal day closure procedure. This method is allowed when fiscal days status is “FiscalDayOpened” or “FiscalDayCloseFailed”.\r\nIn case fiscal day contains at least one “Grey” or “Red” receipt (as specified Validation errors), Fiscalisation Backend will respond to closeDay request with error (fiscal day will remain opened). Otherwise if fiscal day does not have “Grey” and “Red” receipts, validation of submitted closeDay request will be executed. In case of fiscal day validation fails (as specified below in “Validation rules”), fiscal day remains opened and its status is changed to “FiscalDayCloseFailed”.",
+        "parameters": [
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CloseDayRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloseDayResponse"
+                },
+                "example": {
+                  "operationID": "0HMPH9AF0QKKE:00000005"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Device/v1/{deviceID}/IssueCertificate": {
+      "post": {
+        "tags": [
+          "Device"
+        ],
+        "description": "Endpoint is used to renew certificate before the expiration of the current certificate.\r\nIt is recommended to renew certificate a month before its expiration.\r\nCertificate reissue can be done at any time. It does not depend on fiscal day status, however it is recommended to be done before opening a new fiscal day.",
+        "parameters": [
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/IssueCertificateRequest"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueCertificateResponse"
+                },
+                "example": {
+                  "operationID": "0HMPH9AF0QKKE:00000005",
+                  "certificate": "-----BEGIN CERTIFICATE-----\nMIIC6TCCAdGgAwIBAgIFAKsSzWowDQYJKoZIhvcNAQELBQAwZDELMAkGA1UEBhMC\nTFQxETAPBgNVBAoMCEdvb2QgTHRkMScwJQYDVQQLDB5Hb29kIEx0ZCBDZXJ0aWZp\nY2F0ZSBBdXRob3JpdHkxGTAXBgNVBAMMEEdvb2QgTHRkIFJvb3QgQ0EwHhcNMTkx\nMDAzMTU1NzA1WhcNMjAxMDEyMTU1NzA1WjBfMQswCQYDVQQGEwJUWjERMA8GA1UE\nCAwIWmFuemliYXIxHzAdBgNVBAoMFlphbnppYmFyIFJldmVudWUgQm9hcmQxHDAa\nBgNVBAMME1pSQi1lVkZELTAwMDAwMDAwNDIwWTATBgcqhkjOPQIBBggqhkjOPQMB\nBwNCAAT7v3DvY7pRg4lz2Z87wSMwSX27KwlpYnSRV6WUiPjpq2XsUAbg2lhUN7q3\nmlNJaUzqoKPmop5qURIpqUydXfapo3IwcDAJBgNVHRMEAjAAMB8GA1UdIwQYMBaA\nFK1RXHm1plvaintqlWaXDs1X3LX+MB0GA1UdDgQWBBRqr96XrCUbuwCQawxO0//n\nTOCoNTAOBgNVHQ8BAf8EBAMCBeAwEwYDVR0lBAwwCgYIKwYBBQUHAwIwDQYJKoZI\nhvcNAQELBQADggEBANr1Wk1cVZB96yobFgK3rQQv9oXW+Jle7Jh36J2o4wSSB+RH\nlfMojDrqKVQCLrFDcF+8JIA3RTRKdduIXgBAr13xQ8JkHd1/o23yN6a2DaYgh0wr\nDrndlR6y1yG0vQuurJ3IgXmC0ldM5+VhalgmoCKFV9JsUD+GhOyJ6NWlc0SqvJCs\n3RZLYwZ4MNViPbRy0Kbp0ufY1zTbh02Gw9aVfFzUwL8GS00iMb4MnSav1xur7wQh\nBoF3PpNvu003P7f1eVJ62qVD2LWWntfn0mL1aRmDe2wpMQKAKhxto+sDb2mfJ6G6\nPFtwMHe7BUfiwTzGYqav21h1w/amPkxNVQ7Li4M=\n-----END CERTIFICATE-----"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Device/v1/{deviceID}/SubmitReceipt": {
+      "post": {
+        "tags": [
+          "Device"
+        ],
+        "description": "Endpoint is used to submit a receipt to Fiscalisation Backend in online mode and get a Fiscalisation Backend signature for it (signature is not a QR code, it is an acknowledgement of Fiscalisation Backend about received receipt). Receipt can be submitted only when fiscal day status is “FiscalDayOpened” or “FiscalDayCloseFailed” and fiscal day is opened not earlier than receiptDate – taxpayerDayMaxHrs. If fiscal day is opened earlier that allowed time, receipt will still be registered, but marked in “Yellow” with validation error RCPT014 (as specified in Validation errors).\r\n\r\nIn case device tried to close a fiscal day and attempt was unsuccessful, device still have a possibility to submit a new receipt.\r\nIn case the same receipt (with the same deviceID, receiptGlobalNo and receiptHash) is submitted more than once, Fiscal Device Gateway API will return successful result to device with the same original receipt receiptID, receiptServerSignature, however different operationID.\r\n\r\nEach submitted receipt is validated. Receipt will not be accepted, error will be returned to device (as specified in Error codes), in these cases:\r\n\r\n•\tdevice status is other than “Active”;\r\n\r\n•\tfiscal day status is other than “FiscalDayOpened” or “FiscalDayCloseFailed”;\r\n\r\n•\treceipt message structure is not valid\r\n\r\nIn case the above mentioned validations have passed, but receipt has other validation issues specified below (described in “Validation rules”), receipt will be accepted and signed, but will be marked as invalid with validation color code assigned (as specified in 7.3. Validation errors).\r\n\r\nEach submitted receipt, must increase fiscal day counters as specified in Fiscal counters.",
+        "parameters": [
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/SubmitReceiptRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmitReceiptResponse"
+                },
+                "example": {
+                  "receiptID": 600,
+                  "serverDate": "2023-05-04T16:45:37",
+                  "receiptServerSignature": {
+                    "certificateThumbprint": "F9B295CA65BA22B94F6D4B27E48D08BF6CD7F7C8",
+                    "hash": "8IURjBbdTy2b6EnUzSEHHCjIenorq5TdYSCtuzCVisw=",
+                    "signature": "gz/JZQVw5Mk7vCTVx02hrZEQS1vAnMIEnwVdl/eouL9SkYbmZFrfQLVtfhPwxM2SCzgrqf9dpuQi1/t9u7T1t5Vvl/vkMW8FLH0u2IReOXLakxFx9TNWu7XH20FqjCJLXOB3NYAiVshAHtYpwPmU9gYCJBTwfhKAjmJaYpIkUvXE+cXKsV4Zxuvm7y25jOGs2RlLExmVw2uT53aRLoLbHdIxaelq8Pgx+YEJQNz9/AniRyjQRdOD5FyQgu00IU9SydrcpkM6xA01fHsNnB53ATb6CdGBAXv88I42n6o8E784CI8wCGWTF6lEoN6sMnLQPqyxY9YQj0ZxcvW5xhC9uA=="
+                  },
+                  "operationID": "0HMQCKLK5B38G:00000006"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Device/v1/{deviceID}/Ping": {
+      "post": {
+        "tags": [
+          "Device"
+        ],
+        "description": "Endpoint is used to report device is online to Fiscalisation Backend. When device is turned on, it must regularly report to Fiscalisation Backend that it is online. Reporting periodicity is specified in reportingFrequency parameter received in response from Fiscalisation Backend.",
+        "parameters": [
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Success",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PingResponse"
+                },
+                "example": {
+                  "reportingFrequency": 5,
+                  "operationID": "0HMS2LV2BED20:00000001"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Device/v1/{deviceID}/SubmitFile": {
+      "post": {
+        "tags": [
+          "Device"
+        ],
+        "summary": "Offline Device receipts",
+        "parameters": [
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Accepts text content.",
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string"
+              },
+              "example": "{\r\n    \"header\": {\r\n        \"deviceId\": 1111,\r\n        \"fiscalDayNo\": 6,\r\n        \"fiscalDayOpened\": \"2023-05-30T08:38:54\",\r\n        \"fileSequence\": 2\r\n    },\r\n    \"content\": {\r\n        \"receipts\": [\r\n            {\r\n                \"receiptType\": \"fiscalInvoice\",\r\n                \"receiptCurrency\": \"USD\",\r\n                \"receiptCounter\": 5,\r\n                \"receiptGlobalNo\": 1112,\r\n                \"invoiceNo\": \"IV-2023/1256\",\r\n                \"receiptDate\": \"2023-05-30T18:38:54\",\r\n                \"receiptLinesTaxInclusive\": true,\r\n                \"receiptLines\": [\r\n                    {\r\n                        \"receiptLineType\": \"sale\",\r\n                        \"receiptLineNo\": 1,\r\n                        \"receiptLineHSCode\": \"85456852\",\r\n                        \"receiptLineName\": \"Man's shoes\",\r\n                        \"receiptLinePrice\": 25,\r\n                        \"receiptLineQuantity\": 1,\r\n                        \"receiptLineTotal\": 25,\r\n                        \"taxCode\": \"A\",\r\n                        \"taxPercent\": 15,\r\n                        \"taxID\": 1\r\n                    }\r\n                ],\r\n                \"receiptTaxes\": [\r\n                    {\r\n                        \"taxCode\": \"A\",\r\n                        \"taxPercent\": 15,\r\n                        \"taxID\": 1,\r\n                        \"taxAmount\": 3.75,\r\n                        \"salesAmountWithTax\": 28.75\r\n                    }\r\n                ],\r\n                \"receiptPayments\": [\r\n                    {\r\n                        \"moneyTypeCode\": \"cash\",\r\n                        \"paymentAmount\": 28.75\r\n                    }\r\n                ],\r\n                \"receiptTotal\": 28.75,\r\n                \"receiptPrintForm\": \"receipt48\",\r\n                \"receiptDeviceSignature\": {\r\n                    \"hash\": \"bGFiYXM=\",\r\n                    \"signature\": \"bGFiYXM=\"\r\n                },\r\n              \"receiptType\": \"fiscalInvoice\",\r\n                \"receiptCurrency\": \"USD\"\r\n            }\r\n        ]\r\n    },\r\n    \"footer\": {\r\n        \"fiscalDayCounters\": [\r\n            {\r\n                \"fiscalCounterType\": \"saleByTax\",\r\n                \"fiscalCounterCurrency\": \"USD\",\r\n                \"fiscalCounterTaxPercent\": 15,\r\n                \"fiscalCounterTaxID\": 0,\r\n                \"fiscalCounterMoneyType\": \"cash\",\r\n                \"fiscalCounterValue\": 28.75\r\n            }\r\n        ],\r\n        \"fiscalDayDeviceSignature\": {\r\n            \"hash\": \"bGFiYXM=\",\r\n            \"signature\": \"bGFiYXM=\"\r\n        },\r\n        \"receiptCounter\": 1,\r\n        \"fiscalDayClosed\": \"2023-05-30T22:38:54\"\r\n    }\r\n}\r\n"
+            },
+            "text/binary": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              },
+              "example": "{\r\n    \"header\": {\r\n        \"deviceId\": 1111,\r\n        \"fiscalDayNo\": 6,\r\n        \"fiscalDayOpened\": \"2023-05-30T08:38:54\",\r\n        \"fileSequence\": 2\r\n    },\r\n    \"content\": {\r\n        \"receipts\": [\r\n            {\r\n                \"receiptType\": \"fiscalInvoice\",\r\n                \"receiptCurrency\": \"USD\",\r\n                \"receiptCounter\": 5,\r\n                \"receiptGlobalNo\": 1112,\r\n                \"invoiceNo\": \"IV-2023/1256\",\r\n                \"receiptDate\": \"2023-05-30T18:38:54\",\r\n                \"receiptLinesTaxInclusive\": true,\r\n                \"receiptLines\": [\r\n                    {\r\n                        \"receiptLineType\": \"sale\",\r\n                        \"receiptLineNo\": 1,\r\n                        \"receiptLineHSCode\": \"85456852\",\r\n                        \"receiptLineName\": \"Man's shoes\",\r\n                        \"receiptLinePrice\": 25,\r\n                        \"receiptLineQuantity\": 1,\r\n                        \"receiptLineTotal\": 25,\r\n                        \"taxCode\": \"A\",\r\n                        \"taxPercent\": 15,\r\n                        \"taxID\": 1\r\n                    }\r\n                ],\r\n                \"receiptTaxes\": [\r\n                    {\r\n                        \"taxCode\": \"A\",\r\n                        \"taxPercent\": 15,\r\n                        \"taxID\": 1,\r\n                        \"taxAmount\": 3.75,\r\n                        \"salesAmountWithTax\": 28.75\r\n                    }\r\n                ],\r\n                \"receiptPayments\": [\r\n                    {\r\n                        \"moneyTypeCode\": \"cash\",\r\n                        \"paymentAmount\": 28.75\r\n                    }\r\n                ],\r\n                \"receiptTotal\": 28.75,\r\n                \"receiptPrintForm\": \"receipt48\",\r\n                \"receiptDeviceSignature\": {\r\n                    \"hash\": \"bGFiYXM=\",\r\n                    \"signature\": \"bGFiYXM=\"\r\n                },\r\n              \"receiptType\": \"fiscalInvoice\",\r\n                \"receiptCurrency\": \"USD\"\r\n            }\r\n        ]\r\n    },\r\n    \"footer\": {\r\n        \"fiscalDayCounters\": [\r\n            {\r\n                \"fiscalCounterType\": \"saleByTax\",\r\n                \"fiscalCounterCurrency\": \"USD\",\r\n                \"fiscalCounterTaxPercent\": 15,\r\n                \"fiscalCounterTaxID\": 0,\r\n                \"fiscalCounterMoneyType\": \"cash\",\r\n                \"fiscalCounterValue\": 28.75\r\n            }\r\n        ],\r\n        \"fiscalDayDeviceSignature\": {\r\n            \"hash\": \"bGFiYXM=\",\r\n            \"signature\": \"bGFiYXM=\"\r\n        },\r\n        \"receiptCounter\": 1,\r\n        \"fiscalDayClosed\": \"2023-05-30T22:38:54\"\r\n    }\r\n}\r\n"
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmitFileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because fiscal day status must be FiscalDayClosed.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/422",
+                  "title": "Unprocessable Entity",
+                  "status": 422,
+                  "detail": "Device fiscal day status must be FiscalDayClosed"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Operation failed because no device were found with provided device id.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/404",
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "Not existing device with provided device id"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Operation failed because content is not provided.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/422",
+                  "title": "Bad request",
+                  "status": 400,
+                  "detail": "Content is empty"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Device/v1/{deviceID}/SubmittedFileList": {
+      "get": {
+        "tags": [
+          "Device"
+        ],
+        "summary": "Get submitted files list with applied filters",
+        "parameters": [
+          {
+            "name": "OperationID",
+            "in": "query",
+            "schema": {
+              "maxLength": 100,
+              "minLength": 0,
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "FileUploadedFrom",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "FileUploadedTill",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ListSubmittedFileEnum"
+                }
+              ]
+            }
+          },
+          {
+            "name": "Order",
+            "in": "query",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ListRequestOrderEnum"
+                }
+              ]
+            }
+          },
+          {
+            "name": "Offset",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Limit",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Operator",
+            "in": "query",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/LogicalOperatorEnum"
+                }
+              ]
+            }
+          },
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Device certificate expired.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server encountered temporary issues.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "example": {
+                  "type": "https://httpstatuses.io/500",
+                  "title": "Server error",
+                  "status": 500,
+                  "operationID": "0HMPDRRQL1C0G:00000005"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubmittedFileHeaderDtoListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Operation failed because of provided data or invalid object state in Fiscal backend. Returns problem details structure as described in https://www.rfc-editor.org/rfc/rfc7807 with errorCode field to specify error.",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/DeviceInformation/v1/{deviceID}/SearchBranches": {
+      "get": {
+        "tags": [
+          "DeviceInformation"
+        ],
+        "parameters": [
+          {
+            "name": "TaxPayerBranchId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "BranchName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "RegionName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "StationName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "District",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Address",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "City",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/TaxPayerBranchesListEnum"
+                }
+              ]
+            }
+          },
+          {
+            "name": "Order",
+            "in": "query",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/ListRequestOrderEnum"
+                }
+              ]
+            }
+          },
+          {
+            "name": "Offset",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Limit",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Operator",
+            "in": "query",
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/LogicalOperatorEnum"
+                }
+              ]
+            }
+          },
+          {
+            "name": "deviceID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "DeviceModelName",
+            "in": "header",
+            "description": "Device model name as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "DeviceModelVersion",
+            "in": "header",
+            "description": "Device model version number as registered in Tax Authority",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchListResponseListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Content",
+            "headers": {
+              "operationId": {
+                "description": "unique operation id",
+                "schema": {
+                  "type": "string",
+                  "description": "unique operation id",
+                  "format": ""
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AddressDto": {
+        "type": "object",
+        "properties": {
+          "province": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "street": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "houseNo": {
+            "maxLength": 250,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "district": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApiProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "BranchListResponse": {
+        "type": "object",
+        "properties": {
+          "taxPayerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "taxPayerTIN": {
+            "type": "string",
+            "nullable": true
+          },
+          "taxPayerBranchId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "branchName": {
+            "type": "string",
+            "nullable": true
+          },
+          "taxPayerName": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "province": {
+            "type": "string",
+            "nullable": true
+          },
+          "district": {
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "regionName": {
+            "type": "string",
+            "nullable": true
+          },
+          "stationName": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "BranchListResponseListResponse": {
+        "required": [
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BranchListResponse"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "BuyerAddressDto": {
+        "type": "object",
+        "properties": {
+          "province": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "street": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "houseNo": {
+            "maxLength": 250,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "district": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "BuyerContactsDto": {
+        "type": "object",
+        "properties": {
+          "phoneNo": {
+            "maxLength": 20,
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "BuyerDto": {
+        "type": "object",
+        "properties": {
+          "buyerRegisterName": {
+            "maxLength": 250,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "buyerTradeName": {
+            "maxLength": 250,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "vatNumber": {
+            "maxLength": 9,
+            "minLength": 9,
+            "type": "string",
+            "nullable": true
+          },
+          "buyerTIN": {
+            "maxLength": 10,
+            "minLength": 10,
+            "type": "string",
+            "nullable": true
+          },
+          "buyerContacts": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BuyerContactsDto"
+              }
+            ],
+            "nullable": true
+          },
+          "buyerAddress": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BuyerAddressDto"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CloseDayRequest": {
+        "required": [
+          "fiscalDayCounters",
+          "fiscalDayDeviceSignature",
+          "fiscalDayNo",
+          "receiptCounter"
+        ],
+        "type": "object",
+        "properties": {
+          "fiscalDayNo": {
+            "type": "integer",
+            "description": "Fiscal day number.\r\nValidation rules:\r\n- fiscalDayNo must be the same as provided/received fiscalDayNo value in openDay request.",
+            "format": "int32",
+            "example": 101
+          },
+          "fiscalDayCounters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FiscalDayCounterDto"
+            },
+            "description": "List of fiscal counters.\r\nZero value counters may not be submitted to Fiscalisation Backend."
+          },
+          "fiscalDayDeviceSignature": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SignatureDataDto"
+              }
+            ],
+            "description": "SignatureData structure with SHA256 hash of fiscal day report fields (hash used for signature) and fiscal day report device signature prepared by using device private key.\r\nValidation rules:\r\n- fiscalDayDeviceSignature must be valid"
+          },
+          "receiptCounter": {
+            "type": "integer",
+            "description": "ReceiptCounter value of last receipt of current fiscal day.",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CloseDayResponse": {
+        "required": [
+          "operationID"
+        ],
+        "type": "object",
+        "properties": {
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ContactsDto": {
+        "type": "object",
+        "properties": {
+          "phoneNo": {
+            "maxLength": 20,
+            "type": "string",
+            "nullable": true
+          },
+          "email": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreditDebitNoteDto": {
+        "type": "object",
+        "properties": {
+          "receiptID": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "deviceID": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "receiptGlobalNo": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "fiscalDayNo": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DeviceOperatingModeEnum": {
+        "enum": [
+          "Online",
+          "Offline"
+        ],
+        "type": "string"
+      },
+      "DevicesGetSubmittedFileListRequest": {
+        "required": [
+          "fileUploadedFrom",
+          "fileUploadedTill",
+          "limit",
+          "offset"
+        ],
+        "type": "object",
+        "properties": {
+          "order": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ListRequestOrderEnum"
+              }
+            ]
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "operator": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LogicalOperatorEnum"
+              }
+            ]
+          },
+          "sort": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ListSubmittedFileEnum"
+              }
+            ]
+          },
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "fileUploadedFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fileUploadedTill": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FileProcessingErrorEnum": {
+        "enum": [
+          "IncorrectFileFormat",
+          "FileSentForClosedDay",
+          "BadCertificateSignature",
+          "MissingReceipts",
+          "ReceiptsWithValidationErrors",
+          "CountersMismatch",
+          "FileExceededAllowedWaitingTime",
+          "InternalError"
+        ],
+        "type": "string"
+      },
+      "FileProcessingStatusEnum": {
+        "enum": [
+          "InProgress",
+          "CompleteSuccessful",
+          "FailedWithErrors",
+          "WaitingForPreviousFile"
+        ],
+        "type": "string"
+      },
+      "FiscalCounterTypeEnum": {
+        "enum": [
+          "SaleByTax",
+          "SaleTaxByTax",
+          "CreditNoteByTax",
+          "CreditNoteTaxByTax",
+          "DebitNoteByTax",
+          "DebitNoteTaxByTax",
+          "BalanceByMoneyType",
+          "PayoutByTax",
+          "PayoutTaxByTax"
+        ],
+        "type": "string"
+      },
+      "FiscalDayCounterDto": {
+        "required": [
+          "fiscalCounterCurrency",
+          "fiscalCounterType",
+          "fiscalCounterValue"
+        ],
+        "type": "object",
+        "properties": {
+          "fiscalCounterType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FiscalCounterTypeEnum"
+              }
+            ]
+          },
+          "fiscalCounterCurrency": {
+            "maxLength": 3,
+            "minLength": 3,
+            "type": "string"
+          },
+          "fiscalCounterTaxPercent": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "fiscalCounterTaxID": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "fiscalCounterMoneyType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MoneyTypeEnum"
+              }
+            ],
+            "nullable": true
+          },
+          "fiscalCounterValue": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FiscalDayDocumentQuantity": {
+        "required": [
+          "receiptCurrency",
+          "receiptQuantity",
+          "receiptTotalAmount",
+          "receiptType"
+        ],
+        "type": "object",
+        "properties": {
+          "receiptType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReceiptTypeEnum"
+              }
+            ],
+            "description": "Type of receipt",
+            "example": "FiscalInvoice"
+          },
+          "receiptCurrency": {
+            "maxLength": 3,
+            "minLength": 3,
+            "type": "string",
+            "description": "Receipt counter currency (ISO 4217 currency code).",
+            "example": "USD"
+          },
+          "receiptQuantity": {
+            "type": "integer",
+            "description": "Total quantity of receipts of particular receipt type and currency for fiscal day.",
+            "format": "int32",
+            "example": 200
+          },
+          "receiptTotalAmount": {
+            "type": "number",
+            "description": "Total receipt amount (including tax) of receipts of particular receipt type and currency for fiscal day.",
+            "format": "double",
+            "example": 3500.05
+          }
+        },
+        "additionalProperties": false
+      },
+      "FiscalDayProcessingErrorEnum": {
+        "enum": [
+          "BadCertificateSignature",
+          "MissingReceipts",
+          "ReceiptsWithValidationErrors",
+          "CountersMismatch",
+          "InternalError"
+        ],
+        "type": "string"
+      },
+      "FiscalDayReconciliationModeEnum": {
+        "enum": [
+          "Auto",
+          "Manual"
+        ],
+        "type": "string"
+      },
+      "FiscalDayStatusEnum": {
+        "enum": [
+          "FiscalDayClosed",
+          "FiscalDayOpened",
+          "FiscalDayCloseInitiated",
+          "FiscalDayCloseFailed"
+        ],
+        "type": "string"
+      },
+      "GetConfigResponse": {
+        "required": [
+          "applicableTaxes",
+          "certificateValidTill",
+          "deviceBranchAddress",
+          "deviceBranchName",
+          "deviceOperatingMode",
+          "deviceSerialNo",
+          "operationID",
+          "qrUrl",
+          "taxpayerDayEndNotificationHrs",
+          "taxPayerDayMaxHrs",
+          "taxPayerName",
+          "taxPayerTIN"
+        ],
+        "type": "object",
+        "properties": {
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          },
+          "taxPayerName": {
+            "maxLength": 250,
+            "minLength": 0,
+            "type": "string"
+          },
+          "taxPayerTIN": {
+            "maxLength": 10,
+            "minLength": 10,
+            "type": "string"
+          },
+          "vatNumber": {
+            "maxLength": 9,
+            "minLength": 9,
+            "type": "string",
+            "nullable": true
+          },
+          "deviceSerialNo": {
+            "maxLength": 20,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deviceBranchName": {
+            "maxLength": 250,
+            "minLength": 0,
+            "type": "string"
+          },
+          "deviceBranchAddress": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AddressDto"
+              }
+            ]
+          },
+          "deviceBranchContacts": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContactsDto"
+              }
+            ],
+            "nullable": true
+          },
+          "deviceOperatingMode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeviceOperatingModeEnum"
+              }
+            ]
+          },
+          "taxPayerDayMaxHrs": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "applicableTaxes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Tax"
+            }
+          },
+          "certificateValidTill": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "qrUrl": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string"
+          },
+          "taxpayerDayEndNotificationHrs": {
+            "type": "integer",
+            "description": "How much time in hours before end of fiscal day device should show notification to salesperson.",
+            "format": "int32",
+            "example": 20
+          }
+        },
+        "additionalProperties": false
+      },
+      "GetStatusResponse": {
+        "required": [
+          "fiscalDayStatus",
+          "operationID"
+        ],
+        "type": "object",
+        "properties": {
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          },
+          "fiscalDayStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FiscalDayStatusEnum"
+              }
+            ]
+          },
+          "fiscalDayReconciliationMode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FiscalDayReconciliationModeEnum"
+              }
+            ],
+            "nullable": true
+          },
+          "fiscalDayServerSignature": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SignatureDataEx"
+              }
+            ],
+            "nullable": true
+          },
+          "fiscalDayClosed": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "fiscalDayCounter": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FiscalDayCounterDto"
+            },
+            "nullable": true
+          },
+          "lastReceiptGlobalNo": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "lastFiscalDayNo": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "fiscalDayClosingErrorCode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FiscalDayProcessingErrorEnum"
+              }
+            ],
+            "nullable": true
+          },
+          "fiscalDayDocumentQuantities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FiscalDayDocumentQuantity"
+            },
+            "description": "List of fiscal day document quantities. This field is returned only when fiscalDayStatus is �FiscalDayClosed� and fiscalDayReconciliationMode is �Manual�. FiscalDayDocumentQuantity type description provided in FiscalDayDocumentQuantity table.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "InvoiceWithValidationError": {
+        "type": "object",
+        "properties": {
+          "receiptCounter": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "receiptGlobalNo": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "validationErrors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "IssueCertificateRequest": {
+        "required": [
+          "certificateRequest"
+        ],
+        "type": "object",
+        "properties": {
+          "certificateRequest": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Certificate signing request (CSR) for which certificate will be generated (in PEM format).\r\ncertificateRequest requirements are specified in registerDevice endpoint description.",
+            "example": "-----BEGIN CERTIFICATE REQUEST-----\\nMIHYMIGAAgEAMB4xHDAaBgNVBAMME1pSQi1lVkZELTAwMDAwMDAwNDIwWTATBgcq\\nhkjOPQIBBggqhkjOPQMBBwNCAAT7v3DvY7pRg4lz2Z87wSMwSX27KwlpYnSRV6WU\\niPjpq2XsUAbg2lhUN7q3mlNJaUzqoKPmop5qURIpqUydXfapoAAwCgYIKoZIzj0E\\nAwIDRwAwRAIgLMEJQDh18bUE9waT2UXzP0+8FcGukpcIegMxd1A4JaQCIAZkzmEH\\ne0aaZ2jIcZArZo+rWzI4IwnSXtJqXLrpGUML\\n-----END CERTIFICATE REQUEST-----"
+          }
+        },
+        "additionalProperties": false
+      },
+      "IssueCertificateResponse": {
+        "required": [
+          "certificate",
+          "operationID"
+        ],
+        "type": "object",
+        "properties": {
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          },
+          "certificate": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ListRequestOrderEnum": {
+        "enum": [
+          "asc",
+          "desc"
+        ],
+        "type": "string"
+      },
+      "ListSubmittedFileEnum": {
+        "enum": [
+          "DeviceId",
+          "FileName",
+          "FileUploadDate",
+          "FileProcessingDate",
+          "FileProcessingStatus",
+          "FileProcessingError"
+        ],
+        "type": "string"
+      },
+      "LogicalOperatorEnum": {
+        "enum": [
+          "And",
+          "Or"
+        ],
+        "type": "string"
+      },
+      "MoneyTypeEnum": {
+        "enum": [
+          "Cash",
+          "Card",
+          "MobileWallet",
+          "Coupon",
+          "Credit",
+          "BankTransfer",
+          "Other"
+        ],
+        "type": "string"
+      },
+      "OpenDayRequest": {
+        "required": [
+          "fiscalDayOpened"
+        ],
+        "type": "object",
+        "properties": {
+          "fiscalDayNo": {
+            "type": "integer",
+            "description": "Fiscal day number assigned by device.\r\nIf this field is not sent, Fiscalisation Backend will generate fiscal day number and return to device.\r\nValidation rules:\r\n- fiscalDayNo must be equal to 1 for the first fiscal day of device\r\n- fiscalDayNo must be greater by one from the last closed fiscal day fiscalDayNo.",
+            "format": "int32",
+            "nullable": true,
+            "example": 101
+          },
+          "fiscalDayOpened": {
+            "type": "string",
+            "description": "Date and time when fiscal day was opened on a device. Time is provided in local time without time zone information.",
+            "format": "date-time",
+            "example": "2023-03-30T18:38:54"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OpenDayResponse": {
+        "required": [
+          "fiscalDayNo",
+          "operationID"
+        ],
+        "type": "object",
+        "properties": {
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          },
+          "fiscalDayNo": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PaymentDto": {
+        "required": [
+          "moneyTypeCode",
+          "paymentAmount"
+        ],
+        "type": "object",
+        "properties": {
+          "moneyTypeCode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MoneyTypeEnum"
+              }
+            ]
+          },
+          "paymentAmount": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PingResponse": {
+        "required": [
+          "operationID",
+          "reportingFrequency"
+        ],
+        "type": "object",
+        "properties": {
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          },
+          "reportingFrequency": {
+            "type": "integer",
+            "description": "Reporting frequency in minutes.",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "ReceiptDto": {
+        "required": [
+          "invoiceNo",
+          "receiptCounter",
+          "receiptCurrency",
+          "receiptDate",
+          "receiptDeviceSignature",
+          "receiptGlobalNo",
+          "receiptLines",
+          "receiptLinesTaxInclusive",
+          "receiptPayments",
+          "receiptTaxes",
+          "receiptTotal",
+          "receiptType"
+        ],
+        "type": "object",
+        "properties": {
+          "receiptType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReceiptTypeEnum"
+              }
+            ]
+          },
+          "receiptCurrency": {
+            "maxLength": 3,
+            "minLength": 0,
+            "type": "string"
+          },
+          "receiptCounter": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "receiptGlobalNo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "invoiceNo": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string"
+          },
+          "buyerData": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BuyerDto"
+              }
+            ],
+            "nullable": true
+          },
+          "receiptNotes": {
+            "maxLength": 500,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "receiptDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "creditDebitNote": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreditDebitNoteDto"
+              }
+            ],
+            "nullable": true
+          },
+          "receiptLinesTaxInclusive": {
+            "type": "boolean"
+          },
+          "receiptLines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReceiptLineDto"
+            }
+          },
+          "receiptTaxes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReceiptTaxDto"
+            }
+          },
+          "receiptPayments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentDto"
+            }
+          },
+          "receiptTotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "receiptPrintForm": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReceiptPrintFormEnum"
+              }
+            ],
+            "nullable": true
+          },
+          "receiptDeviceSignature": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SignatureDataDto"
+              }
+            ]
+          },
+          "userInfo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserInfoDto"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReceiptLineDto": {
+        "required": [
+          "receiptLineName",
+          "receiptLineNo",
+          "receiptLineQuantity",
+          "receiptLineTotal",
+          "receiptLineType",
+          "taxID"
+        ],
+        "type": "object",
+        "properties": {
+          "receiptLineType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReceiptLineTypeEnum"
+              }
+            ]
+          },
+          "receiptLineNo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "receiptLineHSCode": {
+            "maxLength": 8,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "receiptLineName": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": "string"
+          },
+          "receiptLinePrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "receiptLineQuantity": {
+            "type": "number",
+            "format": "double"
+          },
+          "receiptLineTotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "taxCode": {
+            "maxLength": 3,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "taxPercent": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "taxID": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReceiptLineTypeEnum": {
+        "enum": [
+          "Sale",
+          "Discount"
+        ],
+        "type": "string"
+      },
+      "ReceiptPrintFormEnum": {
+        "enum": [
+          "Receipt48",
+          "InvoiceA4"
+        ],
+        "type": "string"
+      },
+      "ReceiptTaxDto": {
+        "required": [
+          "salesAmountWithTax",
+          "taxAmount",
+          "taxID"
+        ],
+        "type": "object",
+        "properties": {
+          "taxCode": {
+            "maxLength": 3,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "taxPercent": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "taxID": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "taxAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "salesAmountWithTax": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReceiptTypeEnum": {
+        "enum": [
+          "FiscalInvoice",
+          "CreditNote",
+          "DebitNote"
+        ],
+        "type": "string"
+      },
+      "SignatureDataDto": {
+        "required": [
+          "hash",
+          "signature"
+        ],
+        "type": "object",
+        "properties": {
+          "hash": {
+            "maxLength": 32,
+            "type": "string",
+            "format": "byte"
+          },
+          "signature": {
+            "maxLength": 256,
+            "type": "string",
+            "format": "byte"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SignatureDataEx": {
+        "required": [
+          "certificateThumbprint",
+          "hash",
+          "signature"
+        ],
+        "type": "object",
+        "properties": {
+          "hash": {
+            "maxLength": 32,
+            "type": "string",
+            "format": "byte"
+          },
+          "signature": {
+            "maxLength": 256,
+            "type": "string",
+            "format": "byte"
+          },
+          "certificateThumbprint": {
+            "minLength": 1,
+            "type": "string",
+            "description": "SHA-1 Thumbprint of Certificate used for signature",
+            "example": "b785a0b4d8a734a55ba595d143b4cf72834cd88d"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SubmitFileResponse": {
+        "required": [
+          "operationID"
+        ],
+        "type": "object",
+        "properties": {
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SubmitReceiptRequest": {
+        "required": [
+          "receipt"
+        ],
+        "type": "object",
+        "properties": {
+          "receipt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReceiptDto"
+              }
+            ],
+            "description": "Receipt data"
+          }
+        },
+        "additionalProperties": false
+      },
+      "SubmitReceiptResponse": {
+        "required": [
+          "operationID",
+          "receiptID",
+          "receiptServerSignature",
+          "serverDate"
+        ],
+        "type": "object",
+        "properties": {
+          "operationID": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "Operation ID assigned by Fiscalisation Backend.",
+            "example": "0HMPH9AF0QKKE:00000005"
+          },
+          "receiptID": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "serverDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "receiptServerSignature": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SignatureDataEx"
+              }
+            ]
+          },
+          "validationErrors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SubmittedFileHeaderDto": {
+        "type": "object",
+        "properties": {
+          "fileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "fileUploadDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "deviceId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dayNo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fiscalDayOpenedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fileSequence": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fileProcessingDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "fileProcessingStatus": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FileProcessingStatusEnum"
+              }
+            ]
+          },
+          "fileProcessingError": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FileProcessingErrorEnum"
+              }
+            ],
+            "nullable": true
+          },
+          "hasFooter": {
+            "type": "boolean"
+          },
+          "operationId": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          },
+          "ipAddress": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          },
+          "invoiceWithValidationErrors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvoiceWithValidationError"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SubmittedFileHeaderDtoListResponse": {
+        "required": [
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubmittedFileHeaderDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Tax": {
+        "required": [
+          "taxID",
+          "taxName",
+          "validFrom"
+        ],
+        "type": "object",
+        "properties": {
+          "taxPercent": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "taxName": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string"
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "validTill": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "taxID": {
+            "type": "integer",
+            "description": "Tax ID uniquely identifying a tax. This tax ID must be used in submitting invoices.",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TaxPayerBranchesListEnum": {
+        "enum": [
+          "TaxPayerBranchId",
+          "TaxPayerName",
+          "BranchName",
+          "City",
+          "Province",
+          "RegionName",
+          "StationName",
+          "District",
+          "Address"
+        ],
+        "type": "string"
+      },
+      "UserInfoDto": {
+        "required": [
+          "userFullName",
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "userFullName": {
+            "maxLength": 250,
+            "minLength": 0,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ValidationError": {
+        "required": [
+          "validationErrorCode",
+          "validationErrorColor",
+          "validationErrorDescription"
+        ],
+        "type": "object",
+        "properties": {
+          "validationErrorCode": {
+            "maxLength": 10,
+            "minLength": 0,
+            "type": "string"
+          },
+          "validationErrorColor": {
+            "maxLength": 10,
+            "minLength": 0,
+            "type": "string"
+          },
+          "validationErrorDescription": {
+            "maxLength": 4000,
+            "minLength": 0,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "VerifyBuyerByTinRequest": {
+        "required": [
+          "tin"
+        ],
+        "type": "object",
+        "properties": {
+          "tin": {
+            "maxLength": 10,
+            "minLength": 10,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "VerifyBuyerByTinResponse": {
+        "required": [
+          "taxPayerName",
+          "tin",
+          "vatNumber"
+        ],
+        "type": "object",
+        "properties": {
+          "tin": {
+            "maxLength": 10,
+            "minLength": 1,
+            "type": "string"
+          },
+          "taxPayerName": {
+            "maxLength": 250,
+            "minLength": 1,
+            "type": "string"
+          },
+          "vatNumber": {
+            "maxLength": 9,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Device",
+      "description": "All methods except closeDay are synchronous. closeDay method returns response about accepted request synchronously, however processing of information is done asynchronously.\r\nFiscal Device Gateway uses mutual TLS authentication (https://en.wikipedia.org/wiki/Mutual_authentication) to authenticate device using device certificate. Device certificate is validated against issuing certificate to allow or deny access to API endpoints.\r\nAfter authentication provided device certificate is checked against issued certificate (see registerDevice and issueCertificate methods for device certificate issuing) to check if the device certificate was issued to calling device (by method parameter deviceId) and the device certificate was not revoked"
+    },
+    {
+      "name": "DeviceInformation",
+      "description": "DeviceInformation endpoints for fiscal devices."
+    }
+  ]
+}
