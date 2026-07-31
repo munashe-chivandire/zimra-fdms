@@ -31,6 +31,29 @@ npm install zimra-fdms
 
 Node 18+. One runtime dependency (`@peculiar/x509`, for CSR generation).
 
+## CLI — fiscalise without writing code
+
+The package ships a `zimra-fdms` command. Fastest way to a first fiscalised
+receipt, and enough for ops work (checking device status, recovering a stuck
+fiscal day) without touching the SDK:
+
+```sh
+npx zimra-fdms register --device-id 12345 --serial MYPOS01 --activation-key AAAABBBB
+npx zimra-fdms config                       # taxpayer info + valid taxIds
+npx zimra-fdms day open
+npx zimra-fdms submit --sample > receipt.json   # edit to match your taxes
+npx zimra-fdms submit receipt.json          # prints receipt no + QR data
+npx zimra-fdms day close
+```
+
+Device identity, certificate and the fiscal-day hash chain live in a profile
+directory (default `./.zimra`, override with `--profile <dir>` or
+`ZIMRA_PROFILE`). Receipts chain correctly across separate invocations; if
+the day-state file is ever lost, `day close` recovers by signing the counters
+FDMS itself reports. `status`, `config` and `submit` take `--json` for
+scripting. **Keep `.zimra/` out of version control** — it contains the
+device private key.
+
 ## Quick start
 
 ### 1. One-time device registration
@@ -140,6 +163,7 @@ spec revision would silently break. Run them before every release.
 - `src/qr.ts` — verification QR data
 - `src/queue.ts` — offline receipt queue
 - `src/http.ts` — mTLS transport (zero-dependency, node:https)
+- `src/cli.ts` — the `zimra-fdms` CLI
 - `spec/` — ZIMRA's OpenAPI specs, fetched from the official test Swagger
 
 ## Test environment

@@ -36,7 +36,8 @@
     "test": "tsx --test test/*.test.ts",
     "test:e2e": "tsx scripts/e2e.ts",
     "register": "tsx scripts/register.ts",
-    "spec:drift": "tsx scripts/spec-drift.ts"
+    "spec:drift": "tsx scripts/spec-drift.ts",
+    "pretest": "npm run build"
   },
   "license": "MIT",
   "publishConfig": {
@@ -52,5 +53,8 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "bin": {
+    "zimra-fdms": "./dist/cli.js"
   }
 }

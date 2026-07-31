@@ -121,6 +121,13 @@ export interface FiscalDayCounter {
   fiscalCounterValue: number;
 }
 
+export interface FiscalDayDocumentQuantity {
+  receiptType: ReceiptType;
+  receiptCurrency: string;
+  receiptQuantity: number;
+  receiptTotalAmount: number;
+}
+
 export interface GetStatusResponse {
   operationID: string;
   fiscalDayStatus: FiscalDayStatus;
@@ -131,6 +138,8 @@ export interface GetStatusResponse {
   lastReceiptGlobalNo?: number | null;
   lastFiscalDayNo?: number | null;
   fiscalDayClosingErrorCode?: string | null;
+  /** Per spec: only present when the day is closed with Manual reconciliation. */
+  fiscalDayDocumentQuantities?: FiscalDayDocumentQuantity[] | null;
 }
 
 // ---------------------------------------------------------------------------

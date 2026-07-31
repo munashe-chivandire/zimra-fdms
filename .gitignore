@@ -27,3 +27,6 @@ Thumbs.db
 # logs & coverage
 *.log
 coverage/
+
+# CLI device profiles (contain private keys)
+.zimra/
