@@ -1,0 +1,56 @@
+name: FDMS spec drift
+
+# ZIMRA can change the FDMS API without telling anyone. This checks the live
+# Swagger specs (test + production) against the baseline in spec/ every day
+# and opens/updates a GitHub issue when something the SDK depends on changed.
+
+on:
+  schedule:
+    - cron: '0 4 * * *' # daily 06:00 CAT
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Check live specs against baseline
+        id: drift
+        shell: bash # explicit bash => pipefail, so tee doesn't mask the exit code
+        run: npx tsx scripts/spec-drift.ts 2>&1 | tee drift.out
+
+      - name: Open or update drift issue
+        if: failure() && steps.drift.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh label create spec-drift --color D93F0B \
+            --description "ZIMRA changed the FDMS API contract" --force
+          {
+            echo "The daily spec check found drift on a contract the SDK depends on."
+            echo
+            echo '```'
+            cat drift.out
+            echo '```'
+            echo
+            echo "Once handled, refresh the baseline with \`npm run spec:drift -- --update\` and close this."
+          } > body.md
+          existing="$(gh issue list --label spec-drift --state open --json number --jq '.[0].number')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file body.md
+          else
+            gh issue create --title "ZIMRA FDMS spec drift detected" \
+              --label spec-drift --body-file body.md
+          fi

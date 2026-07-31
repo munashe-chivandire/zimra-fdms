@@ -35,7 +35,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "tsx --test test/*.test.ts",
     "test:e2e": "tsx scripts/e2e.ts",
-    "register": "tsx scripts/register.ts"
+    "register": "tsx scripts/register.ts",
+    "spec:drift": "tsx scripts/spec-drift.ts"
   },
   "license": "MIT",
   "publishConfig": {
