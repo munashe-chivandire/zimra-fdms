@@ -55,6 +55,6 @@
     "node": ">=18"
   },
   "bin": {
-    "zimra-fdms": "./dist/cli.js"
+    "zimra-fdms": "dist/cli.js"
   }
 }
