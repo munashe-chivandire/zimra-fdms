@@ -116,6 +116,39 @@ await queue.submitOrEnqueue(receiptInput); // queues on network failure
 await queue.flush();                       // FIFO retry when back online
 ```
 
+**Custom Storage**
+
+If you fiscalizing for multiple tenants or you just want to persist all pending receipts then you can implement the `QueueStorage` interface, create an object and pass it into `OfflineReceiptQueue` and the SDK handles the rest:
+
+```ts
+import { QueueStorage, ReceiptInput, OfflineReceiptQueue } from "zimra-fdms";
+
+export class CustomQueueStorage implements QueueStorage {
+
+  constructor(
+    private readonly tenantId: string
+  ) {}
+
+  async load(): Promise<ReceiptInput[]> {
+    let items = await loadItemsFromDB(this.tenantId);
+    return items;
+  }
+
+  async save(pending: ReceiptInput[]): Promise<void> {
+     await saveItemsToDB(this.tenantId, pending);
+  }
+}
+
+const customStorage = new CustomQueueStorage("<tenant id>")
+
+
+const queue = new OfflineReceiptQueue(device, customStorage);
+await queue.submitOrEnqueue(receiptInput); // queues on network failure
+await queue.flush();                       // FIFO retry when back online
+```
+
+
+
 ### 4. Certificate renewal
 
 ```ts
