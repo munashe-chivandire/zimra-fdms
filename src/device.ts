@@ -58,6 +58,8 @@ export interface FiscalDayState {
   receiptCounter: number;
   receiptGlobalNo: number;
   previousReceiptHash?: string;
+  /** fdmsDateTime of the last submitted receipt — FDMS requires strictly increasing receiptDates (RCPT030). */
+  previousReceiptDate?: string;
   counters: FiscalDayCounter[];
 }
 
@@ -226,7 +228,18 @@ export class FiscalDevice {
     const s = this.requireDay();
     const receiptType = input.receiptType ?? "FiscalInvoice";
     const inclusive = input.linesTaxInclusive ?? true;
-    const date = input.receiptDate ?? new Date();
+    let date = input.receiptDate ?? new Date();
+    // FDMS rejects a receiptDate that is not strictly greater than the previous
+    // receipt's (RCPT030, Red), and the format only resolves to whole seconds —
+    // so back-to-back receipts in the same second must be nudged forward.
+    // Only auto-generated dates are nudged; an explicit receiptDate is trusted.
+    if (
+      input.receiptDate === undefined &&
+      s.previousReceiptDate &&
+      fdmsDateTime(date) <= s.previousReceiptDate
+    ) {
+      date = new Date(new Date(s.previousReceiptDate).getTime() + 1000);
+    }
 
     const lines: ReceiptLine[] = input.lines.map((l, i) => ({
       receiptLineType: "Sale",
@@ -299,6 +312,7 @@ export class FiscalDevice {
     s.receiptCounter += 1;
     s.receiptGlobalNo += 1;
     s.previousReceiptHash = signature.hash;
+    s.previousReceiptDate = fdmsDateTime(date);
     accumulateCounters(s.counters, receipt);
 
     return {

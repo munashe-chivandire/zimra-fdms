@@ -54,6 +54,24 @@ FDMS itself reports. `status`, `config` and `submit` take `--json` for
 scripting. **Keep `.zimra/` out of version control** — it contains the
 device private key.
 
+## MCP server — fiscalise from an agent
+
+The same binary runs an MCP server (spec revision 2026-07-28, with fallback
+for 2025-era clients), so Claude Code or any MCP client can register devices,
+open/close fiscal days and submit receipts:
+
+```sh
+claude mcp add zimra-fdms -- npx zimra-fdms mcp
+```
+
+Tools: `register_device`, `get_status`, `ping`, `get_config`,
+`open_fiscal_day`, `close_fiscal_day`, `submit_receipt`, `sample_receipt`.
+They operate on the same profile directory as the CLI (`--profile <dir>`,
+`ZIMRA_PROFILE`, or `./.zimra` — and every tool also takes an optional
+`profile` argument per call), so agent and terminal are interchangeable
+against one device: the hash chain and day counters live on disk, not in the
+session.
+
 ## Quick start
 
 ### 1. One-time device registration
@@ -201,6 +219,8 @@ spec revision would silently break. Run them before every release.
 - `src/queue.ts` — offline receipt queue
 - `src/http.ts` — mTLS transport (zero-dependency, node:https)
 - `src/cli.ts` — the `zimra-fdms` CLI
+- `src/mcp.ts` — the MCP server (`zimra-fdms mcp`)
+- `src/profile.ts` — profile directory + day-state persistence (shared by CLI and MCP)
 - `spec/` — ZIMRA's OpenAPI specs, fetched from the official test Swagger
 
 ## Test environment

@@ -19,115 +19,33 @@
  */
 
 import { parseArgs } from "node:util";
-import {
-  chmodSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
-import { join, resolve } from "node:path";
-import { FiscalDevice, type FiscalDayState, type ReceiptInput } from "./device.js";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { type ReceiptInput } from "./device.js";
 import { registerDevice } from "./registration.js";
-import { FdmsHttpClient } from "./http.js";
 import {
-  fiscalDaySigningString,
-  signCanonicalString,
-  toCents,
-} from "./signing.js";
-import {
-  FdmsApiError,
-  type DeviceIdentity,
-  type FdmsEnvironment,
-  type GetStatusResponse,
-} from "./types.js";
-
-// ---------------------------------------------------------------------------
-// Profile
-// ---------------------------------------------------------------------------
-
-interface Profile {
-  dir: string;
-  device: DeviceIdentity & { environment: FdmsEnvironment };
-  certificatePem: string;
-  privateKeyPem: string;
-}
-
-function profileDir(flag?: string): string {
-  return resolve(flag ?? process.env.ZIMRA_PROFILE ?? ".zimra");
-}
+  ProfileError,
+  clearDayState,
+  closeFromServerCounters,
+  dayStatePath,
+  fiscalDeviceFrom,
+  loadDayState,
+  loadProfile as loadProfileOrThrow,
+  pollDayClosed,
+  profileDir,
+  saveDayState,
+  writeProfile,
+  type Profile,
+} from "./profile.js";
+import { FdmsApiError, type DeviceIdentity, type FdmsEnvironment } from "./types.js";
 
 function loadProfile(flag?: string): Profile {
-  const dir = profileDir(flag);
-  const devicePath = join(dir, "device.json");
-  if (!existsSync(devicePath)) {
-    fail(
-      `No device profile at ${devicePath}.\n` +
-        `Run \`zimra-fdms register\` first, or point --profile (or ZIMRA_PROFILE) at an existing profile directory.`,
-    );
+  try {
+    return loadProfileOrThrow(flag);
+  } catch (err) {
+    if (err instanceof ProfileError) fail(err.message);
+    throw err;
   }
-  const device = JSON.parse(readFileSync(devicePath, "utf-8"));
-  for (const k of ["deviceId", "serialNumber", "modelName", "modelVersion", "environment"]) {
-    if (device[k] === undefined) fail(`${devicePath} is missing "${k}".`);
-  }
-  return {
-    dir,
-    device,
-    certificatePem: readProfileFile(dir, "device-certificate.pem"),
-    privateKeyPem: readProfileFile(dir, "device-private-key.pem"),
-  };
-}
-
-function readProfileFile(dir: string, name: string): string {
-  const p = join(dir, name);
-  if (!existsSync(p)) fail(`Missing ${p} — the profile is incomplete. Re-run \`zimra-fdms register\`.`);
-  return readFileSync(p, "utf-8");
-}
-
-function fiscalDeviceFrom(p: Profile): FiscalDevice {
-  return new FiscalDevice(
-    p.device,
-    { certificatePem: p.certificatePem, privateKeyPem: p.privateKeyPem },
-    { environment: p.device.environment },
-  );
-}
-
-// -- day state --------------------------------------------------------------
-
-interface PersistedDayState {
-  deviceId: number;
-  savedAt: string;
-  state: FiscalDayState;
-}
-
-function dayStatePath(dir: string): string {
-  return join(dir, "day-state.json");
-}
-
-function loadDayState(p: Profile): FiscalDayState | undefined {
-  const path = dayStatePath(p.dir);
-  if (!existsSync(path)) return undefined;
-  const persisted: PersistedDayState = JSON.parse(readFileSync(path, "utf-8"));
-  if (persisted.deviceId !== p.device.deviceId) {
-    fail(
-      `${path} belongs to device ${persisted.deviceId}, but this profile is device ${p.device.deviceId}. Delete the stale file to continue.`,
-    );
-  }
-  return persisted.state;
-}
-
-function saveDayState(p: Profile, state: FiscalDayState): void {
-  const persisted: PersistedDayState = {
-    deviceId: p.device.deviceId,
-    savedAt: new Date().toISOString(),
-    state,
-  };
-  writeFileSync(dayStatePath(p.dir), `${JSON.stringify(persisted, null, 2)}\n`);
-}
-
-function clearDayState(p: Profile): void {
-  rmSync(dayStatePath(p.dir), { force: true });
 }
 
 // ---------------------------------------------------------------------------
@@ -170,6 +88,7 @@ Commands:
   day open     Open a fiscal day
   day close    Close the fiscal day (recovers from server counters if needed)
   submit       Submit a receipt from a JSON file (see: submit --sample)
+  mcp          Run the MCP server over stdio (for Claude Code and other agents)
 
 Global options:
   --profile <dir>   Profile directory (default ./.zimra, env ZIMRA_PROFILE)
@@ -269,16 +188,12 @@ Device ID, serial and activation key come from the FDMS taxpayer portal.`);
   console.log(`Registering device ${deviceId} (${device.serialNumber}) against FDMS ${environment}...`);
   try {
     const result = await registerDevice(device, activationKey, { environment });
-    mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, "device.json"), `${JSON.stringify({ ...device, environment }, null, 2)}\n`);
-    writeFileSync(certPath, result.certificatePem);
-    const keyPath = join(dir, "device-private-key.pem");
-    writeFileSync(keyPath, result.keys.privateKeyPem);
-    try {
-      chmodSync(keyPath, 0o600); // no-op on Windows, meaningful elsewhere
-    } catch {
-      /* best effort */
-    }
+    const { keyPath } = writeProfile(
+      dir,
+      { ...device, environment },
+      result.certificatePem,
+      result.keys.privateKeyPem,
+    );
     console.log(`OK — certificate issued (operationID ${result.operationId}).`);
     console.log(`Profile written to ${dir}`);
     console.log(`Keep ${keyPath} secret — it signs your receipts.`);
@@ -432,14 +347,19 @@ to signing the counters FDMS itself reports — same math, server's numbers.`);
       device.restoreState(local);
       await device.closeDay();
     } else {
-      const already = await closeFromServerCounters(p);
-      if (already) {
+      const res = await closeFromServerCounters(p);
+      if (res.alreadyClosed) {
+        console.log("Fiscal day is already closed.");
         clearDayState(p);
         return;
       }
+      console.log(
+        `No local day state — closing day ${res.fiscalDayNo} from server counters (${res.counterCount} counter(s), ${res.receiptCounter} receipt(s)).`,
+      );
     }
     clearDayState(p);
-    const outcome = await pollDayClosed(p);
+    const outcome = await pollDayClosed(p, () => process.stdout.write("."));
+    process.stdout.write("\n");
     if (outcome === "FiscalDayClosed") {
       console.log("Fiscal day closed.");
     } else {
@@ -450,75 +370,6 @@ to signing the counters FDMS itself reports — same math, server's numbers.`);
   } catch (err) {
     printApiError(err);
   }
-}
-
-/**
- * Stateless close: sign whatever counters the server reports. This is the
- * recovery path for a lost/absent day-state.json and mirrors what the server
- * expects bit-for-bit, since the numbers are its own.
- */
-async function closeFromServerCounters(p: Profile): Promise<boolean> {
-  const http = new FdmsHttpClient(
-    p.device,
-    { certificatePem: p.certificatePem, privateKeyPem: p.privateKeyPem },
-    { environment: p.device.environment },
-  );
-  const status = await http.request<GetStatusResponse>(
-    "GET",
-    http.devicePath("GetStatus"),
-  );
-  if (status.fiscalDayStatus === "FiscalDayClosed") {
-    console.log("Fiscal day is already closed.");
-    return true;
-  }
-  const fiscalDayNo = status.lastFiscalDayNo;
-  if (fiscalDayNo == null) fail("Server did not report a fiscal day number.");
-
-  const counters = (status.fiscalDayCounter ?? []).filter(
-    (c) => toCents(c.fiscalCounterValue) !== 0,
-  );
-  const receiptCounter = (status.fiscalDayDocumentQuantities ?? []).reduce(
-    (sum, q) => sum + (q.receiptQuantity ?? 0),
-    0,
-  );
-  // GetStatus doesn't report when the day was opened; the signing string needs
-  // the opening date. Same-day recovery (the realistic case) makes that today.
-  const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const fiscalDayDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-
-  console.log(
-    `No local day state — closing day ${fiscalDayNo} from server counters (${counters.length} counter(s), ${receiptCounter} receipt(s)).`,
-  );
-  const canonical = fiscalDaySigningString(
-    p.device.deviceId,
-    fiscalDayNo,
-    fiscalDayDate,
-    counters,
-  );
-  const signature = await signCanonicalString(p.privateKeyPem, canonical, "der");
-  await http.request("POST", http.devicePath("CloseDay"), {
-    fiscalDayNo,
-    fiscalDayCounters: counters,
-    fiscalDayDeviceSignature: signature,
-    receiptCounter,
-  });
-  return false;
-}
-
-/** CloseDay is asynchronous server-side; poll until it settles. */
-async function pollDayClosed(p: Profile): Promise<string> {
-  const device = fiscalDeviceFrom(p);
-  let last = "FiscalDayCloseInitiated";
-  for (let i = 0; i < 12; i++) {
-    await new Promise((r) => setTimeout(r, 3000));
-    const s = await device.getStatus();
-    last = s.fiscalDayStatus;
-    if (last === "FiscalDayClosed" || last === "FiscalDayCloseFailed") break;
-    process.stdout.write(".");
-  }
-  process.stdout.write("\n");
-  return last;
 }
 
 async function cmdSubmit(argv: string[]): Promise<void> {
@@ -642,6 +493,10 @@ async function main(argv: string[]): Promise<void> {
     }
     case "submit":
       return cmdSubmit(rest);
+    case "mcp": {
+      const { runMcpStdio } = await import("./mcp.js");
+      return runMcpStdio(rest);
+    }
     default:
       fail(`Unknown command "${cmd}". Run \`zimra-fdms --help\` for usage.`);
   }

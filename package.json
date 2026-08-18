@@ -1,6 +1,6 @@
 {
   "name": "zimra-fdms",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "TypeScript SDK for the ZIMRA Fiscalisation Data Management System (FDMS) — direct device registration, mTLS, receipt signing, fiscal days, offline queue and QR codes",
   "keywords": [
     "zimra",
@@ -12,7 +12,9 @@
     "receipt",
     "pos",
     "invoice",
-    "vfd"
+    "vfd",
+    "mcp",
+    "model-context-protocol"
   ],
   "author": "Shaun Chivandire",
   "repository": {
@@ -37,16 +39,20 @@
     "test:e2e": "tsx scripts/e2e.ts",
     "register": "tsx scripts/register.ts",
     "spec:drift": "tsx scripts/spec-drift.ts",
-    "pretest": "npm run build"
+    "pretest": "npm run build",
+    "test:e2e:mcp": "node scripts/mcp-e2e.mjs"
   },
   "license": "MIT",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@peculiar/x509": "^1.12.3"
+    "@modelcontextprotocol/server": "^2.0.0",
+    "@peculiar/x509": "^1.12.3",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@modelcontextprotocol/client": "^2.0.0",
     "@types/node": "^26.1.2",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0"
