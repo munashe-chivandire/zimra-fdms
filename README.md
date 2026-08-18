@@ -116,6 +116,43 @@ await queue.submitOrEnqueue(receiptInput); // queues on network failure
 await queue.flush();                       // FIFO retry when back online
 ```
 
+**Custom storage**
+
+The queue keeps pending receipts in memory by default. To persist them across
+restarts — or to keep a separate queue per tenant — implement `QueueStorage`
+and pass it as the second constructor argument:
+
+```ts
+import { OfflineReceiptQueue } from "zimra-fdms";
+import type { QueueStorage, ReceiptInput } from "zimra-fdms";
+
+export class CustomQueueStorage implements QueueStorage {
+  constructor(private readonly tenantId: string) {}
+
+  async load(): Promise<ReceiptInput[]> {
+    // Oldest first. Order by a persisted sequence column — not by whatever
+    // order the database happens to return rows in.
+    return loadItemsFromDB(this.tenantId);
+  }
+
+  async save(pending: ReceiptInput[]): Promise<void> {
+    // Replace the whole snapshot; an empty array means "clear the queue".
+    await replaceItemsInDB(this.tenantId, pending);
+  }
+}
+
+const queue = new OfflineReceiptQueue(
+  device,
+  new CustomQueueStorage("<tenant id>"),
+);
+```
+
+Both rules matter after a crash. `flush()` calls `save()` with the remaining
+receipts after each successful submission, so an append-only implementation
+re-sends receipts that ZIMRA already accepted. And receipts are numbered and
+hash-chained at flush time, not at sale time — so whatever order `load()`
+returns is the order they are fiscalized in.
+
 ### 4. Certificate renewal
 
 ```ts
