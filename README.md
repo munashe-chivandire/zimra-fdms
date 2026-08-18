@@ -116,38 +116,42 @@ await queue.submitOrEnqueue(receiptInput); // queues on network failure
 await queue.flush();                       // FIFO retry when back online
 ```
 
-**Custom Storage**
+**Custom storage**
 
-If you fiscalizing for multiple tenants or you just want to persist all pending receipts then you can implement the `QueueStorage` interface, create an object and pass it into `OfflineReceiptQueue` and the SDK handles the rest:
+The queue keeps pending receipts in memory by default. To persist them across
+restarts — or to keep a separate queue per tenant — implement `QueueStorage`
+and pass it as the second constructor argument:
 
 ```ts
-import { QueueStorage, ReceiptInput, OfflineReceiptQueue } from "zimra-fdms";
+import { OfflineReceiptQueue } from "zimra-fdms";
+import type { QueueStorage, ReceiptInput } from "zimra-fdms";
 
 export class CustomQueueStorage implements QueueStorage {
-
-  constructor(
-    private readonly tenantId: string
-  ) {}
+  constructor(private readonly tenantId: string) {}
 
   async load(): Promise<ReceiptInput[]> {
-    let items = await loadItemsFromDB(this.tenantId);
-    return items;
+    // Oldest first. Order by a persisted sequence column — not by whatever
+    // order the database happens to return rows in.
+    return loadItemsFromDB(this.tenantId);
   }
 
   async save(pending: ReceiptInput[]): Promise<void> {
-     await saveItemsToDB(this.tenantId, pending);
+    // Replace the whole snapshot; an empty array means "clear the queue".
+    await replaceItemsInDB(this.tenantId, pending);
   }
 }
 
-const customStorage = new CustomQueueStorage("<tenant id>")
-
-
-const queue = new OfflineReceiptQueue(device, customStorage);
-await queue.submitOrEnqueue(receiptInput); // queues on network failure
-await queue.flush();                       // FIFO retry when back online
+const queue = new OfflineReceiptQueue(
+  device,
+  new CustomQueueStorage("<tenant id>"),
+);
 ```
 
-
+Both rules matter after a crash. `flush()` calls `save()` with the remaining
+receipts after each successful submission, so an append-only implementation
+re-sends receipts that ZIMRA already accepted. And receipts are numbered and
+hash-chained at flush time, not at sale time — so whatever order `load()`
+returns is the order they are fiscalized in.
 
 ### 4. Certificate renewal
 
