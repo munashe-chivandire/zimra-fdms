@@ -16,7 +16,8 @@ Goko Consultancy Tax  clearance.pdf
 ZIMRA CHAT FABLE.txt
 
 # README images — live on the orphan `assets` branch, not in main
-assets/
+# (root only — docs/assets holds the website's CSS/JS and must be tracked)
+/assets/
 
 # editor / OS noise
 .vscode/

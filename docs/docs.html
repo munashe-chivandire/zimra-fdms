@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documentation — zimra-fdms</title>
+<meta name="description" content="Full documentation for zimra-fdms: installation, device registration, the fiscal day lifecycle, receipt signing, the offline queue, certificate renewal, the complete API reference and the zimra-fdms CLI.">
+<meta property="og:title" content="zimra-fdms documentation">
+<meta property="og:description" content="Guide, API reference and CLI for the open-source TypeScript SDK for ZIMRA FDMS.">
+<meta property="og:image" content="https://raw.githubusercontent.com/munashe-chivandire/zimra-fdms/assets/assets/logoDark.png">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<script>(function(){try{var t=localStorage.getItem('zf-theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',t)}catch(e){}})()</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/docs.css">
+</head>
+<body>
+
+<div id="progress"></div>
+<div class="mesh"><div class="orb orb-a"></div><div class="orb orb-b"></div><div class="orb orb-c"></div></div>
+<div class="grid-lines"></div>
+<div class="grain"></div>
+
+<header class="dochead">
+  <button class="dh-menu" id="dhmenu" type="button" aria-label="Contents"><i class="ph-light ph-list"></i></button>
+  <a class="dh-brand" href="/">
+    <img class="only-dark" src="img/mark.png" alt="">
+    <img class="only-light" src="img/mark-light.png" alt="">
+    zimra-<i>fdms</i>
+    <span class="dh-tag">docs</span>
+  </a>
+  <div class="dh-spacer"></div>
+  <button class="dh-search" id="spotopen" type="button" aria-label="Search the documentation">
+    <i class="ph-light ph-magnifying-glass"></i>
+    <span>Search the documentation</span>
+    <kbd id="spotkbd">Ctrl K</kbd>
+  </button>
+  <div class="dh-spacer"></div>
+  <div class="dh-links">
+    <a href="/">Home</a>
+    <a href="https://www.npmjs.com/package/zimra-fdms">npm</a>
+  </div>
+  <button class="tt" id="tt" type="button" aria-label="Toggle theme">
+    <i class="ph-light ph-moon i-moon"></i><i class="ph-light ph-sun i-sun"></i>
+  </button>
+  <a class="pillbtn" href="https://github.com/munashe-chivandire/zimra-fdms">
+    <i class="ph ph-github-logo"></i>GitHub
+    <span class="orb2"><i class="ph ph-arrow-up-right"></i></span></a>
+</header>
+
+<div class="sb-scrim" id="scrim"></div>
+
+<div class="doclayout" id="top">
+
+<!-- ============================ SIDEBAR ============================ -->
+<aside class="sidebar" id="sidebar">
+  <nav id="sbnav">
+    <div class="sb-group">
+      <h4>Getting started</h4>
+      <a href="#introduction">Introduction</a>
+      <a href="#installation">Installation</a>
+      <a href="#quick-start">Quick start</a>
+    </div>
+    <div class="sb-group">
+      <h4>Guide</h4>
+      <a href="#registration">Device registration</a>
+      <a href="#fiscal-day">Fiscal day lifecycle</a>
+      <a href="#receipts">Receipts &amp; signing</a>
+      <a href="#offline-queue">Offline queue</a>
+      <a href="#certificate-renewal">Certificate renewal</a>
+      <a href="#errors">Error handling</a>
+    </div>
+    <div class="sb-group">
+      <h4>API reference</h4>
+      <a href="#api-fiscaldevice">FiscalDevice</a>
+      <a href="#api-registration">registerDevice()</a>
+      <a href="#api-queue">OfflineReceiptQueue</a>
+      <a href="#api-signing">Signing utilities</a>
+      <a href="#api-crypto">Crypto, QR &amp; HTTP</a>
+      <a href="#api-types">Types &amp; enums</a>
+    </div>
+    <div class="sb-group">
+      <h4>CLI</h4>
+      <a href="#cli">Overview &amp; profile</a>
+      <a href="#cli-commands">Command reference</a>
+    </div>
+    <div class="sb-group">
+      <h4>MCP server</h4>
+      <a href="#mcp">Overview &amp; setup</a>
+      <a href="#mcp-tools">Tool reference</a>
+    </div>
+    <div class="sb-group">
+      <h4>Notes</h4>
+      <a href="#gotchas">Spec gotchas</a>
+      <a href="#testing">Testing</a>
+      <a href="#environment">Test environment</a>
+    </div>
+  </nav>
+</aside>
+
+<!-- ============================ CONTENT ============================ -->
+<main class="content">
+
+<span class="kicker"><span class="dot"></span><b>docs</b><span class="sep">—</span>v0.3.0
+  <span class="sep">·</span>MIT<span class="sep">·</span>Node 18+</span>
+<h1>Documentation</h1>
+<p class="lead">Everything needed to fiscalise with <code>zimra-fdms</code> — from a first registered
+device to a signed fiscal-day close. Every behaviour described here is the behaviour of the shipped
+code, verified live against ZIMRA's FDMS test environment.</p>
+
+<!-- ---------------- Introduction ---------------- -->
+<section class="doc-sec" id="introduction">
+  <h2>Introduction<a class="anchor" href="#introduction">#</a></h2>
+  <p><code>zimra-fdms</code> is an open-source TypeScript SDK that talks <b>directly</b> to ZIMRA's
+  Fiscalisation Data Management System using your own device certificates. There is no middleman
+  service in the path, no per-receipt fee, and no vendor between your POS and the tax authority.</p>
+
+  <h3>What it handles for you</h3>
+  <ul>
+    <li><b>Device registration</b> — ECDSA P-256 key generation, a CSR in ZIMRA's exact subject format, and certificate issuance.</li>
+    <li><b>mTLS transport</b> — mutual TLS over plain <code>node:https</code>, with typed errors.</li>
+    <li><b>Receipt signing</b> — the canonical signing string, SHA-256 hash, DER-encoded ECDSA signature and the receipt-to-receipt hash chain.</li>
+    <li><b>Fiscal day lifecycle</b> — open, counter accumulation across receipts, and a correctly sorted, signed close.</li>
+    <li><b>Offline queue</b> — FIFO queueing and retry inside FDMS's 72-hour grace window.</li>
+    <li><b>Verification QR data</b> — the exact string ZIMRA's validation portal expects.</li>
+  </ul>
+
+  <h3>What it does not handle</h3>
+  <p>The SDK solves the <em>integration</em>. Going live still requires the human path: ZIMRA
+  onboarding, sample-document approval, live device registration, ITF263 and ongoing compliance.
+  See <a href="/#going-to-production">going to production</a> on the home page.</p>
+
+  <div class="note-box">
+    <i class="ph-light ph-info"></i>
+    <div>
+      <p><b>Community project.</b> Not affiliated with or endorsed by the Zimbabwe Revenue Authority.
+      "ZIMRA" and "FDMS" refer to the authority's public fiscalisation programme and API.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ---------------- Installation ---------------- -->
+<section class="doc-sec" id="installation">
+  <h2>Installation<a class="anchor" href="#installation">#</a></h2>
+
+  <div class="codewin nolines" data-lang="sh" data-file="terminal">
+<pre><code>npm install zimra-fdms</code></pre>
+  </div>
+
+  <p>Node 18 or newer. The package has exactly one runtime dependency —
+  <code>@peculiar/x509</code>, used to build the certificate signing request. Everything else runs
+  on Node built-ins (<code>node:https</code>, <code>node:crypto</code>).</p>
+
+  <h3>Module format</h3>
+  <p>The package is <b>ESM-only</b> (<code>"type": "module"</code>). In a CommonJS project, reach it
+  through a dynamic import:</p>
+
+  <div class="codewin" data-lang="ts" data-file="cjs-consumer.cts">
+<pre><code>const { FiscalDevice } = await import("zimra-fdms");</code></pre>
+  </div>
+
+  <h3>What you need before writing code</h3>
+  <p>Three values, issued when the device is added on the FDMS portal:</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Value</th><th>Example</th><th>Where it comes from</th></tr></thead>
+      <tbody>
+        <tr><td><code>deviceId</code></td><td><code>12345</code></td><td>FDMS portal, on device creation</td></tr>
+        <tr><td><code>serialNumber</code></td><td><code>MYPOS001</code></td><td>Chosen when registering the device</td></tr>
+        <tr><td><code>activationKey</code></td><td><code>AAAABBBB</code></td><td>8-character key from the portal, single use</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>For the test environment these are self-service and take minutes:
+  <a href="https://fdmsops.zimra.co.zw/fdms-public/add-device">fdmsops.zimra.co.zw/fdms-public/add-device</a>.</p>
+</section>
+
+<!-- ---------------- Quick start ---------------- -->
+<section class="doc-sec" id="quick-start">
+  <h2>Quick start<a class="anchor" href="#quick-start">#</a></h2>
+  <p>A complete fiscal day: register once, then open, sell, close.</p>
+
+  <h3>1 · Register the device (once)</h3>
+  <div class="codewin" data-lang="ts" data-file="register.ts">
+<pre><code>import { registerDevice } from "zimra-fdms";
+
+const { keys, certificatePem } = await registerDevice(
+  { deviceId: 12345, serialNumber: "MYPOS001", modelName: "Server", modelVersion: "v1" },
+  "ACTIVKEY",
+  { environment: "test" },
+);
+
+// Persist these two securely — together they are the device identity.
+await saveSecret("device-private-key.pem", keys.privateKeyPem);
+await saveSecret("device-certificate.pem", certificatePem);</code></pre>
+  </div>
+
+  <h3>2 · Run the fiscal day</h3>
+  <div class="codewin" data-lang="ts" data-file="pos.ts" data-hl="12-19">
+<pre><code>import { FiscalDevice } from "zimra-fdms";
+
+const device = new FiscalDevice(
+  { deviceId: 12345, serialNumber: "MYPOS001", modelName: "Server", modelVersion: "v1" },
+  { certificatePem, privateKeyPem },
+  { environment: "test" },
+);
+
+await device.getConfig();   // tax table, qrUrl, operating mode
+await device.openDay();
+
+const sale = await device.submitReceipt({
+  currency: "USD",
+  invoiceNo: "INV-0001",
+  lines: [
+    { name: "Consulting", price: 115, quantity: 1, taxId: 513, taxPercent: 0 },
+  ],
+  payments: [{ moneyType: "Cash", amount: 115 }],
+});
+
+console.log(sale.qrData);   // encode this into the printed QR code
+
+await device.closeDay();    // signed counters, computed for you</code></pre>
+  </div>
+
+  <div class="note-box warn">
+    <i class="ph-light ph-warning"></i>
+    <div>
+      <p><b>Persist the fiscal day state.</b> Call <code>device.getState()</code> after every receipt
+      and <code>device.restoreState()</code> on startup. The receipt hash chain and counters must
+      survive process restarts — see <a href="#fiscal-day">fiscal day lifecycle</a>.</p>
+    </div>
+  </div>
+
+  <p>Prefer not to write code yet? The same cycle runs from the terminal — see the
+  <a href="#cli">CLI</a>.</p>
+</section>
+
+<!-- ---------------- Device registration ---------------- -->
+<section class="doc-sec" id="registration">
+  <h2>Device registration<a class="anchor" href="#registration">#</a></h2>
+  <p>Registration is the bootstrap step, and the only call that runs <b>without</b> a client
+  certificate — the activation key is what authenticates you. It happens once per device.</p>
+
+  <h3>What the call actually does</h3>
+  <ol>
+    <li>Generates an ECDSA P-256 key pair with WebCrypto.</li>
+    <li>Builds a CSR whose subject CN is <code>ZIMRA-{serial}-{deviceId padded to 10 digits}</code>.</li>
+    <li>POSTs it with the activation key to <code>/Public/v1/{deviceId}/RegisterDevice</code>.</li>
+    <li>Returns the issued PEM certificate alongside the generated keys.</li>
+  </ol>
+
+  <div class="codewin" data-lang="ts" data-file="register.ts">
+<pre><code>import { registerDevice, deviceCommonName } from "zimra-fdms";
+
+const device = {
+  deviceId: 12345,
+  serialNumber: "MYPOS001",
+  modelName: "Server",
+  modelVersion: "v1",
+};
+
+deviceCommonName(device.serialNumber, device.deviceId);
+// "ZIMRA-MYPOS001-0000012345"
+
+const { keys, certificatePem, operationId } = await registerDevice(
+  device,
+  "ACTIVKEY",
+  { environment: "test" },
+);</code></pre>
+  </div>
+
+  <h3>What to store, and how</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Value</th><th>Sensitivity</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><code>keys.privateKeyPem</code></td><td>Secret</td><td>PKCS#8 PEM. Never leaves the device. Losing it means re-registering.</td></tr>
+        <tr><td><code>certificatePem</code></td><td>Not secret</td><td>The issued device certificate. Pairs with the private key for mTLS.</td></tr>
+        <tr><td><code>keys.publicKeyPem</code></td><td>Not secret</td><td>SPKI PEM. Kept for convenience; FDMS does not need it again.</td></tr>
+        <tr><td><code>keys.csrPem</code></td><td>Not secret</td><td>The CSR that was submitted. Useful for support tickets.</td></tr>
+        <tr><td><code>operationId</code></td><td>Not secret</td><td>ZIMRA's request correlation id — quote it when reporting a problem.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note-box warn">
+    <i class="ph-light ph-key"></i>
+    <div>
+      <p><b>The private key is the device.</b> Anyone holding it can issue fiscal receipts as you.
+      Store it with the same care as a payment credential — file permissions <code>0600</code> at
+      minimum, a secret manager in production, and never in version control.</p>
+    </div>
+  </div>
+
+  <h3>Environments</h3>
+  <p>Pass <code>environment: "test"</code> (the default) or <code>"production"</code>. They resolve to
+  different hosts and are entirely separate worlds — a test device and its certificate are
+  meaningless in production.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Environment</th><th>Base URL</th></tr></thead>
+      <tbody>
+        <tr><td><code>test</code></td><td><code>https://fdmsapitest.zimra.co.zw</code></td></tr>
+        <tr><td><code>production</code></td><td><code>https://fdmsapi.zimra.co.zw</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Activation keys are single use</h3>
+  <p>Once a device is registered, its activation key is spent. Re-registering the same device
+  requires a fresh key from the portal — which is why the CLI refuses to overwrite an existing
+  profile without <code>--force</code>.</p>
+</section>
+
+<!-- ---------------- Fiscal day ---------------- -->
+<section class="doc-sec" id="fiscal-day">
+  <h2>Fiscal day lifecycle<a class="anchor" href="#fiscal-day">#</a></h2>
+  <p>FDMS is stateful. Receipts only exist inside an open fiscal day, they must be numbered
+  consecutively, and the day closes with a signature over accumulated counters. The SDK owns that
+  state for you in a <code>FiscalDayState</code> object.</p>
+
+  <h3>The states</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>fiscalDayStatus</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>FiscalDayClosed</code></td><td>No day is open. The only state from which <code>openDay()</code> succeeds.</td></tr>
+        <tr><td><code>FiscalDayOpened</code></td><td>Receipts can be submitted.</td></tr>
+        <tr><td><code>FiscalDayCloseInitiated</code></td><td>Close accepted, still settling server-side. Poll until it resolves.</td></tr>
+        <tr><td><code>FiscalDayCloseFailed</code></td><td>The close was rejected — usually a counter or signature mismatch.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Opening</h3>
+  <div class="codewin" data-lang="ts" data-file="day.ts">
+<pre><code>await device.openDay();              // FDMS assigns the next fiscal day number
+await device.openDay(41);            // or request a specific one
+await device.openDay(41, openedAt);  // and control the opening timestamp</code></pre>
+  </div>
+  <p><code>openDay()</code> calls <code>getStatus()</code> first and throws if the device is not in
+  <code>FiscalDayClosed</code>, so a double-open fails locally instead of costing an API round trip.
+  It also seeds <code>receiptGlobalNo</code> from the server's <code>lastReceiptGlobalNo</code>, which
+  is what keeps global numbering continuous across days.</p>
+
+  <h3>Persisting state between processes</h3>
+  <p>A POS process restarts; the hash chain must not. Persist after every receipt:</p>
+
+  <div class="codewin" data-lang="ts" data-file="state.ts" data-hl="4-5">
+<pre><code>const sale = await device.submitReceipt(input);
+
+// Commit the new chain position in the same transaction as the sale.
+const state = device.getState();
+await db.saveFiscalDayState(state);</code></pre>
+  </div>
+
+  <p>And restore on startup:</p>
+
+  <div class="codewin" data-lang="ts" data-file="startup.ts">
+<pre><code>const saved = await db.loadFiscalDayState();
+if (saved) device.restoreState(saved);</code></pre>
+  </div>
+
+  <p><code>getState()</code> returns a deep clone, and <code>restoreState()</code> clones on the way
+  in — so the object you persist is a snapshot, not a live reference into the device.</p>
+
+  <h4>What the state contains</h4>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Field</th><th>Type</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>fiscalDayNo</code></td><td><code>number</code></td><td>The open day, as assigned by FDMS.</td></tr>
+        <tr><td><code>fiscalDayDate</code></td><td><code>string</code></td><td><code>YYYY-MM-DD</code>, part of the day-close signing string.</td></tr>
+        <tr><td><code>receiptCounter</code></td><td><code>number</code></td><td>Receipts issued in this day, starting at 1.</td></tr>
+        <tr><td><code>receiptGlobalNo</code></td><td><code>number</code></td><td>Receipts issued over the device lifetime.</td></tr>
+        <tr><td><code>previousReceiptHash</code></td><td><code>string?</code></td><td>The hash chain link. Undefined for the first receipt of a day.</td></tr>
+        <tr><td><code>counters</code></td><td><code>FiscalDayCounter[]</code></td><td>Running totals by tax, money type and currency.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Closing</h3>
+  <p><code>closeDay()</code> builds the canonical fiscal-day string from the accumulated counters,
+  signs it, drops zero-value counters, submits, and clears local state.</p>
+
+  <div class="codewin" data-lang="ts" data-file="day.ts">
+<pre><code>await device.closeDay();</code></pre>
+  </div>
+
+  <div class="note-box">
+    <i class="ph-light ph-clock-countdown"></i>
+    <div>
+      <p><b>CloseDay settles asynchronously.</b> A successful response means <em>accepted</em>, not
+      <em>closed</em>. Poll <code>getStatus()</code> until <code>fiscalDayStatus</code> reaches
+      <code>FiscalDayClosed</code> or <code>FiscalDayCloseFailed</code> before opening the next day.</p>
+    </div>
+  </div>
+
+  <div class="codewin" data-lang="ts" data-file="close.ts">
+<pre><code>await device.closeDay();
+
+let status = "FiscalDayCloseInitiated";
+for (let i = 0; i &lt; 12 &amp;&amp; status === "FiscalDayCloseInitiated"; i++) {
+  await new Promise((r) =&gt; setTimeout(r, 3000));
+  status = (await device.getStatus()).fiscalDayStatus;
+}
+
+if (status !== "FiscalDayClosed") {
+  throw new Error(`Fiscal day did not close cleanly: ${status}`);
+}</code></pre>
+  </div>
+
+  <h3>Recovering a lost day state</h3>
+  <p>If the persisted state is lost while a day is open, the day can still be closed: FDMS itself
+  reports the counters it has accumulated. Read <code>fiscalDayCounter</code> from
+  <code>getStatus()</code>, sign those, and submit. This is exactly what
+  <code>zimra-fdms day close</code> does when it finds no local state — see
+  <a href="#cli-commands">the CLI reference</a>.</p>
+</section>
+
+<!-- ---------------- Receipts ---------------- -->
+<section class="doc-sec" id="receipts">
+  <h2>Receipts &amp; signing<a class="anchor" href="#receipts">#</a></h2>
+  <p>One call builds, signs and submits a receipt. Everything FDMS validates — counters, totals in
+  cents, the tax summary, the canonical string, the DER signature, the hash chain — is derived from
+  the input you pass.</p>
+
+  <h3>Receipt input</h3>
+  <div class="codewin" data-lang="ts" data-file="sale.ts">
+<pre><code>const sale = await device.submitReceipt({
+  currency: "USD",
+  invoiceNo: "INV-0001",
+  lines: [
+    { name: "Bread", price: 2.5, quantity: 2, taxId: 1, taxPercent: 15, taxCode: "A" },
+    { name: "Milk",  price: 1.8, quantity: 1, taxId: 2, taxPercent: null },  // exempt
+  ],
+  payments: [{ moneyType: "Cash", amount: 6.8 }],
+});
+
+sale.receipt;    // the full signed Receipt sent to FDMS
+sale.response;   // receiptID, serverDate, server signature, validationErrors
+sale.qrData;     // string to encode in the printed QR code</code></pre>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><code>currency</code></td><td><code>string</code></td><td>—</td><td>ISO code, e.g. <code>"USD"</code>, <code>"ZWG"</code>.</td></tr>
+        <tr><td><code>invoiceNo</code></td><td><code>string</code></td><td>—</td><td>Your invoice number. Must be unique within the fiscal day.</td></tr>
+        <tr><td><code>lines</code></td><td><code>ReceiptLineInput[]</code></td><td>—</td><td>At least one line.</td></tr>
+        <tr><td><code>payments</code></td><td><code>{ moneyType, amount }[]</code></td><td>—</td><td>Must sum exactly to the receipt total.</td></tr>
+        <tr><td><code>receiptType</code></td><td><code>ReceiptType</code></td><td><code>"FiscalInvoice"</code></td><td>Or <code>"CreditNote"</code> / <code>"DebitNote"</code>.</td></tr>
+        <tr><td><code>linesTaxInclusive</code></td><td><code>boolean</code></td><td><code>true</code></td><td>Whether line prices already contain tax.</td></tr>
+        <tr><td><code>receiptDate</code></td><td><code>Date</code></td><td><code>new Date()</code></td><td>Device local time; serialised without a timezone.</td></tr>
+        <tr><td><code>notes</code></td><td><code>string</code></td><td><code>null</code></td><td>Free text printed on the receipt.</td></tr>
+        <tr><td><code>buyer</code></td><td><code>BuyerData</code></td><td><code>null</code></td><td>Required for a buyer to claim input VAT.</td></tr>
+        <tr><td><code>creditDebitNote</code></td><td><code>CreditDebitNote</code></td><td><code>null</code></td><td>Required for credit and debit notes.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>Line fields</h4>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><code>name</code></td><td><code>string</code></td><td>Printed description.</td></tr>
+        <tr><td><code>price</code></td><td><code>number</code></td><td>Unit price. Tax-inclusive unless <code>linesTaxInclusive</code> is <code>false</code>.</td></tr>
+        <tr><td><code>quantity</code></td><td><code>number</code></td><td>Line total is <code>price × quantity</code>, rounded to 2 dp.</td></tr>
+        <tr><td><code>taxId</code></td><td><code>number</code></td><td>Must be a valid id from <code>getConfig().applicableTaxes</code>.</td></tr>
+        <tr><td><code>taxPercent</code></td><td><code>number | null</code></td><td><code>null</code> or omitted marks the line exempt.</td></tr>
+        <tr><td><code>taxCode</code></td><td><code>string?</code></td><td>Optional letter code from the tax table.</td></tr>
+        <tr><td><code>hsCode</code></td><td><code>string?</code></td><td>Optional harmonised system code.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note-box warn">
+    <i class="ph-light ph-scan"></i>
+    <div>
+      <p><b><code>qrData</code> requires <code>getConfig()</code>.</b> The QR string is built from
+      <code>qrUrl</code>, which arrives with the device configuration. If you never call
+      <code>getConfig()</code>, receipts still submit and validate — but <code>sale.qrData</code> is
+      <code>undefined</code> and you have nothing to print. Call it once at startup.</p>
+    </div>
+  </div>
+
+  <h3>Tax handling</h3>
+  <p>Lines are grouped into a tax summary by <code>(taxId, taxPercent)</code> and sorted by
+  <code>taxID</code>. With tax-inclusive pricing the tax is extracted from the line total
+  (<code>total − total ÷ (1 + rate)</code>); with exclusive pricing it is added on top. Amounts are
+  rounded to 2 dp at each step, then converted to integer cents for signing.</p>
+
+  <p>Payments are checked against the computed total in cents — a mismatch throws before anything is
+  sent:</p>
+  <div class="codewin nolines" data-lang="sh" data-file="error">
+<pre><code>Error: Payments (6.79) do not equal receipt total (6.80)</code></pre>
+  </div>
+
+  <h3>Credit and debit notes</h3>
+  <p>A credit note reverses an earlier receipt and must point back at it. Its counters are
+  accumulated with a negative sign, which is what makes the day balance.</p>
+
+  <div class="codewin" data-lang="ts" data-file="credit-note.ts">
+<pre><code>await device.submitReceipt({
+  receiptType: "CreditNote",
+  currency: "USD",
+  invoiceNo: "CN-0001",
+  creditDebitNote: {
+    receiptID: original.response.receiptID,
+    deviceID: 12345,
+    receiptGlobalNo: original.receipt.receiptGlobalNo,
+    fiscalDayNo: 41,
+  },
+  lines: [{ name: "Consulting", price: 115, quantity: 1, taxId: 513, taxPercent: 0 }],
+  payments: [{ moneyType: "Cash", amount: 115 }],
+});</code></pre>
+  </div>
+
+  <h3>The canonical signing string</h3>
+  <p>This is the format FDMS verifies. Getting one separator wrong yields <code>RCPT010</code>, so
+  the SDK builds it for you — but it is worth knowing what is being signed:</p>
+
+  <div class="codewin nolines" data-lang="txt" data-file="receipt-signing-string">
+<pre><code>deviceID
++ RECEIPTTYPE          uppercase, e.g. FISCALINVOICE
++ CURRENCY             uppercase, e.g. USD
++ receiptGlobalNo
++ receiptDate          YYYY-MM-DDTHH:mm:ss, local, no timezone
++ receiptTotal         integer cents
++ taxes                sorted by taxID, each: percent "15.00" ("" if exempt)
+                       + taxAmount cents + salesAmountWithTax cents
++ previousReceiptHash  base64; omitted for the first receipt of the day</code></pre>
+  </div>
+
+  <p>The signature is <code>base64(ECDSA-P256-SHA256(canonical))</code> in <b>ASN.1 DER</b> encoding,
+  and <code>hash</code> is <code>base64(SHA-256(canonical))</code>. That hash becomes the next
+  receipt's <code>previousReceiptHash</code> — the chain.</p>
+
+  <div class="note-box">
+    <i class="ph-light ph-shield-check"></i>
+    <div>
+      <p><b>State commits only after acceptance.</b> Counters, the global number and the chain hash
+      advance only once FDMS has accepted the receipt. A rejected submission leaves the device state
+      untouched, so a retry is safe.</p>
+    </div>
+  </div>
+
+  <h3>Validation errors</h3>
+  <p>A receipt can be accepted and still carry warnings. <code>sale.response.validationErrors</code>
+  is an array of <code>{ validationErrorCode, validationErrorColor, validationErrorText }</code> —
+  surface these in your logs rather than discarding them, because they are what ZIMRA will ask about
+  later.</p>
+</section>
+
+<!-- ---------------- Offline queue ---------------- -->
+<section class="doc-sec" id="offline-queue">
+  <h2>Offline queue<a class="anchor" href="#offline-queue">#</a></h2>
+  <p>FDMS allows sales to continue while the connection is down, with a <b>72-hour</b> grace window to
+  submit them. <code>OfflineReceiptQueue</code> wraps a device with that behaviour: submit if you
+  can, queue if you cannot, and drain in order when the link returns.</p>
+
+  <div class="codewin" data-lang="ts" data-file="offline.ts">
+<pre><code>import { OfflineReceiptQueue } from "zimra-fdms";
+
+const queue = new OfflineReceiptQueue(device);
+
+// Returns the submitted receipt, or undefined if it was queued instead.
+const sale = await queue.submitOrEnqueue(receiptInput);
+if (!sale) console.warn(`Offline — ${queue.size} receipt(s) pending`);
+
+// Later, when connectivity is back:
+const { submitted, remaining, error } = await queue.flush();</code></pre>
+  </div>
+
+  <h3>How it behaves</h3>
+  <ul>
+    <li><b>Ordering first.</b> <code>submitOrEnqueue()</code> drains anything already queued before
+    attempting the new sale. If the drain does not finish, the new receipt joins the back of the
+    queue rather than jumping ahead.</li>
+    <li><b>Only network failures queue.</b> <code>ECONNREFUSED</code>, <code>ECONNRESET</code>,
+    <code>ENOTFOUND</code>, <code>ETIMEDOUT</code>, <code>EAI_AGAIN</code> and timeouts are treated as
+    offline. A rejection from FDMS — a bad tax id, a duplicate invoice number — throws, because
+    queueing it would just fail again later.</li>
+    <li><b>Flush stops at the first failure.</b> The chain is sequential; skipping a receipt would
+    break it. <code>flush()</code> returns what it managed to submit, how many remain, and the error
+    that stopped it.</li>
+  </ul>
+
+  <div class="note-box warn">
+    <i class="ph-light ph-arrows-in-line-vertical"></i>
+    <div>
+      <p><b>Receipts are numbered and hash-chained at flush time, not at sale time.</b> The queue
+      holds unsigned <code>ReceiptInput</code> values; numbering and signing happen when
+      <code>flush()</code> submits them. So whatever order <code>load()</code> returns is the order
+      they are fiscalised in — and <code>receiptDate</code> is the moment of submission unless you
+      set it explicitly on the input.</p>
+      <p>If the receipt must carry the real time of sale, pass
+      <code>receiptDate: new Date()</code> when you enqueue it.</p>
+    </div>
+  </div>
+
+  <h3>Persistent storage</h3>
+  <p>The default <code>MemoryQueueStorage</code> loses pending receipts on restart — which is exactly
+  when you need them. Implement <code>QueueStorage</code> to persist them, or to keep one queue per
+  tenant:</p>
+
+  <div class="codewin" data-lang="ts" data-file="queue-storage.ts">
+<pre><code>import { OfflineReceiptQueue } from "zimra-fdms";
+import type { QueueStorage, ReceiptInput } from "zimra-fdms";
+
+export class DbQueueStorage implements QueueStorage {
+  constructor(private readonly tenantId: string) {}
+
+  async load(): Promise&lt;ReceiptInput[]&gt; {
+    // Oldest first. Order by a persisted sequence column — not by whatever
+    // order the database happens to return rows in.
+    return loadItemsFromDB(this.tenantId);
+  }
+
+  async save(pending: ReceiptInput[]): Promise&lt;void&gt; {
+    // Replace the whole snapshot; an empty array means "clear the queue".
+    await replaceItemsInDB(this.tenantId, pending);
+  }
+}
+
+const queue = new OfflineReceiptQueue(device, new DbQueueStorage("acme"));</code></pre>
+  </div>
+
+  <p>Both rules matter after a crash:</p>
+  <ol>
+    <li><code>save()</code> receives the <b>full remaining set</b> after each successful submission.
+    An append-only implementation will re-send receipts ZIMRA has already accepted.</li>
+    <li><code>load()</code> must return <b>oldest first</b>. The order it returns is the order the
+    receipts are numbered and chained in.</li>
+  </ol>
+
+  <div class="note-box">
+    <i class="ph-light ph-timer"></i>
+    <div>
+      <p><b>The 72-hour window is yours to watch.</b> The SDK does not expire queued receipts. If a
+      device stays offline past the grace period, submission will be refused — alert on
+      <code>queue.size</code> and the age of the oldest entry.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ---------------- Certificate renewal ---------------- -->
+<section class="doc-sec" id="certificate-renewal">
+  <h2>Certificate renewal<a class="anchor" href="#certificate-renewal">#</a></h2>
+  <p>Device certificates expire. <code>getConfig()</code> reports
+  <code>certificateValidTill</code>; renew before it passes, because an expired certificate means no
+  mTLS, which means no fiscalisation at all.</p>
+
+  <div class="codewin" data-lang="ts" data-file="renew.ts" data-hl="6-8">
+<pre><code>const config = await device.getConfig();
+const validTill = new Date(config.certificateValidTill);
+const daysLeft = (validTill.getTime() - Date.now()) / 86_400_000;
+
+if (daysLeft &lt; 30) {
+  const { keys, certificatePem } = await device.renewCertificate();
+  await saveSecret("device-private-key.pem", keys.privateKeyPem);
+  await saveSecret("device-certificate.pem", certificatePem);
+  // Reconnect with a new FiscalDevice built from the new pair.
+}</code></pre>
+  </div>
+
+  <p><code>renewCertificate()</code> generates a <b>fresh key pair</b> and CSR and calls
+  <code>IssueCertificate</code>. The old key does not carry over — persist both new values together,
+  then construct a new <code>FiscalDevice</code> with them. The existing instance keeps using the old
+  identity until you replace it.</p>
+
+  <div class="note-box warn">
+    <i class="ph-light ph-warning"></i>
+    <div>
+      <p><b>Renew outside a fiscal day.</b> Swapping identities mid-day means the receipts before and
+      after the swap were signed by different certificates. Close the day, renew, then open the next
+      one.</p>
+    </div>
+  </div>
+
+  <p>FDMS also signals this itself: error code <code>DEV02</code> means the certificate is about to
+  expire.</p>
+</section>
+
+<!-- ---------------- Errors ---------------- -->
+<section class="doc-sec" id="errors">
+  <h2>Error handling<a class="anchor" href="#errors">#</a></h2>
+  <p>Every non-2xx response becomes an <code>FdmsApiError</code>, which carries the HTTP status,
+  ZIMRA's problem body, the correlation id, and — where the code is known — a plain-language hint.</p>
+
+  <div class="codewin" data-lang="ts" data-file="errors.ts">
+<pre><code>import { FdmsApiError } from "zimra-fdms";
+
+try {
+  await device.submitReceipt(input);
+} catch (err) {
+  if (err instanceof FdmsApiError) {
+    console.error(err.message);        // detail + (errorCode: X) + hint
+    console.error(err.status);         // HTTP status
+    console.error(err.problem);        // raw ApiProblemDetails from FDMS
+    console.error(err.operationId);    // quote this to ZIMRA support
+    console.error(err.hint);           // undefined for unmapped codes
+  }
+  throw err;
+}</code></pre>
+  </div>
+
+  <h3>Known error codes</h3>
+  <p>Exported as <code>FDMS_ERROR_HINTS</code>, and folded into the error message automatically:</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Code</th><th>What it means</th></tr></thead>
+      <tbody>
+        <tr><td><code>DEV01</code></td><td>Device is not active — blacklisted, suspended, or not yet approved.</td></tr>
+        <tr><td><code>DEV02</code></td><td>Certificate is about to expire — call <a href="#certificate-renewal">renewCertificate()</a>.</td></tr>
+        <tr><td><code>FDC01</code></td><td>Fiscal day is already open — close it before opening a new one.</td></tr>
+        <tr><td><code>FDC02</code></td><td>Fiscal day is not open — call <code>openDay()</code> first.</td></tr>
+        <tr><td><code>RCPT010</code></td><td>Receipt signature verification failed — the canonical string is wrong (field order, cents conversion, tax concatenation, previous hash).</td></tr>
+        <tr><td><code>RCPT011</code></td><td>Receipt counters are not sequential.</td></tr>
+        <tr><td><code>RCPT012</code></td><td>Invoice number duplicated within the fiscal day.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Errors thrown before the network</h3>
+  <p>Some failures are caught locally and are plain <code>Error</code>s, not <code>FdmsApiError</code>:</p>
+  <ul class="tight">
+    <li><code>Cannot open a fiscal day while status is …</code> — <code>openDay()</code> on a device that is not closed.</li>
+    <li><code>No fiscal day state. Call openDay(), or restoreState() …</code> — submitting or closing without state.</li>
+    <li><code>Payments (x) do not equal receipt total (y)</code> — the payment check.</li>
+    <li><code>FDMS request timed out after 30000ms</code> — transport timeout, tunable via <code>timeoutMs</code>.</li>
+  </ul>
+
+  <h3>A practical triage order</h3>
+  <ol>
+    <li>Read <code>err.hint</code> — if it is set, it names the cause.</li>
+    <li>Check <code>getStatus()</code>. Most day-related errors are a state mismatch.</li>
+    <li>For <code>RCPT010</code>, compare your canonical string against
+    <a href="#api-signing"><code>receiptSigningString()</code></a> and check the previous hash.</li>
+    <li>Keep the <code>operationId</code>. It is the only handle ZIMRA support can trace.</li>
+  </ol>
+</section>
+
+<!-- ---------------- API: FiscalDevice ---------------- -->
+<section class="doc-sec" id="api-fiscaldevice">
+  <h2>FiscalDevice<a class="anchor" href="#api-fiscaldevice">#</a></h2>
+  <p>The high-level client. One instance represents one registered device and owns the fiscal-day
+  state for it.</p>
+
+  <div class="api">
+    <h4><span class="rt">new</span> <span class="nm">FiscalDevice</span>(device, identity, options?)</h4>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>device</code></td><td><code>DeviceIdentity</code></td><td><code>deviceId</code>, <code>serialNumber</code>, <code>modelName</code>, <code>modelVersion</code>. Model name and version are sent as request headers.</td></tr>
+          <tr><td><code>identity</code></td><td><code>MtlsIdentity</code></td><td><code>{ certificatePem, privateKeyPem }</code> from registration or renewal.</td></tr>
+          <tr><td><code>options.environment</code></td><td><code>"test" | "production"</code></td><td>Default <code>"test"</code>.</td></tr>
+          <tr><td><code>options.timeoutMs</code></td><td><code>number</code></td><td>Request timeout. Default <code>30000</code>.</td></tr>
+          <tr><td><code>options.signatureFormat</code></td><td><code>"der" | "p1363"</code></td><td>Default <code>"der"</code>. Leave it alone unless you are debugging signatures.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3>Configuration &amp; status</h3>
+
+  <div class="api">
+    <h4><span class="nm">getConfig</span>(): <span class="rt">Promise&lt;GetConfigResponse&gt;</span><span class="badge async">async</span></h4>
+    <p>Fetches taxpayer details, the applicable tax table, operating mode, certificate expiry and
+    <code>qrUrl</code>. The response is cached on the instance and is what makes
+    <code>qrData</code> available on submitted receipts — call it once at startup.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">getStatus</span>(): <span class="rt">Promise&lt;GetStatusResponse&gt;</span><span class="badge async">async</span></h4>
+    <p>Current fiscal day status, the server's counters, <code>lastReceiptGlobalNo</code> and
+    <code>lastFiscalDayNo</code>. The source of truth when local state is missing or suspect.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">ping</span>(): <span class="rt">Promise&lt;PingResponse&gt;</span><span class="badge async">async</span></h4>
+    <p>Liveness check against FDMS. Also returns <code>reportingFrequency</code>, the server's view of
+    how often this device should be reporting.</p>
+  </div>
+
+  <h3>Fiscal day</h3>
+
+  <div class="api">
+    <h4><span class="nm">openDay</span>(fiscalDayNo?, opened?): <span class="rt">Promise&lt;OpenDayResponse&gt;</span><span class="badge async">async</span><span class="badge throws">throws</span></h4>
+    <p>Opens a fiscal day and initialises local state. Calls <code>getStatus()</code> first and throws
+    if the device is not <code>FiscalDayClosed</code>.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>fiscalDayNo</code></td><td><code>number?</code></td><td><code>null</code></td><td>Omit to let FDMS assign the next number.</td></tr>
+          <tr><td><code>opened</code></td><td><code>Date</code></td><td><code>new Date()</code></td><td>Opening timestamp; also sets <code>fiscalDayDate</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">closeDay</span>(): <span class="rt">Promise&lt;CloseDayResponse&gt;</span><span class="badge async">async</span><span class="badge throws">throws</span></h4>
+    <p>Signs the accumulated counters and closes the day, then clears local state. Zero-value counters
+    are excluded from both the payload and the signing string. Throws if there is no fiscal day state.
+    Remember that the close settles asynchronously — <a href="#fiscal-day">poll <code>getStatus()</code></a>.</p>
+  </div>
+
+  <h3>Receipts</h3>
+
+  <div class="api">
+    <h4><span class="nm">submitReceipt</span>(input): <span class="rt">Promise&lt;SubmittedReceipt&gt;</span><span class="badge async">async</span><span class="badge throws">throws</span></h4>
+    <p>Builds, signs and submits a receipt, then advances counters and the hash chain — but only after
+    FDMS accepts it. See <a href="#receipts">receipts &amp; signing</a> for the full input shape.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Returns</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>receipt</code></td><td><code>Receipt</code></td><td>The complete signed receipt that was sent.</td></tr>
+          <tr><td><code>response</code></td><td><code>SubmitReceiptResponse</code></td><td><code>receiptID</code>, <code>serverDate</code>, server signature, <code>validationErrors</code>.</td></tr>
+          <tr><td><code>qrData</code></td><td><code>string?</code></td><td>QR content. <code>undefined</code> unless <code>getConfig()</code> has been called.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3>State</h3>
+
+  <div class="api">
+    <h4><span class="nm">getState</span>(): <span class="rt">FiscalDayState | undefined</span></h4>
+    <p>A deep clone of the current day state, or <code>undefined</code> when no day is open. Persist
+    this after every receipt.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">restoreState</span>(state): <span class="rt">void</span></h4>
+    <p>Restores persisted state on startup. Stores a clone, so the object you pass stays yours.</p>
+  </div>
+
+  <h3>Certificates</h3>
+
+  <div class="api">
+    <h4><span class="nm">renewCertificate</span>(): <span class="rt">Promise&lt;{ keys, certificatePem, operationId }&gt;</span><span class="badge async">async</span></h4>
+    <p>Generates a fresh key pair and CSR and calls <code>IssueCertificate</code>. Persist both
+    returned values and rebuild the device with them — see
+    <a href="#certificate-renewal">certificate renewal</a>.</p>
+  </div>
+
+  <h3>Exported helpers</h3>
+
+  <div class="api">
+    <h4><span class="nm">buildReceiptTaxes</span>(lines, taxInclusive): <span class="rt">ReceiptTax[]</span></h4>
+    <p>Groups receipt lines into the tax summary FDMS expects, sorted by <code>taxID</code>. Called
+    for you by <code>submitReceipt()</code>; exported for testing and for building receipts by hand.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">accumulateCounters</span>(counters, receipt): <span class="rt">void</span></h4>
+    <p>Folds a submitted receipt into the running fiscal-day counters, in place. Credit notes are
+    accumulated negatively. Also exported for testing and manual day reconstruction.</p>
+  </div>
+</section>
+
+<!-- ---------------- API: registration ---------------- -->
+<section class="doc-sec" id="api-registration">
+  <h2>registerDevice()<a class="anchor" href="#api-registration">#</a></h2>
+  <p>The bootstrap calls. Neither requires a client certificate.</p>
+
+  <div class="api">
+    <h4><span class="nm">registerDevice</span>(device, activationKey, options?): <span class="rt">Promise&lt;RegisteredDevice&gt;</span><span class="badge async">async</span><span class="badge throws">throws</span></h4>
+    <p>Generates keys and a CSR, registers the device, and returns the issued certificate.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>device</code></td><td><code>DeviceIdentity</code></td><td>Model name and version are sent as headers.</td></tr>
+          <tr><td><code>activationKey</code></td><td><code>string</code></td><td>8 characters, case-insensitive, single use.</td></tr>
+          <tr><td><code>options.environment</code></td><td><code>"test" | "production"</code></td><td>Default <code>"test"</code>.</td></tr>
+          <tr><td><code>options.clientPrefix</code></td><td><code>string</code></td><td>CN prefix. Default <code>"ZIMRA"</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Returns</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>keys</code></td><td><code>DeviceKeyPair</code></td><td><code>privateKeyPem</code>, <code>publicKeyPem</code>, <code>csrPem</code>, <code>commonName</code>.</td></tr>
+          <tr><td><code>certificatePem</code></td><td><code>string</code></td><td>The issued device certificate.</td></tr>
+          <tr><td><code>operationId</code></td><td><code>string</code></td><td>ZIMRA correlation id.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">getServerCertificate</span>(environment?, thumbprint?): <span class="rt">Promise&lt;string[]&gt;</span><span class="badge async">async</span></h4>
+    <p>Fetches the FDMS server certificate chain, used to validate the server's signatures on
+    submitted receipts. <code>environment</code> defaults to <code>"test"</code>; pass a
+    <code>thumbprint</code> to request a specific certificate.</p>
+  </div>
+</section>
+
+<!-- ---------------- API: queue ---------------- -->
+<section class="doc-sec" id="api-queue">
+  <h2>OfflineReceiptQueue<a class="anchor" href="#api-queue">#</a></h2>
+
+  <div class="api">
+    <h4><span class="rt">new</span> <span class="nm">OfflineReceiptQueue</span>(device, storage?)</h4>
+    <p><code>storage</code> defaults to <code>new MemoryQueueStorage()</code>. Pending receipts are
+    loaded from storage lazily, on the first operation.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">size</span>: <span class="rt">number</span></h4>
+    <p>Receipts currently waiting. Reflects what has been loaded into the instance — read it after an
+    <code>enqueue()</code>, <code>submitOrEnqueue()</code> or <code>flush()</code> call.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">enqueue</span>(input): <span class="rt">Promise&lt;void&gt;</span><span class="badge async">async</span></h4>
+    <p>Appends a receipt to the queue and persists the new snapshot. Does not attempt submission.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">submitOrEnqueue</span>(input): <span class="rt">Promise&lt;SubmittedReceipt | undefined&gt;</span><span class="badge async">async</span><span class="badge throws">throws</span></h4>
+    <p>Flushes anything already queued, then submits. Returns <code>undefined</code> when the receipt
+    was queued instead of submitted. Only network-class failures queue — anything FDMS actively
+    rejected is rethrown.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">flush</span>(): <span class="rt">Promise&lt;FlushResult&gt;</span><span class="badge async">async</span></h4>
+    <p>Submits queued receipts FIFO, stopping at the first failure, and saves the remaining snapshot
+    after each success.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Returns</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>submitted</code></td><td><code>SubmittedReceipt[]</code></td><td>Receipts accepted during this flush.</td></tr>
+          <tr><td><code>remaining</code></td><td><code>number</code></td><td>Still queued. <code>0</code> means fully drained.</td></tr>
+          <tr><td><code>error</code></td><td><code>unknown?</code></td><td>Set only when the flush stopped early.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3>QueueStorage</h3>
+  <div class="api">
+    <h4><span class="nm">interface QueueStorage</span></h4>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Method</th><th>Contract</th></tr></thead>
+        <tbody>
+          <tr><td><code>load()</code></td><td>Returns pending receipts, <b>oldest first</b>.</td></tr>
+          <tr><td><code>save(pending)</code></td><td>Replaces the stored snapshot with <code>pending</code>. An empty array clears the queue.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">class MemoryQueueStorage</span></h4>
+    <p>The default. Holds receipts in memory and loses them on restart. Fine for tests and for
+    always-online deployments; replace it anywhere a crash could lose a sale.</p>
+  </div>
+</section>
+
+<!-- ---------------- API: signing ---------------- -->
+<section class="doc-sec" id="api-signing">
+  <h2>Signing utilities<a class="anchor" href="#api-signing">#</a></h2>
+  <p>The canonical-string layer. <code>FiscalDevice</code> uses these internally; they are exported
+  because when FDMS returns <code>RCPT010</code>, being able to print the exact string you signed is
+  the difference between a fix and a guess.</p>
+
+  <div class="api">
+    <h4><span class="nm">receiptSigningString</span>(deviceId, receipt, previousReceiptHash?): <span class="rt">string</span></h4>
+    <p>Builds the canonical receipt string. <code>receipt</code> is a <code>Receipt</code> without its
+    signature. Omit <code>previousReceiptHash</code> for the first receipt of a fiscal day.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">fiscalDaySigningString</span>(deviceId, fiscalDayNo, fiscalDayDate, counters): <span class="rt">string</span></h4>
+    <p>Builds the canonical day-close string. Filters zero counters, then sorts by counter-type
+    priority, currency, tax id, and finally money type in <b>enum order</b> — Cash, Card,
+    MobileWallet, Coupon, Credit, BankTransfer, Other.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">concatenateReceiptTaxes</span>(taxes): <span class="rt">string</span></h4>
+    <p>The tax block of the receipt string: sorted by <code>taxID</code>, each entry rendered as
+    percent (2 dp, empty when exempt) + tax amount in cents + sales amount in cents.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">signCanonicalString</span>(privateKeyPem, canonical, format?): <span class="rt">Promise&lt;SignatureData&gt;</span><span class="badge async">async</span></h4>
+    <p>Signs with ECDSA P-256 / SHA-256 and returns <code>{ hash, signature }</code>, both base64.
+    <code>format</code> defaults to <code>"der"</code>.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">p1363ToDer</span>(p1363): <span class="rt">Buffer</span></h4>
+    <p>Converts a raw <code>r||s</code> signature — what WebCrypto emits — into the ASN.1 DER encoding
+    FDMS verifies.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">sha256Base64</span>(data): <span class="rt">string</span></h4>
+    <p><code>base64(SHA-256(utf8 data))</code> — the <code>hash</code> field of
+    <code>SignatureData</code>, and the value that chains one receipt to the next.</p>
+  </div>
+
+  <h3>Formatting helpers</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Function</th><th>Returns</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>toCents(amount)</code></td><td><code>number</code></td><td>Integer cents, guarded against float drift.</td></tr>
+        <tr><td><code>formatTaxPercent(percent)</code></td><td><code>string</code></td><td>Fixed 2 dp, e.g. <code>"15.00"</code>.</td></tr>
+        <tr><td><code>fdmsDateTime(date?)</code></td><td><code>string</code></td><td><code>YYYY-MM-DDTHH:mm:ss</code>, local, no timezone.</td></tr>
+        <tr><td><code>fdmsDate(date?)</code></td><td><code>string</code></td><td><code>YYYY-MM-DD</code>, for fiscal day dates.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note-box warn">
+    <i class="ph-light ph-clock"></i>
+    <div>
+      <p><b>Times are local and unqualified.</b> FDMS receives no timezone offset, so the server reads
+      the timestamp in its own terms. Run fiscalising processes in Africa/Harare — a container on UTC
+      will silently stamp receipts two hours early.</p>
+    </div>
+  </div>
+
+  <h3>Debugging a signature rejection</h3>
+  <div class="codewin" data-lang="ts" data-file="debug-signing.ts">
+<pre><code>import { receiptSigningString, sha256Base64 } from "zimra-fdms";
+
+const canonical = receiptSigningString(12345, unsignedReceipt, previousHash);
+console.log(JSON.stringify(canonical));   // quoted, so trailing spaces show
+console.log(sha256Base64(canonical));</code></pre>
+  </div>
+</section>
+
+<!-- ---------------- API: crypto/qr/http ---------------- -->
+<section class="doc-sec" id="api-crypto">
+  <h2>Crypto, QR &amp; HTTP<a class="anchor" href="#api-crypto">#</a></h2>
+
+  <h3>Crypto</h3>
+  <div class="api">
+    <h4><span class="nm">generateDeviceCsr</span>(serialNumber, deviceId, client?): <span class="rt">Promise&lt;DeviceKeyPair&gt;</span><span class="badge async">async</span></h4>
+    <p>Generates an ECDSA P-256 key pair and a CSR signed with <code>ecdsa-with-SHA256</code>.
+    <code>client</code> defaults to <code>"ZIMRA"</code>. Called for you by
+    <code>registerDevice()</code> and <code>renewCertificate()</code>.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">deviceCommonName</span>(serialNumber, deviceId, client?): <span class="rt">string</span></h4>
+    <p>The exact CN FDMS requires: <code>ZIMRA-MYPOS001-0000012345</code>. Useful for verifying a
+    certificate you were issued elsewhere.</p>
+  </div>
+
+  <h3>QR</h3>
+  <div class="api">
+    <h4><span class="nm">receiptQrData</span>(params): <span class="rt">string</span></h4>
+    <p>Builds the QR content string. <code>submitReceipt()</code> calls this for you when
+    <code>getConfig()</code> has run.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Parameter</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>qrUrl</code></td><td><code>string</code></td><td>From <code>getConfig()</code>. A trailing slash is added if missing.</td></tr>
+          <tr><td><code>deviceId</code></td><td><code>number</code></td><td>Rendered zero-padded to 10 digits.</td></tr>
+          <tr><td><code>receiptDate</code></td><td><code>Date</code></td><td>Rendered <code>ddMMyyyy</code>.</td></tr>
+          <tr><td><code>receiptGlobalNo</code></td><td><code>number</code></td><td>Rendered zero-padded to 10 digits.</td></tr>
+          <tr><td><code>deviceSignatureBase64</code></td><td><code>string</code></td><td>The receipt signature; its first 16 MD5 hex characters end the string.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <p>The result is what a customer scans to verify the invoice on ZIMRA's portal — encode it into a QR
+  image with any renderer you like:</p>
+  <div class="codewin nolines" data-lang="sh" data-file="qr-content">
+<pre><code>https://fdmsapitest.zimra.co.zw/0000037367290720260000000123a1b2c3d4e5f60718</code></pre>
+  </div>
+
+  <h3>HTTP</h3>
+  <div class="api">
+    <h4><span class="nm">class FdmsHttpClient</span></h4>
+    <p>The mTLS transport, built on <code>node:https</code> with no HTTP dependency. Reach for it only
+    when you need an endpoint the SDK does not wrap yet.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Member</th><th>Signature</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>constructor</code></td><td><code>(device, identity, options?)</code></td><td><code>identity</code> may be <code>undefined</code> for public endpoints.</td></tr>
+          <tr><td><code>request</code></td><td><code>&lt;T&gt;(method, path, body?) =&gt; Promise&lt;T&gt;</code></td><td><code>"GET"</code> or <code>"POST"</code>. Throws <code>FdmsApiError</code> on non-2xx.</td></tr>
+          <tr><td><code>devicePath</code></td><td><code>(endpoint) =&gt; string</code></td><td>Builds <code>/Device/v1/{deviceId}/{endpoint}</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="codewin" data-lang="ts" data-file="raw-call.ts">
+<pre><code>import { FdmsHttpClient } from "zimra-fdms";
+
+const http = new FdmsHttpClient(device, { certificatePem, privateKeyPem });
+const res = await http.request("POST", http.devicePath("Ping"));</code></pre>
+  </div>
+</section>
+
+<!-- ---------------- API: types ---------------- -->
+<section class="doc-sec" id="api-types">
+  <h2>Types &amp; enums<a class="anchor" href="#api-types">#</a></h2>
+  <p>Every type below is exported from the package root. They are derived from ZIMRA's published
+  OpenAPI specs, which live in <code>spec/</code> in the repository.</p>
+
+  <h3>Enums</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Type</th><th>Values</th></tr></thead>
+      <tbody>
+        <tr><td><code>FdmsEnvironment</code></td><td><code>"test"</code>, <code>"production"</code></td></tr>
+        <tr><td><code>ReceiptType</code></td><td><code>"FiscalInvoice"</code>, <code>"CreditNote"</code>, <code>"DebitNote"</code></td></tr>
+        <tr><td><code>ReceiptLineType</code></td><td><code>"Sale"</code>, <code>"Discount"</code></td></tr>
+        <tr><td><code>MoneyType</code></td><td><code>"Cash"</code>, <code>"Card"</code>, <code>"MobileWallet"</code>, <code>"Coupon"</code>, <code>"Credit"</code>, <code>"BankTransfer"</code>, <code>"Other"</code></td></tr>
+        <tr><td><code>FiscalDayStatus</code></td><td><code>"FiscalDayClosed"</code>, <code>"FiscalDayOpened"</code>, <code>"FiscalDayCloseInitiated"</code>, <code>"FiscalDayCloseFailed"</code></td></tr>
+        <tr><td><code>DeviceOperatingMode</code></td><td><code>"Online"</code>, <code>"Offline"</code></td></tr>
+        <tr><td><code>FiscalCounterType</code></td><td><code>"SaleByTax"</code>, <code>"SaleTaxByTax"</code>, <code>"CreditNoteByTax"</code>, <code>"CreditNoteTaxByTax"</code>, <code>"DebitNoteByTax"</code>, <code>"DebitNoteTaxByTax"</code>, <code>"BalanceByMoneyType"</code>, <code>"PayoutByTax"</code>, <code>"PayoutTaxByTax"</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><code>FDMS_BASE_URLS</code> is exported as a constant map from environment to base URL.</p>
+
+  <h3>Core interfaces</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Type</th><th>Shape</th></tr></thead>
+      <tbody>
+        <tr><td><code>DeviceIdentity</code></td><td><code>deviceId</code>, <code>serialNumber</code>, <code>modelName</code>, <code>modelVersion</code></td></tr>
+        <tr><td><code>MtlsIdentity</code></td><td><code>certificatePem</code>, <code>privateKeyPem</code></td></tr>
+        <tr><td><code>DeviceKeyPair</code></td><td><code>privateKeyPem</code>, <code>publicKeyPem</code>, <code>csrPem</code>, <code>commonName</code></td></tr>
+        <tr><td><code>SignatureData</code></td><td><code>hash</code>, <code>signature</code> — both base64</td></tr>
+        <tr><td><code>SignatureDataEx</code></td><td><code>SignatureData</code> + <code>certificateThumbprint</code></td></tr>
+        <tr><td><code>TaxDefinition</code></td><td><code>taxID</code>, <code>taxName</code>, <code>taxPercent</code>, <code>validFrom</code>, <code>validTill</code></td></tr>
+        <tr><td><code>FiscalDayCounter</code></td><td><code>fiscalCounterType</code>, <code>fiscalCounterCurrency</code>, <code>fiscalCounterTaxPercent</code>, <code>fiscalCounterTaxID</code>, <code>fiscalCounterMoneyType</code>, <code>fiscalCounterValue</code></td></tr>
+        <tr><td><code>ReceiptLine</code></td><td><code>receiptLineType</code>, <code>receiptLineNo</code>, <code>receiptLineName</code>, <code>receiptLinePrice</code>, <code>receiptLineQuantity</code>, <code>receiptLineTotal</code>, <code>taxID</code>, <code>taxPercent</code>, <code>taxCode</code>, <code>receiptLineHSCode</code></td></tr>
+        <tr><td><code>ReceiptTax</code></td><td><code>taxID</code>, <code>taxPercent</code>, <code>taxCode</code>, <code>taxAmount</code>, <code>salesAmountWithTax</code></td></tr>
+        <tr><td><code>Payment</code></td><td><code>moneyTypeCode</code>, <code>paymentAmount</code></td></tr>
+        <tr><td><code>BuyerData</code></td><td><code>buyerRegisterName</code>, <code>buyerTradeName</code>, <code>vatNumber</code>, <code>buyerTIN</code>, <code>buyerContacts</code>, <code>buyerAddress</code></td></tr>
+        <tr><td><code>CreditDebitNote</code></td><td><code>receiptID</code>, <code>deviceID</code>, <code>receiptGlobalNo</code>, <code>fiscalDayNo</code></td></tr>
+        <tr><td><code>ValidationError</code></td><td><code>validationErrorCode</code>, <code>validationErrorColor</code>, <code>validationErrorText</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Response types</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Type</th><th>Key fields</th></tr></thead>
+      <tbody>
+        <tr><td><code>GetConfigResponse</code></td><td><code>taxPayerName</code>, <code>taxPayerTIN</code>, <code>vatNumber</code>, <code>deviceSerialNo</code>, <code>deviceBranchName</code>, <code>deviceBranchAddress</code>, <code>deviceOperatingMode</code>, <code>taxPayerDayMaxHrs</code>, <code>applicableTaxes</code>, <code>certificateValidTill</code>, <code>qrUrl</code>, <code>taxpayerDayEndNotificationHrs</code></td></tr>
+        <tr><td><code>GetStatusResponse</code></td><td><code>fiscalDayStatus</code>, <code>fiscalDayCounter</code>, <code>lastReceiptGlobalNo</code>, <code>lastFiscalDayNo</code>, <code>fiscalDayClosed</code>, <code>fiscalDayClosingErrorCode</code>, <code>fiscalDayServerSignature</code>, <code>fiscalDayDocumentQuantities</code></td></tr>
+        <tr><td><code>OpenDayResponse</code></td><td><code>operationID</code>, <code>fiscalDayNo</code></td></tr>
+        <tr><td><code>CloseDayResponse</code></td><td><code>operationID</code></td></tr>
+        <tr><td><code>SubmitReceiptResponse</code></td><td><code>operationID</code>, <code>receiptID</code>, <code>serverDate</code>, <code>receiptServerSignature</code>, <code>validationErrors</code></td></tr>
+        <tr><td><code>PingResponse</code></td><td><code>operationID</code>, <code>reportingFrequency</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Errors</h3>
+  <div class="api">
+    <h4><span class="nm">class FdmsApiError</span> <span class="rt">extends Error</span></h4>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Property</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>status</code></td><td><code>number</code></td><td>HTTP status code.</td></tr>
+          <tr><td><code>problem</code></td><td><code>ApiProblemDetails?</code></td><td>ZIMRA's response body, when it was JSON.</td></tr>
+          <tr><td><code>operationId</code></td><td><code>string?</code></td><td>From the <code>operationid</code> response header.</td></tr>
+          <tr><td><code>hint</code></td><td><code>string?</code></td><td>Plain-language explanation for known codes.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><code>FDMS_ERROR_HINTS</code> is the exported code-to-hint map behind <code>hint</code> — see
+    <a href="#errors">error handling</a>.</p>
+  </div>
+</section>
+
+<!-- ---------------- CLI ---------------- -->
+<section class="doc-sec" id="cli">
+  <h2>CLI — overview &amp; profile<a class="anchor" href="#cli">#</a></h2>
+  <p>The package ships a <code>zimra-fdms</code> command. It is the fastest route to a first
+  fiscalised receipt, and enough for ops work — checking device status, recovering a stuck fiscal
+  day — without writing any code.</p>
+
+  <div class="codewin nolines" data-lang="sh" data-file="terminal">
+<pre><code>npx zimra-fdms register --device-id 12345 --serial MYPOS01 --activation-key AAAABBBB
+npx zimra-fdms config                       # taxpayer info + valid taxIds
+npx zimra-fdms day open
+npx zimra-fdms submit --sample &gt; receipt.json   # edit to match your taxes
+npx zimra-fdms submit receipt.json          # prints receipt no + QR data
+npx zimra-fdms day close</code></pre>
+  </div>
+
+  <h3>The profile directory</h3>
+  <p>A CLI process dies between invocations, but the receipt hash chain and fiscal-day counters must
+  not. Everything lives in a profile directory — <code>./.zimra</code> by default, overridden with
+  <code>--profile &lt;dir&gt;</code> or the <code>ZIMRA_PROFILE</code> environment variable.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>File</th><th>Contents</th></tr></thead>
+      <tbody>
+        <tr><td><code>device.json</code></td><td>Device identity and environment.</td></tr>
+        <tr><td><code>device-certificate.pem</code></td><td>The mTLS certificate issued by FDMS.</td></tr>
+        <tr><td><code>device-private-key.pem</code></td><td>The matching private key, written <code>0600</code> where the OS supports it.</td></tr>
+        <tr><td><code>day-state.json</code></td><td>The open fiscal day: counters, hash chain, receipt numbers.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note-box warn">
+    <i class="ph-light ph-git-branch"></i>
+    <div>
+      <p><b>Keep <code>.zimra/</code> out of version control.</b> It contains the device private key.
+      Add it to <code>.gitignore</code> before the first <code>register</code>.</p>
+    </div>
+  </div>
+
+  <p>Receipts chain correctly across separate invocations, and the day-state file is validated against
+  the profile's device id — a state file from another device is refused rather than silently used.</p>
+
+  <h3>Global options</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Option</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><code>--profile &lt;dir&gt;</code></td><td>Profile directory. Default <code>./.zimra</code>, env <code>ZIMRA_PROFILE</code>.</td></tr>
+        <tr><td><code>--json</code></td><td>Machine-readable output. Supported by <code>status</code>, <code>config</code> and <code>submit</code>.</td></tr>
+        <tr><td><code>-h</code>, <code>--help</code></td><td>Help for a command.</td></tr>
+        <tr><td><code>-v</code>, <code>--version</code></td><td>Print the package version.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ---------------- CLI commands ---------------- -->
+<section class="doc-sec" id="cli-commands">
+  <h2>CLI — command reference<a class="anchor" href="#cli-commands">#</a></h2>
+
+  <div class="api">
+    <h4><span class="nm">zimra-fdms register</span></h4>
+    <p>Registers a device and writes the certificate, key and identity into the profile.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Flag</th><th>Default</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>--device-id &lt;n&gt;</code></td><td>—</td><td>Required. Positive integer from the FDMS portal.</td></tr>
+          <tr><td><code>--serial &lt;sn&gt;</code></td><td>—</td><td>Required. Device serial number.</td></tr>
+          <tr><td><code>--activation-key &lt;key&gt;</code></td><td>—</td><td>Required. The 8-character portal key.</td></tr>
+          <tr><td><code>--model-name &lt;name&gt;</code></td><td><code>Server</code></td><td>Sent as a request header.</td></tr>
+          <tr><td><code>--model-version &lt;v&gt;</code></td><td><code>v1</code></td><td>Sent as a request header.</td></tr>
+          <tr><td><code>--env &lt;env&gt;</code></td><td><code>test</code></td><td><code>test</code> or <code>production</code>.</td></tr>
+          <tr><td><code>--force</code></td><td>off</td><td>Re-register over an existing profile. Needs a fresh activation key.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">zimra-fdms status</span></h4>
+    <p>Device and fiscal-day status: current state, last receipt global number, last fiscal day, and
+    any closing error code. Supports <code>--json</code>.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">zimra-fdms ping</span></h4>
+    <p>Pings FDMS and reports the server's view of the device's operating mode.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">zimra-fdms config</span></h4>
+    <p>Taxpayer information, the applicable tax table and certificate expiry. This is where you find
+    the valid <code>taxId</code> values for your receipts. Supports <code>--json</code>.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">zimra-fdms day open</span></h4>
+    <p>Opens a fiscal day and writes <code>day-state.json</code>.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">zimra-fdms day close</span></h4>
+    <p>Closes the fiscal day, then polls until the close settles — up to twelve checks, three seconds
+    apart. If <code>day-state.json</code> is missing, it recovers by signing the counters FDMS itself
+    reports, so a lost state file does not strand an open day.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">zimra-fdms submit &lt;receipt.json&gt;</span></h4>
+    <p>Submits a receipt and prints the receipt number and QR data. Run
+    <code>zimra-fdms submit --sample</code> to print a starter file. The JSON is a
+    <code>ReceiptInput</code> — payments must sum to the receipt total, and every <code>taxId</code>
+    must appear in <code>zimra-fdms config</code>. Supports <code>--json</code>.</p>
+  </div>
+
+  <h3>Sample receipt file</h3>
+  <div class="codewin" data-lang="json" data-file="receipt.json">
+<pre><code>{
+  "receiptType": "FiscalInvoice",
+  "currency": "USD",
+  "invoiceNo": "INV-0001",
+  "linesTaxInclusive": true,
+  "lines": [
+    {
+      "name": "Bread",
+      "price": 2.5,
+      "quantity": 2,
+      "taxId": 1,
+      "taxPercent": 15,
+      "taxCode": "A"
+    }
+  ],
+  "payments": [{ "moneyType": "Cash", "amount": 5.0 }]
+}</code></pre>
+  </div>
+</section>
+
+<!-- ---------------- MCP server ---------------- -->
+<section class="doc-sec" id="mcp">
+  <h2>MCP server — overview &amp; setup<a class="anchor" href="#mcp">#</a></h2>
+  <p>The same binary runs a <a href="https://modelcontextprotocol.io">Model Context Protocol</a>
+  server, so Claude Code — or any MCP client — can register devices, run fiscal days and submit
+  receipts through natural language. It implements the MCP <b>2026-07-28</b> revision (the stateless
+  core) and still serves 2025-era clients from the same process.</p>
+
+  <div class="codewin nolines" data-lang="sh" data-file="terminal">
+<pre><code># add it to Claude Code
+claude mcp add zimra-fdms -- npx zimra-fdms mcp
+
+# or run it directly for any other MCP client (stdio)
+npx zimra-fdms mcp --profile ./.zimra</code></pre>
+  </div>
+
+  <h3>One profile, two front-ends</h3>
+  <p>The MCP server operates on the exact <a href="#cli">profile directory</a> the CLI uses —
+  <code>./.zimra</code> by default, overridden with <code>--profile &lt;dir&gt;</code>,
+  <code>ZIMRA_PROFILE</code>, or a per-call <code>profile</code> argument on every tool. The state
+  FDMS actually cares about — the receipt hash chain and fiscal-day counters — lives on disk in that
+  directory, never in the MCP session. Open a day from the terminal, submit receipts from an agent,
+  close from either: the chain is one and the same.</p>
+
+  <div class="note-box warn">
+    <i class="ph-light ph-lock-key"></i>
+    <div>
+      <p><b>The private key never crosses the wire.</b> Tools return receipt numbers, status and QR
+      data — not key material. And <code>register_device</code> refuses to overwrite an existing
+      certificate unless explicitly forced, because re-registering invalidates it.</p>
+    </div>
+  </div>
+
+  <h3>Errors are in-band</h3>
+  <p>FDMS failures surface as MCP tool errors carrying the same plain-language hints the CLI prints
+  — <code>DEV01</code>, <code>RCPT010</code> and friends — so the agent can read the hint and fix
+  its own call instead of guessing.</p>
+</section>
+
+<!-- ---------------- MCP tools ---------------- -->
+<section class="doc-sec" id="mcp-tools">
+  <h2>MCP server — tool reference<a class="anchor" href="#mcp-tools">#</a></h2>
+  <p>Eight tools mirror the CLI verbs. Every tool accepts an optional <code>profile</code> argument;
+  read-only tools are annotated as such so clients can skip confirmation prompts for them.</p>
+
+  <div class="api">
+    <h4><span class="nm">register_device</span></h4>
+    <p>Registers a device: generates ECDSA P-256 keys and ZIMRA's exact CSR, exchanges the
+    activation key for an mTLS certificate, and writes the profile. Arguments:
+    <code>deviceId</code>, <code>serialNumber</code>, <code>activationKey</code> (8 characters),
+    optional <code>modelName</code>, <code>modelVersion</code>, <code>environment</code>
+    (<code>test</code>/<code>production</code>) and <code>force</code>.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">get_status</span></h4>
+    <p>Device and fiscal-day status from FDMS, plus the local day state if one exists — the same
+    view as <code>zimra-fdms status</code>. Read-only.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">ping</span></h4>
+    <p>Pings FDMS over mTLS, reporting latency and the server's reporting frequency. Read-only.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">get_config</span></h4>
+    <p>Taxpayer info, operating mode, certificate expiry and the applicable tax table — the source
+    of valid <code>taxId</code> values for receipt lines. Read-only.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">open_fiscal_day</span></h4>
+    <p>Opens a fiscal day and persists the day state to the profile.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">close_fiscal_day</span></h4>
+    <p>Closes the day with the locally tracked counters, polling until the asynchronous close
+    settles. With no local day state it recovers by signing the counters FDMS itself reports —
+    the same recovery path as <code>zimra-fdms day close</code>.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">submit_receipt</span></h4>
+    <p>Signs and submits a receipt on the open day, advancing the hash chain. Takes a
+    <code>receipt</code> object with the full <code>ReceiptInput</code> schema — lines, payments,
+    optional buyer data and credit/debit-note references — validated before anything is signed.
+    Returns receipt numbers, <code>receiptID</code>, QR data and any server validation warnings.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">sample_receipt</span></h4>
+    <p>Returns a starter <code>ReceiptInput</code> template to adapt against the device tax table.
+    Read-only, no network.</p>
+  </div>
+
+  <p>The whole loop — open, chained receipts, signed close — is verified live against the FDMS test
+  environment through a spawned MCP server on the 2026-07-28 protocol:
+  <code>npm run test:e2e:mcp</code>.</p>
+</section>
+
+<!-- ---------------- Gotchas ---------------- -->
+<section class="doc-sec" id="gotchas">
+  <h2>Spec gotchas<a class="anchor" href="#gotchas">#</a></h2>
+  <p>Knowledge that cost real fiscal days to earn. All of it is already handled by the SDK — this is
+  here so that when something breaks, you know where to look.</p>
+
+  <h3>Signatures must be ASN.1 DER</h3>
+  <p>FDMS rejects raw IEEE P1363 (<code>r||s</code>) ECDSA signatures with <code>RCPT020</code> /
+  <code>BadCertificateSignature</code>. WebCrypto emits P1363, so the SDK converts to DER by default.
+  If you sign anything yourself, convert with <a href="#api-signing"><code>p1363ToDer()</code></a>.</p>
+
+  <h3>The CSR subject CN format is exact</h3>
+  <p><code>ZIMRA-{serial}-{deviceId padded to 10 digits}</code>, ECDSA P-256 preferred. A CN that is
+  off by a single character fails registration with an unhelpful message.</p>
+
+  <h3>Counter order is enum order, not alphabetical</h3>
+  <p>Fiscal-day counters sort by counter-type priority, then currency, then <code>taxID</code> — and
+  <code>BalanceByMoneyType</code> sorts by the <b>money-type enum order</b> (Cash, Card, MobileWallet,
+  Coupon, Credit, BankTransfer, Other), not alphabetically. One swapped pair fails the whole day-close
+  signature.</p>
+
+  <h3>Zero-value counters are excluded</h3>
+  <p>They appear in neither the close payload nor the signing string. Including them produces a valid
+  JSON body with an invalid signature — the hardest kind of bug to see.</p>
+
+  <h3>The first receipt of a day has no previous hash</h3>
+  <p>The <code>previousReceiptHash</code> segment is omitted entirely, not sent as an empty string
+  placeholder.</p>
+
+  <h3>Timestamps are local and unqualified</h3>
+  <p><code>YYYY-MM-DDTHH:mm:ss</code> with no timezone offset. Run fiscalising processes in
+  Africa/Harare; a UTC container stamps receipts two hours early.</p>
+
+  <h3>Receipt dates must strictly increase — at one-second resolution</h3>
+  <p>FDMS rejects any receipt whose <code>receiptDate</code> is not strictly greater than the
+  previous receipt's (<code>RCPT030</code>, red), and the format only resolves to whole seconds — so
+  two sales in the same second fail. The SDK nudges auto-generated dates forward by a second when
+  needed; explicit <code>receiptDate</code> values are trusted as given. Worse: a red-flagged
+  receipt still <em>consumes</em> its global number even though <code>GetStatus</code> doesn't count
+  it, so the next day opens one number short and draws <code>RCPT012</code> — and a day containing
+  any red receipt can only be closed from the test portal, not the API.</p>
+
+  <h3>The test portal can rescue you</h3>
+  <p><a href="https://fdmsops.zimra.co.zw/fdms-public/">fdmsops.zimra.co.zw/fdms-public/</a> can
+  force-close a stuck fiscal day and reset device activation. Invaluable during development.</p>
+</section>
+
+<!-- ---------------- Testing ---------------- -->
+<section class="doc-sec" id="testing">
+  <h2>Testing<a class="anchor" href="#testing">#</a></h2>
+
+  <div class="codewin nolines" data-lang="sh" data-file="terminal">
+<pre><code>npm test              # regression suite for the signing rules (no network)
+npm run test:e2e      # full live cycle against the FDMS test environment
+npm run test:e2e:mcp  # the same live cycle, driven through the MCP server</code></pre>
+  </div>
+
+  <p>The regression suite pins the canonical signing strings, DER conversion, tax computation, counter
+  accumulation and QR format — precisely the things a silent ZIMRA spec revision would break. Run it
+  before every release.</p>
+
+  <h3>Spec drift watching</h3>
+  <p>ZIMRA can change the FDMS API without announcing it. <code>npm run spec:drift</code> compares the
+  live Swagger specs against the baseline in <code>spec/</code>, and a scheduled GitHub Action runs it
+  daily. Findings are split into two tiers:</p>
+  <ul class="tight">
+    <li><b>BREAKING</b> — touches an endpoint or type this SDK uses. Fails the check.</li>
+    <li><b>INFO</b> — drift elsewhere in FDMS. Reported without failing.</li>
+  </ul>
+  <p>Comparison is on the API contract — paths, parameters, required flags, enum values, maxLength —
+  so formatting and key-order churn do not register as drift. Run
+  <code>npm run spec:drift -- --update</code> to accept the current live state as the new baseline.</p>
+</section>
+
+<!-- ---------------- Environment ---------------- -->
+<section class="doc-sec" id="environment">
+  <h2>Test environment<a class="anchor" href="#environment">#</a></h2>
+  <p>The FDMS test environment is self-service. No paperwork, no approval queue — device credentials
+  are issued in minutes, which makes it possible to go from install to a ZIMRA-validated invoice in
+  one sitting.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Purpose</th><th>URL</th></tr></thead>
+      <tbody>
+        <tr><td>API</td><td><a href="https://fdmsapitest.zimra.co.zw/swagger/index.html">fdmsapitest.zimra.co.zw</a> — Swagger at <code>/swagger/index.html</code></td></tr>
+        <tr><td>Device portal</td><td><a href="https://fdmsops.zimra.co.zw/fdms-public/add-device">fdmsops.zimra.co.zw/fdms-public/add-device</a></td></tr>
+        <tr><td>Invoice validation</td><td><a href="https://fdmstest.zimra.co.zw">fdmstest.zimra.co.zw</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Going to production</h3>
+  <p>Live fiscalisation needs the human path: ZIMRA onboarding, sample-document approval, live device
+  registration, ITF263 and ongoing compliance monitoring. The code is solved; the paperwork is not.
+  <a href="mailto:shaunchivandire@gmail.com?subject=ZIMRA%20fiscalisation%20onboarding">Goko
+  Consultancy &amp; Training Services</a> handles that path end to end.</p>
+
+  <div class="pager">
+    <a href="/"><span>Back to</span><b>Home</b></a>
+    <a class="next" href="https://github.com/munashe-chivandire/zimra-fdms"><span>Source</span><b>GitHub &#8599;</b></a>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================ RIGHT RAIL ============================ -->
+<aside class="toc">
+  <h4>On this page</h4>
+  <nav id="tocnav"></nav>
+  <div class="edge">
+    <a href="https://github.com/munashe-chivandire/zimra-fdms/issues"><i class="ph-light ph-bug"></i>Report an issue</a>
+    <a href="https://www.npmjs.com/package/zimra-fdms"><i class="ph-light ph-package"></i>View on npm</a>
+    <a href="#top"><i class="ph-light ph-arrow-up"></i>Back to top</a>
+  </div>
+</aside>
+
+</div><!-- /doclayout -->
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <img class="only-dark" src="img/logo-dark.webp" alt="zimra-fdms">
+      <img class="only-light" src="img/logo-light.webp" alt="zimra-fdms">
+      <span class="links">
+        <a href="/">Home</a>
+        <a href="https://github.com/munashe-chivandire/zimra-fdms">GitHub</a>
+        <a href="https://www.npmjs.com/package/zimra-fdms">npm</a>
+        <a href="https://fdmsapitest.zimra.co.zw/swagger/index.html">FDMS API</a>
+      </span>
+      <span class="fine">&copy; 2026 Shaun Chivandire &middot; MIT License. Community open-source project — not
+      affiliated with or endorsed by the Zimbabwe Revenue Authority. "ZIMRA" and "FDMS" refer to the
+      authority's public fiscalisation programme and API.</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ============================ SPOTLIGHT SEARCH ============================ -->
+<div class="spot" id="spot" hidden>
+  <div class="spot-scrim" data-spot-close></div>
+  <div class="spot-box" role="dialog" aria-modal="true" aria-label="Search the documentation">
+    <div class="spot-head">
+      <i class="ph-light ph-magnifying-glass"></i>
+      <input type="text" id="spotinput" placeholder="Search the documentation" autocomplete="off" spellcheck="false" aria-label="Search query">
+      <button class="spot-esc" type="button" data-spot-close>esc</button>
+    </div>
+    <div class="spot-results" id="spotresults"></div>
+    <div class="spot-foot">
+      <span><kbd>&#8593;</kbd><kbd>&#8595;</kbd> navigate</span>
+      <span><kbd>&#8629;</kbd> open</span>
+      <span><kbd>esc</kbd> close</span>
+      <span class="spot-count" id="spotcount"></span>
+    </div>
+  </div>
+</div>
+
+<script src="assets/site.js"></script>
+<script src="assets/docs.js"></script>
+
+</body>
+</html>
