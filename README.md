@@ -53,7 +53,9 @@ the day-state file is ever lost, `day close` recovers by signing the counters
 FDMS itself reports. That signature covers the date the day was opened, which
 FDMS does not report back, so pass `--date YYYY-MM-DD` when recovering a day
 opened on an earlier date. A close that FDMS rejects keeps the local state
-for a retry. `status`, `config` and `submit` take `--json` for
+for a retry. A day holding a receipt with a **Red** validation error (RCPT030,
+RCPT012) cannot be closed by the device at all; the SDK refuses up front and
+points you at ZIMRA. See [CHANGELOG.md](CHANGELOG.md) for the observed codes. `status`, `config` and `submit` take `--json` for
 scripting. **Keep `.zimra/` out of version control** — it contains the
 device private key.
 

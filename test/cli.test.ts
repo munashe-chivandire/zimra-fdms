@@ -252,3 +252,29 @@ test("day close --help documents --date and the kept state", () => {
   assert.ok(stdout.includes("--date YYYY-MM-DD"));
   assert.ok(stdout.includes("kept until FDMS confirms"));
 });
+
+test("day close refuses a day with Red validation errors and keeps the state", () => {
+  const dir = tempProfile({
+    "device.json": DEVICE_JSON,
+    "device-certificate.pem": "-----BEGIN CERTIFICATE-----\nAA==\n-----END CERTIFICATE-----\n",
+    "device-private-key.pem": "-----BEGIN PRIVATE KEY-----\nAA==\n-----END PRIVATE KEY-----\n",
+    "day-state.json": JSON.stringify({
+      deviceId: 99999,
+      savedAt: "2026-08-23T00:00:00Z",
+      state: {
+        fiscalDayNo: 3,
+        fiscalDayDate: "2026-08-23",
+        receiptCounter: 1,
+        receiptGlobalNo: 7,
+        counters: [],
+        redErrors: [{ receiptGlobalNo: 7, receiptCounter: 1, code: "RCPT030" }],
+      },
+    }),
+  });
+  const { code, stderr } = run(["day", "close", "--profile", dir]);
+  assert.equal(code, 1);
+  assert.ok(stderr.includes("RCPT030"), stderr);
+  assert.ok(stderr.includes("--force"), stderr);
+  assert.ok(readFileSync(join(dir, "day-state.json"), "utf-8").includes("RCPT030"));
+  rmSync(dir, { recursive: true, force: true });
+});

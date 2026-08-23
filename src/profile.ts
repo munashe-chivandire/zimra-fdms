@@ -137,10 +137,37 @@ export function saveDayState(p: Profile, state: FiscalDayState): void {
     state,
   };
   writeFileSync(dayStatePath(p.dir), `${JSON.stringify(persisted, null, 2)}\n`);
+  saveLastGlobalNo(p, state.receiptGlobalNo);
 }
 
 export function clearDayState(p: Profile): void {
   rmSync(dayStatePath(p.dir), { force: true });
+}
+
+/**
+ * Highest receipt global number this profile has issued, kept across days.
+ * FDMS's GetStatus reports the number of the receipt with the latest
+ * receiptDate, so after a future-dated receipt it lags the real maximum and
+ * the next day's first receipt would get a Red RCPT012.
+ */
+export function lastGlobalNoPath(dir: string): string {
+  return join(dir, "last-receipt-global-no.json");
+}
+
+export function loadLastGlobalNo(p: Profile): number | undefined {
+  const path = lastGlobalNoPath(p.dir);
+  if (!existsSync(path)) return undefined;
+  const v = JSON.parse(readFileSync(path, "utf-8"));
+  return v.deviceId === p.device.deviceId ? v.lastReceiptGlobalNo : undefined;
+}
+
+export function saveLastGlobalNo(p: Profile, lastReceiptGlobalNo: number): void {
+  const prev = loadLastGlobalNo(p) ?? 0;
+  if (lastReceiptGlobalNo <= prev) return;
+  writeFileSync(
+    lastGlobalNoPath(p.dir),
+    `${JSON.stringify({ deviceId: p.device.deviceId, lastReceiptGlobalNo }, null, 2)}\n`,
+  );
 }
 
 // -- day close helpers ------------------------------------------------------

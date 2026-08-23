@@ -21,7 +21,7 @@
 import { parseArgs } from "node:util";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { type ReceiptInput } from "./device.js";
+import { DayNotClosableError, type ReceiptInput } from "./device.js";
 import { registerDevice } from "./registration.js";
 import {
   ProfileError,
@@ -30,6 +30,7 @@ import {
   dayStatePath,
   fiscalDeviceFrom,
   loadDayState,
+  loadLastGlobalNo,
   loadProfile as loadProfileOrThrow,
   pollDayClosed,
   profileDir,
@@ -314,7 +315,9 @@ async function cmdDayOpen(argv: string[]): Promise<void> {
   const p = loadProfile(values.profile);
   const device = fiscalDeviceFrom(p);
   try {
-    const res = await device.openDay();
+    const res = await device.openDay(undefined, new Date(), {
+      lastReceiptGlobalNo: loadLastGlobalNo(p),
+    });
     saveDayState(p, device.getState()!);
     console.log(`Fiscal day ${res.fiscalDayNo} opened.`);
   } catch (err) {
@@ -328,11 +331,12 @@ async function cmdDayClose(argv: string[]): Promise<void> {
     options: {
       profile: { type: "string" },
       date: { type: "string" },
+      force: { type: "boolean", default: false },
       help: { type: "boolean", short: "h", default: false },
     },
   });
   if (values.help) {
-    console.log(`Usage: zimra-fdms day close [--profile <dir>] [--date YYYY-MM-DD]
+    console.log(`Usage: zimra-fdms day close [--profile <dir>] [--date YYYY-MM-DD] [--force]
 
 Closes the fiscal day using the locally tracked counters. If no local day
 state exists (day opened on another machine, or state file lost), falls back
@@ -343,7 +347,11 @@ cannot know it (FDMS does not report it) and assumes today. Pass --date when
 recovering a day opened on an earlier date.
 
 Local state is kept until FDMS confirms the close, so a failed close can be
-retried with the real counters.`);
+retried with the real counters.
+
+A day holding a receipt with a Red validation error (e.g. RCPT030) cannot be
+closed by the device; FDMS rejects it with ReceiptsWithValidationErrors and
+only ZIMRA can close it. The command refuses up front; --force submits anyway.`);
     return;
   }
   const p = loadProfile(values.profile);
@@ -353,7 +361,7 @@ retried with the real counters.`);
   try {
     if (local) {
       device.restoreState(local);
-      await device.closeDay();
+      await device.closeDay({ force: values.force });
     } else {
       const res = await closeFromServerCounters(p, { fiscalDayDate: values.date });
       if (res.alreadyClosed) {
@@ -386,6 +394,12 @@ retried with the real counters.`);
       );
     }
   } catch (err) {
+    if (err instanceof DayNotClosableError) {
+      fail(
+        `${err.message}
+Test environment: https://fdmsops.zimra.co.zw/fdms-public/close-fiscal-day. Production: contact ZIMRA. Local day state was kept. Use --force to submit the close anyway.`,
+      );
+    }
     printApiError(err);
   }
 }
@@ -426,6 +440,12 @@ Payments must sum to the receipt total.`);
   }
   for (const k of ["currency", "invoiceNo", "lines", "payments"] as const) {
     if (input[k] === undefined) fail(`${file} is missing "${k}". See \`zimra-fdms submit --sample\`.`);
+  }
+  // JSON carries receiptDate as a string; the SDK wants a Date.
+  if (input.receiptDate !== undefined) {
+    const d = new Date(input.receiptDate as unknown as string);
+    if (Number.isNaN(d.getTime())) fail(`${file}: receiptDate is not a valid date.`);
+    input.receiptDate = d;
   }
 
   const p = loadProfile(values.profile);
@@ -468,8 +488,15 @@ Payments must sum to the receipt total.`);
       if (validation.length) {
         console.log(`Server validation warnings:`);
         for (const v of validation) {
-          console.log(`  [${v.validationErrorColor ?? "?"}] ${v.validationErrorCode}`);
+          console.log(
+            `  [${v.validationErrorColor ?? "?"}] ${v.validationErrorCode}${v.validationErrorDescription ? ` — ${v.validationErrorDescription}` : ""}`,
+          );
         }
+      }
+      if (device.getState()?.redErrors?.length) {
+        console.error(
+          "Red validation error: this fiscal day can no longer be closed by the device. Close it on the ZIMRA portal once trading is done.",
+        );
       }
     }
   } catch (err) {

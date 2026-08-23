@@ -11,9 +11,11 @@ export {
 } from "./crypto.js";
 export {
   FiscalDevice,
+  DayNotClosableError,
   buildReceiptTaxes,
   accumulateCounters,
   type ReceiptInput,
+  type RedValidationError,
   type ReceiptLineInput,
   type FiscalDayState,
   type SubmittedReceipt,

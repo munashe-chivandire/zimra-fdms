@@ -244,7 +244,7 @@ export interface SubmitReceiptRequest {
 export interface ValidationError {
   validationErrorCode?: string;
   validationErrorColor?: string;
-  validationErrorText?: string;
+  validationErrorDescription?: string;
 }
 
 export interface SubmitReceiptResponse {

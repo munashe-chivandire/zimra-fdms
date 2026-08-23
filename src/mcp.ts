@@ -18,7 +18,7 @@ import { join } from "node:path";
 import { McpServer } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import { z } from "zod";
-import { type ReceiptInput } from "./device.js";
+import { DayNotClosableError, type ReceiptInput } from "./device.js";
 import { registerDevice } from "./registration.js";
 import {
   ProfileError,
@@ -26,6 +26,7 @@ import {
   closeFromServerCounters,
   fiscalDeviceFrom,
   loadDayState,
+  loadLastGlobalNo,
   loadProfile,
   pollDayClosed,
   profileDir,
@@ -85,6 +86,12 @@ const receiptInputSchema = z.object({
     .min(1)
     .describe("Must sum to the receipt total"),
   notes: z.string().optional(),
+  receiptDate: z
+    .string()
+    .optional()
+    .describe(
+      "Receipt date/time (ISO 8601). Defaults to now. Must be later than the previous receipt on the device; an earlier date is a Red RCPT030 error that blocks closing the day.",
+    ),
   buyer: z
     .object({
       buyerRegisterName: z.string().optional(),
@@ -309,7 +316,9 @@ export function createZimraMcpServer(defaultProfile?: string): McpServer {
     handling(async (args) => {
       const p = load(args.profile);
       const device = fiscalDeviceFrom(p);
-      const res = await device.openDay();
+      const res = await device.openDay(undefined, new Date(), {
+        lastReceiptGlobalNo: loadLastGlobalNo(p),
+      });
       saveDayState(p, device.getState()!);
       return ok(
         { fiscalDayNo: res.fiscalDayNo },
@@ -323,9 +332,13 @@ export function createZimraMcpServer(defaultProfile?: string): McpServer {
     {
       title: "Close fiscal day",
       description:
-        "Close the fiscal day using the locally tracked counters. If no local day state exists (day opened elsewhere or state lost), falls back to signing the counters FDMS itself reports. The signature covers the date the day was opened, which FDMS does not report; without local state the SDK assumes today, so pass fiscalDayDate when recovering a day opened earlier. Local state is kept until FDMS confirms the close. CloseDay is asynchronous server-side; this polls until the day settles (up to ~36s).",
+        "Close the fiscal day using the locally tracked counters. If no local day state exists (day opened elsewhere or state lost), falls back to signing the counters FDMS itself reports. The signature covers the date the day was opened, which FDMS does not report; without local state the SDK assumes today, so pass fiscalDayDate when recovering a day opened earlier. Local state is kept until FDMS confirms the close. A day holding a receipt with a Red validation error (e.g. RCPT030) cannot be closed by the device and is refused up front unless force is set; only ZIMRA can close such a day. CloseDay is asynchronous server-side; this polls until the day settles (up to ~36s).",
       inputSchema: z.object({
         profile: profileArg,
+        force: z
+          .boolean()
+          .optional()
+          .describe("Submit CloseDay even though the day holds Red validation errors"),
         fiscalDayDate: z
           .string()
           .regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -343,7 +356,18 @@ export function createZimraMcpServer(defaultProfile?: string): McpServer {
       if (local) {
         const device = fiscalDeviceFrom(p);
         device.restoreState(local);
-        await device.closeDay();
+        try {
+          await device.closeDay({ force: args.force });
+        } catch (err) {
+          if (err instanceof DayNotClosableError) {
+            return toolError(
+              new Error(
+                `${err.message} Test environment: https://fdmsops.zimra.co.zw/fdms-public/close-fiscal-day. Production: contact ZIMRA. Local day state was kept; pass force=true to submit anyway.`,
+              ),
+            );
+          }
+          throw err;
+        }
       } else {
         const res = await closeFromServerCounters(p, { fiscalDayDate: args.fiscalDayDate });
         if (res.alreadyClosed) {
@@ -397,9 +421,18 @@ export function createZimraMcpServer(defaultProfile?: string): McpServer {
       const device = fiscalDeviceFrom(p);
       device.restoreState(local);
       await device.getConfig(); // for QR data
-      const res = await device.submitReceipt(args.receipt as ReceiptInput);
+      const { receiptDate, ...rest } = args.receipt;
+      const input: ReceiptInput = {
+        ...(rest as ReceiptInput),
+        ...(receiptDate !== undefined ? { receiptDate: new Date(receiptDate) } : {}),
+      };
+      if (input.receiptDate && Number.isNaN(input.receiptDate.getTime())) {
+        return toolError(new Error("receiptDate is not a valid date."));
+      }
+      const res = await device.submitReceipt(input);
       saveDayState(p, device.getState()!);
       const validation = res.response.validationErrors ?? [];
+      const dayBlocked = Boolean(device.getState()?.redErrors?.length);
       return ok(
         {
           receiptCounter: res.receipt.receiptCounter,
@@ -409,12 +442,16 @@ export function createZimraMcpServer(defaultProfile?: string): McpServer {
           currency: res.receipt.receiptCurrency,
           qrData: res.qrData ?? null,
           validationErrors: validation,
+          dayClosableByDevice: !dayBlocked,
         },
         `Receipt ${res.receipt.receiptCounter} (global no ${res.receipt.receiptGlobalNo}) accepted — total ${res.receipt.receiptTotal.toFixed(2)} ${res.receipt.receiptCurrency}, receiptID ${res.response.receiptID}.` +
           (validation.length
             ? ` Server validation warnings: ${validation
                 .map((v) => `[${v.validationErrorColor ?? "?"}] ${v.validationErrorCode}`)
                 .join(", ")}`
+            : "") +
+          (dayBlocked
+            ? " Red validation error: this fiscal day can no longer be closed by the device; ZIMRA must close it."
             : ""),
       );
     }),

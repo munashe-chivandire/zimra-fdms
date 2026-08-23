@@ -61,6 +61,34 @@ export interface FiscalDayState {
   /** fdmsDateTime of the last submitted receipt — FDMS requires strictly increasing receiptDates (RCPT030). */
   previousReceiptDate?: string;
   counters: FiscalDayCounter[];
+  /**
+   * Receipts FDMS accepted with a Red validation error. A day carrying one
+   * can no longer be closed by the device (CloseDay fails with
+   * ReceiptsWithValidationErrors); only ZIMRA can close it.
+   */
+  redErrors?: RedValidationError[];
+}
+
+export interface RedValidationError {
+  receiptGlobalNo: number;
+  receiptCounter: number;
+  code: string;
+  description?: string;
+}
+
+/** Thrown by closeDay() when the day holds Red validation errors. */
+export class DayNotClosableError extends Error {
+  constructor(
+    public readonly fiscalDayNo: number,
+    public readonly redErrors: RedValidationError[],
+  ) {
+    super(
+      `Fiscal day ${fiscalDayNo} has ${redErrors.length} receipt(s) with Red validation errors (` +
+        redErrors.map((e) => `global no ${e.receiptGlobalNo}: ${e.code}`).join(", ") +
+        `). FDMS will reject a device CloseDay with ReceiptsWithValidationErrors; the day must be closed by ZIMRA.`,
+    );
+    this.name = "DayNotClosableError";
+  }
 }
 
 export interface SubmittedReceipt {
@@ -161,7 +189,18 @@ export class FiscalDevice {
 
   // -- fiscal day ----------------------------------------------------------
 
-  async openDay(fiscalDayNo?: number, opened: Date = new Date()): Promise<OpenDayResponse> {
+  /**
+   * Open a fiscal day. Receipt global numbers continue from the server's
+   * `lastReceiptGlobalNo`, but FDMS reports the number of the receipt with the
+   * latest receiptDate, not the highest number issued, so after a
+   * future-dated receipt it under-reports. Pass `opts.lastReceiptGlobalNo`
+   * (the highest number this device has issued) and the larger wins.
+   */
+  async openDay(
+    fiscalDayNo?: number,
+    opened: Date = new Date(),
+    opts: { lastReceiptGlobalNo?: number } = {},
+  ): Promise<OpenDayResponse> {
     const status = await this.getStatus();
     if (status.fiscalDayStatus !== "FiscalDayClosed") {
       throw new Error(
@@ -176,7 +215,7 @@ export class FiscalDevice {
         fiscalDayOpened: fdmsDateTime(opened),
       },
     );
-    const lastGlobal = status.lastReceiptGlobalNo ?? 0;
+    const lastGlobal = Math.max(status.lastReceiptGlobalNo ?? 0, opts.lastReceiptGlobalNo ?? 0);
     this.state = {
       fiscalDayNo: res.fiscalDayNo,
       fiscalDayDate: fdmsDate(opened),
@@ -188,8 +227,16 @@ export class FiscalDevice {
     return res;
   }
 
-  async closeDay(): Promise<CloseDayResponse> {
+  /**
+   * Sign and submit CloseDay. Refuses up front when the day holds Red
+   * validation errors, since FDMS will fail the close anyway; pass
+   * `{ force: true }` to submit regardless.
+   */
+  async closeDay(opts: { force?: boolean } = {}): Promise<CloseDayResponse> {
     const s = this.requireDay();
+    if (!opts.force && s.redErrors?.length) {
+      throw new DayNotClosableError(s.fiscalDayNo, s.redErrors);
+    }
     const canonical = fiscalDaySigningString(
       this.device.deviceId,
       s.fiscalDayNo,
@@ -314,6 +361,16 @@ export class FiscalDevice {
     s.previousReceiptHash = signature.hash;
     s.previousReceiptDate = fdmsDateTime(date);
     accumulateCounters(s.counters, receipt);
+    for (const v of response.validationErrors ?? []) {
+      if (v.validationErrorColor?.toLowerCase() === "red") {
+        (s.redErrors ??= []).push({
+          receiptGlobalNo: receipt.receiptGlobalNo,
+          receiptCounter: receipt.receiptCounter,
+          code: v.validationErrorCode ?? "?",
+          description: v.validationErrorDescription,
+        });
+      }
+    }
 
     return {
       receipt,

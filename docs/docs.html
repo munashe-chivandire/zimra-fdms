@@ -553,9 +553,39 @@ sale.qrData;     // string to encode in the printed QR code</code></pre>
 
   <h3>Validation errors</h3>
   <p>A receipt can be accepted and still carry warnings. <code>sale.response.validationErrors</code>
-  is an array of <code>{ validationErrorCode, validationErrorColor, validationErrorText }</code> —
+  is an array of <code>{ validationErrorCode, validationErrorColor, validationErrorDescription }</code> —
   surface these in your logs rather than discarding them, because they are what ZIMRA will ask about
   later.</p>
+
+  <p>The colour matters more than the code. Yellow is a warning. <b>Red means the fiscal day can no
+  longer be closed by the device</b>: CloseDay fails with <code>ReceiptsWithValidationErrors</code> and
+  only ZIMRA can close it (self-service on the test ops portal, a request to ZIMRA in production). The
+  SDK records Red errors in <code>FiscalDayState.redErrors</code> and <code>closeDay()</code> throws
+  <code>DayNotClosableError</code> up front rather than failing thirty seconds later; pass
+  <code>{ force: true }</code> to submit anyway. Observed on the test environment, 23 August 2026:</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Code</th><th>Colour</th><th>Meaning</th><th>Day still closable</th></tr></thead>
+      <tbody>
+        <tr><td><code>RCPT031</code></td><td>Yellow</td><td>Receipt date is in the future</td><td>Yes</td></tr>
+        <tr><td><code>RCPT014</code></td><td>Yellow</td><td>Receipt date is before the day opened</td><td>Yes</td></tr>
+        <tr><td><code>RCPT030</code></td><td><b>Red</b></td><td>Receipt date is earlier than the previous receipt</td><td><b>No</b></td></tr>
+        <tr><td><code>RCPT012</code></td><td><b>Red</b></td><td>Receipt global number is not sequential</td><td><b>No</b></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note-box warn">
+    <i class="ph-light ph-warning"></i>
+    <div>
+      <p><b>A wrong clock is a one-way door.</b> Once a future-dated receipt is accepted, every later
+      receipt must carry a date strictly after it until real time catches up. Submitting with the real
+      (earlier) time is RCPT030 and bricks the day. The SDK nudges auto-generated dates one second past
+      the previous receipt for exactly this reason; only set <code>receiptDate</code> yourself if you
+      know it is later than the last one. FDMS also reports <code>lastReceiptGlobalNo</code> as the
+      number of the receipt with the latest date, not the highest number issued, so the profile keeps
+      its own high-water mark and <code>openDay</code> uses the larger of the two.</p>
+    </div>
+  </div>
 </section>
 
 <!-- ---------------- Offline queue ---------------- -->
@@ -1158,7 +1188,7 @@ const res = await http.request("POST", http.devicePath("Ping"));</code></pre>
         <tr><td><code>Payment</code></td><td><code>moneyTypeCode</code>, <code>paymentAmount</code></td></tr>
         <tr><td><code>BuyerData</code></td><td><code>buyerRegisterName</code>, <code>buyerTradeName</code>, <code>vatNumber</code>, <code>buyerTIN</code>, <code>buyerContacts</code>, <code>buyerAddress</code></td></tr>
         <tr><td><code>CreditDebitNote</code></td><td><code>receiptID</code>, <code>deviceID</code>, <code>receiptGlobalNo</code>, <code>fiscalDayNo</code></td></tr>
-        <tr><td><code>ValidationError</code></td><td><code>validationErrorCode</code>, <code>validationErrorColor</code>, <code>validationErrorText</code></td></tr>
+        <tr><td><code>ValidationError</code></td><td><code>validationErrorCode</code>, <code>validationErrorColor</code>, <code>validationErrorDescription</code></td></tr>
       </tbody>
     </table>
   </div>

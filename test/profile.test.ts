@@ -31,3 +31,78 @@ describe("resolveFiscalDayDate", () => {
     }
   });
 });
+
+import { FiscalDevice, DayNotClosableError } from "../src/device.js";
+
+const DUMMY_DEVICE = new FiscalDevice(
+  { deviceId: 1, serialNumber: "X", modelName: "Server", modelVersion: "v1" },
+  { certificatePem: "", privateKeyPem: "" },
+  { environment: "test" },
+);
+
+describe("closeDay with Red validation errors", () => {
+  const state = {
+    fiscalDayNo: 15,
+    fiscalDayDate: "2026-08-23",
+    receiptCounter: 2,
+    receiptGlobalNo: 23,
+    counters: [],
+    redErrors: [{ receiptGlobalNo: 23, receiptCounter: 2, code: "RCPT030" }],
+  };
+
+  it("refuses before touching the network and names the receipt", async () => {
+    DUMMY_DEVICE.restoreState(state);
+    await assert.rejects(
+      () => DUMMY_DEVICE.closeDay(),
+      (err: unknown) =>
+        err instanceof DayNotClosableError &&
+        err.fiscalDayNo === 15 &&
+        /global no 23: RCPT030/.test(err.message),
+    );
+  });
+
+  it("proceeds with force (fails later on the empty key, not on the guard)", async () => {
+    DUMMY_DEVICE.restoreState(state);
+    await assert.rejects(
+      () => DUMMY_DEVICE.closeDay({ force: true }),
+      (err: unknown) => !(err instanceof DayNotClosableError),
+    );
+  });
+});
+
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { loadLastGlobalNo, saveLastGlobalNo, saveDayState, type Profile } from "../src/profile.js";
+
+describe("last receipt global number", () => {
+  const dir = mkdtempSync(join(tmpdir(), "zimra-profile-test-"));
+  const p = {
+    dir,
+    device: { deviceId: 7, serialNumber: "S", modelName: "Server", modelVersion: "v1", environment: "test" },
+    certificatePem: "",
+    privateKeyPem: "",
+  } as unknown as Profile;
+
+  it("is undefined until a receipt has been issued", () => {
+    assert.equal(loadLastGlobalNo(p), undefined);
+  });
+
+  it("only ever moves up", () => {
+    saveLastGlobalNo(p, 24);
+    saveLastGlobalNo(p, 22);
+    assert.equal(loadLastGlobalNo(p), 24);
+  });
+
+  it("is written by saveDayState", () => {
+    saveDayState(p, {
+      fiscalDayNo: 1,
+      fiscalDayDate: "2026-08-23",
+      receiptCounter: 3,
+      receiptGlobalNo: 30,
+      counters: [],
+    });
+    assert.equal(loadLastGlobalNo(p), 30);
+    rmSync(dir, { recursive: true, force: true });
+  });
+});
