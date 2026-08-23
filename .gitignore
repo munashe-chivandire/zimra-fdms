@@ -14,6 +14,7 @@ fdms-test-credentials.md
 # personal / business files — never publish
 Goko Consultancy Tax  clearance.pdf
 ZIMRA CHAT FABLE.txt
+SIGNS.MD
 
 # README images — live on the orphan `assets` branch, not in main
 # (root only — docs/assets holds the website's CSS/JS and must be tracked)
@@ -33,3 +34,7 @@ coverage/
 .zimra/
 .vercel
 .env*.local
+
+# agent config & design scratch — local only
+.claude/
+Design Inspiration/

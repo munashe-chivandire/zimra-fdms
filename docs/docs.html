@@ -105,7 +105,7 @@
 <!-- ============================ CONTENT ============================ -->
 <main class="content">
 
-<span class="kicker"><span class="dot"></span><b>docs</b><span class="sep">—</span>v0.3.0
+<span class="kicker"><span class="dot"></span><b>docs</b><span class="sep">—</span>v0.3.1
   <span class="sep">·</span>MIT<span class="sep">·</span>Node 18+</span>
 <h1>Documentation</h1>
 <p class="lead">Everything needed to fiscalise with <code>zimra-fdms</code> — from a first registered
@@ -1304,7 +1304,9 @@ npx zimra-fdms day close</code></pre>
     <h4><span class="nm">zimra-fdms day close</span></h4>
     <p>Closes the fiscal day, then polls until the close settles — up to twelve checks, three seconds
     apart. If <code>day-state.json</code> is missing, it recovers by signing the counters FDMS itself
-    reports, so a lost state file does not strand an open day.</p>
+    reports, so a lost state file does not strand an open day. The signature covers the date the day
+    was opened, which FDMS does not report, so pass <code>--date YYYY-MM-DD</code> when recovering a
+    day opened on an earlier date. If FDMS rejects the close, the local state is kept for a retry.</p>
   </div>
 
   <div class="api">
@@ -1417,7 +1419,8 @@ npx zimra-fdms mcp --profile ./.zimra</code></pre>
     <h4><span class="nm">close_fiscal_day</span></h4>
     <p>Closes the day with the locally tracked counters, polling until the asynchronous close
     settles. With no local day state it recovers by signing the counters FDMS itself reports —
-    the same recovery path as <code>zimra-fdms day close</code>.</p>
+    the same recovery path as <code>zimra-fdms day close</code>. Takes an optional
+    <code>fiscalDayDate</code> (YYYY-MM-DD) for recovering a day opened on an earlier date.</p>
   </div>
 
   <div class="api">

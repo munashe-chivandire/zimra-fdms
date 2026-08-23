@@ -1,6 +1,6 @@
 {
   "name": "zimra-fdms",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "TypeScript SDK for the ZIMRA Fiscalisation Data Management System (FDMS) — direct device registration, mTLS, receipt signing, fiscal days, offline queue and QR codes",
   "keywords": [
     "zimra",

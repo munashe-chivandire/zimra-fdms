@@ -150,6 +150,37 @@ export interface ServerCountersClose {
   fiscalDayNo?: number;
   counterCount?: number;
   receiptCounter?: number;
+  /** Date used in the CloseDay signature. */
+  fiscalDayDate?: string;
+  /** True when no date was given and today was assumed. */
+  assumedToday?: boolean;
+}
+
+const FISCAL_DAY_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Pick the fiscal-day date for a stateless close. FDMS signs CloseDay over
+ * the date the day was *opened*, and GetStatus never reports it, so a day
+ * opened yesterday cannot be closed without the caller supplying the date.
+ */
+export function resolveFiscalDayDate(explicit?: string): {
+  fiscalDayDate: string;
+  assumedToday: boolean;
+} {
+  if (explicit !== undefined) {
+    if (!FISCAL_DAY_DATE.test(explicit) || Number.isNaN(Date.parse(explicit))) {
+      throw new ProfileError(
+        `Invalid fiscal day date "${explicit}" — expected YYYY-MM-DD (the date the day was opened).`,
+      );
+    }
+    return { fiscalDayDate: explicit, assumedToday: false };
+  }
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return {
+    fiscalDayDate: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
+    assumedToday: true,
+  };
 }
 
 /**
@@ -157,7 +188,10 @@ export interface ServerCountersClose {
  * recovery path for a lost/absent day-state.json and mirrors what the server
  * expects bit-for-bit, since the numbers are its own.
  */
-export async function closeFromServerCounters(p: Profile): Promise<ServerCountersClose> {
+export async function closeFromServerCounters(
+  p: Profile,
+  opts: { fiscalDayDate?: string } = {},
+): Promise<ServerCountersClose> {
   const http = new FdmsHttpClient(
     p.device,
     { certificatePem: p.certificatePem, privateKeyPem: p.privateKeyPem },
@@ -182,11 +216,9 @@ export async function closeFromServerCounters(p: Profile): Promise<ServerCounter
     (sum, q) => sum + (q.receiptQuantity ?? 0),
     0,
   );
-  // GetStatus doesn't report when the day was opened; the signing string needs
-  // the opening date. Same-day recovery (the realistic case) makes that today.
-  const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const fiscalDayDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  // GetStatus doesn't report when the day was opened, but the signature is
+  // over that date. Callers recovering a day from a previous date must pass it.
+  const { fiscalDayDate, assumedToday } = resolveFiscalDayDate(opts.fiscalDayDate);
 
   const canonical = fiscalDaySigningString(
     p.device.deviceId,
@@ -206,6 +238,8 @@ export async function closeFromServerCounters(p: Profile): Promise<ServerCounter
     fiscalDayNo,
     counterCount: counters.length,
     receiptCounter,
+    fiscalDayDate,
+    assumedToday,
   };
 }
 

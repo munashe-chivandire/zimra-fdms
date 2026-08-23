@@ -1,6 +1,7 @@
 /**
  * Recover a FiscalDayCloseFailed day: re-sign the counters the server reports
- * and retry CloseDay. Usage: npx tsx scripts/recover-close.ts [p1363|der] [receiptCounter]
+ * and retry CloseDay. Usage: npx tsx scripts/recover-close.ts [p1363|der] [receiptCounter] [YYYY-MM-DD]
+ * The date is the day the fiscal day was OPENED (check the ops portal); defaults to today.
  */
 import { readFileSync } from "node:fs";
 import { FdmsHttpClient } from "../src/http.js";
@@ -18,6 +19,7 @@ import type {
 
 const format = (process.argv[2] ?? "der") as EcdsaSignatureFormat;
 const receiptCounterArg = process.argv[3] ? Number(process.argv[3]) : undefined;
+const fiscalDayDateArg = process.argv[4];
 
 const device = {
   deviceId: 37367,
@@ -54,10 +56,11 @@ const fiscalDayNo = status.lastFiscalDayNo!;
 const counters = (status.fiscalDayCounter ?? []).filter(
   (c) => toCents(c.fiscalCounterValue) !== 0,
 );
-// Fiscal day date: the day it was opened — today in this test flow.
+// Fiscal day date: the day it was opened. Only today if nothing is passed.
 const now = new Date();
 const p = (n: number) => String(n).padStart(2, "0");
-const fiscalDayDate = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}`;
+const fiscalDayDate =
+  fiscalDayDateArg ?? `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}`;
 
 const receiptCounter =
   receiptCounterArg ??

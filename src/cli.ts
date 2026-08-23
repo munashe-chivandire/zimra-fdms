@@ -327,15 +327,23 @@ async function cmdDayClose(argv: string[]): Promise<void> {
     args: argv,
     options: {
       profile: { type: "string" },
+      date: { type: "string" },
       help: { type: "boolean", short: "h", default: false },
     },
   });
   if (values.help) {
-    console.log(`Usage: zimra-fdms day close [--profile <dir>]
+    console.log(`Usage: zimra-fdms day close [--profile <dir>] [--date YYYY-MM-DD]
 
 Closes the fiscal day using the locally tracked counters. If no local day
 state exists (day opened on another machine, or state file lost), falls back
-to signing the counters FDMS itself reports — same math, server's numbers.`);
+to signing the counters FDMS itself reports — same math, server's numbers.
+
+The signature covers the date the day was OPENED. Without local state the SDK
+cannot know it (FDMS does not report it) and assumes today. Pass --date when
+recovering a day opened on an earlier date.
+
+Local state is kept until FDMS confirms the close, so a failed close can be
+retried with the real counters.`);
     return;
   }
   const p = loadProfile(values.profile);
@@ -347,24 +355,34 @@ to signing the counters FDMS itself reports — same math, server's numbers.`);
       device.restoreState(local);
       await device.closeDay();
     } else {
-      const res = await closeFromServerCounters(p);
+      const res = await closeFromServerCounters(p, { fiscalDayDate: values.date });
       if (res.alreadyClosed) {
         console.log("Fiscal day is already closed.");
         clearDayState(p);
         return;
       }
       console.log(
-        `No local day state — closing day ${res.fiscalDayNo} from server counters (${res.counterCount} counter(s), ${res.receiptCounter} receipt(s)).`,
+        `No local day state — closing day ${res.fiscalDayNo} from server counters (${res.counterCount} counter(s), ${res.receiptCounter} receipt(s), opened ${res.fiscalDayDate}).`,
       );
+      if (res.assumedToday) {
+        console.log(
+          "Assuming the day was opened today. If it was opened earlier the close fails with BadCertificateSignature; retry with --date YYYY-MM-DD.",
+        );
+      }
     }
-    clearDayState(p);
     const outcome = await pollDayClosed(p, () => process.stdout.write("."));
     process.stdout.write("\n");
     if (outcome === "FiscalDayClosed") {
+      clearDayState(p);
       console.log("Fiscal day closed.");
     } else {
+      const hint = local
+        ? "Local day state was kept so you can retry."
+        : values.date === undefined
+          ? "If the day was opened on an earlier date, retry with --date YYYY-MM-DD."
+          : "Check the opened date on the ZIMRA ops portal; a day with receipt validation errors can only be force-closed there.";
       fail(
-        `CloseDay was accepted but the day is now "${outcome}". Check \`zimra-fdms status\` — FDMS validates asynchronously.`,
+        `CloseDay was accepted but the day is now "${outcome}". Check \`zimra-fdms status\` — FDMS validates asynchronously. ${hint}`,
       );
     }
   } catch (err) {

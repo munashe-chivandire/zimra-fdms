@@ -245,3 +245,10 @@ test("submit without an open day points at `day open`", () => {
   rmSync(dir, { recursive: true, force: true });
   rmSync(receipt, { recursive: true, force: true });
 });
+
+test("day close --help documents --date and the kept state", () => {
+  const { code, stdout } = run(["day", "close", "--help"]);
+  assert.equal(code, 0);
+  assert.ok(stdout.includes("--date YYYY-MM-DD"));
+  assert.ok(stdout.includes("kept until FDMS confirms"));
+});

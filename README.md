@@ -50,7 +50,10 @@ Device identity, certificate and the fiscal-day hash chain live in a profile
 directory (default `./.zimra`, override with `--profile <dir>` or
 `ZIMRA_PROFILE`). Receipts chain correctly across separate invocations; if
 the day-state file is ever lost, `day close` recovers by signing the counters
-FDMS itself reports. `status`, `config` and `submit` take `--json` for
+FDMS itself reports. That signature covers the date the day was opened, which
+FDMS does not report back, so pass `--date YYYY-MM-DD` when recovering a day
+opened on an earlier date. A close that FDMS rejects keeps the local state
+for a retry. `status`, `config` and `submit` take `--json` for
 scripting. **Keep `.zimra/` out of version control** — it contains the
 device private key.
 

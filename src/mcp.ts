@@ -323,8 +323,17 @@ export function createZimraMcpServer(defaultProfile?: string): McpServer {
     {
       title: "Close fiscal day",
       description:
-        "Close the fiscal day using the locally tracked counters. If no local day state exists (day opened elsewhere or state lost), falls back to signing the counters FDMS itself reports. CloseDay is asynchronous server-side; this polls until the day settles (up to ~36s).",
-      inputSchema: z.object({ profile: profileArg }),
+        "Close the fiscal day using the locally tracked counters. If no local day state exists (day opened elsewhere or state lost), falls back to signing the counters FDMS itself reports. The signature covers the date the day was opened, which FDMS does not report; without local state the SDK assumes today, so pass fiscalDayDate when recovering a day opened earlier. Local state is kept until FDMS confirms the close. CloseDay is asynchronous server-side; this polls until the day settles (up to ~36s).",
+      inputSchema: z.object({
+        profile: profileArg,
+        fiscalDayDate: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional()
+          .describe(
+            "Date the fiscal day was opened (YYYY-MM-DD). Only used when no local day state exists; defaults to today.",
+          ),
+      }),
       annotations: { idempotentHint: false, openWorldHint: true },
     },
     handling(async (args) => {
@@ -336,24 +345,28 @@ export function createZimraMcpServer(defaultProfile?: string): McpServer {
         device.restoreState(local);
         await device.closeDay();
       } else {
-        const res = await closeFromServerCounters(p);
+        const res = await closeFromServerCounters(p, { fiscalDayDate: args.fiscalDayDate });
         if (res.alreadyClosed) {
           clearDayState(p);
           return ok({ status: "FiscalDayClosed" }, "Fiscal day is already closed.");
         }
-        recovery = `No local day state — closed day ${res.fiscalDayNo} from server counters (${res.counterCount} counter(s), ${res.receiptCounter} receipt(s)).`;
+        recovery = `No local day state — closed day ${res.fiscalDayNo} from server counters (${res.counterCount} counter(s), ${res.receiptCounter} receipt(s), opened ${res.fiscalDayDate}${res.assumedToday ? ", assumed" : ""}).`;
       }
-      clearDayState(p);
       const outcome = await pollDayClosed(p);
       if (outcome === "FiscalDayClosed") {
+        clearDayState(p);
         return ok(
           { status: outcome },
           ["Fiscal day closed.", recovery].filter(Boolean).join(" "),
         );
       }
+      const hint =
+        !local && args.fiscalDayDate === undefined
+          ? " If the day was opened on an earlier date, retry with fiscalDayDate."
+          : " Local day state was kept so the close can be retried.";
       return toolError(
         new Error(
-          `CloseDay was accepted but the day is now "${outcome}". Check get_status — FDMS validates asynchronously.`,
+          `CloseDay was accepted but the day is now "${outcome}". Check get_status — FDMS validates asynchronously.${hint}`,
         ),
       );
     }),
