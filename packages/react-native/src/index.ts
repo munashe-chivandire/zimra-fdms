@@ -1,5 +1,5 @@
 /**
- * @zimra-fdms/react-native: the Android adapter.
+ * zimra-fdms-react-native: the Android adapter.
  *
  * The device key is generated inside Android Keystore (StrongBox when the
  * phone has it) and never leaves it. The native module signs, exports the
@@ -46,8 +46,8 @@ function native(): NativeZimraFdms {
   if (!mod) {
     throw new Error(
       Platform.OS === "android"
-        ? "ZimraFdms native module not linked; rebuild the app after installing @zimra-fdms/react-native"
-        : `@zimra-fdms/react-native supports Android only (got ${Platform.OS})`,
+        ? "ZimraFdms native module not linked; rebuild the app after installing zimra-fdms-react-native"
+        : `zimra-fdms-react-native supports Android only (got ${Platform.OS})`,
     );
   }
   return mod;

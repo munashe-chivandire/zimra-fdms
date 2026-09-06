@@ -780,7 +780,7 @@ await device.submitReceipt(input);    // marker -> request -> commit -> marker d
   <code>FileStorage</code>, which writes to a temp file and renames, and uses the same file names
   the CLI profile has always used (<code>day-state.json</code>,
   <code>last-receipt-global-no.json</code>), so a profile directory is a valid store. On Android,
-  <code>@zimra-fdms/react-native</code> uses SQLite. In-memory is <code>MemoryStorage</code>.</p>
+  <code>zimra-fdms-react-native</code> uses SQLite. In-memory is <code>MemoryStorage</code>.</p>
 
   <div class="note-box">
     <i class="ph-light ph-info"></i>
@@ -810,7 +810,7 @@ await device.submitReceipt(input);    // marker -> request -> commit -> marker d
         <tr><td><code>zimra-fdms</code></td><td>The Node bundle: core plus <code>PemSigner</code>, <code>NodeTransport</code>, <code>FileStorage</code>, <code>FileJournal</code>, the CLI and the MCP server. What 0.3.x code imports.</td><td>Node 18+</td></tr>
         <tr><td><code>zimra-fdms/core</code></td><td><code>FiscalDevice</code>, signing, counters, hash chain, QR, queue, <code>buildCsr</code>. You supply a <code>Signer</code> and a <code>Transport</code>.</td><td>Anything with ES2020</td></tr>
         <tr><td><code>zimra-fdms/simulator</code></td><td>A local FDMS. See <a href="#simulator">Simulator</a>.</td><td>Node</td></tr>
-        <tr><td><code>@zimra-fdms/react-native</code></td><td><code>KeystoreSigner</code> and <code>OkHttpTransport</code> over a Kotlin module.</td><td>Android 8+</td></tr>
+        <tr><td><code>zimra-fdms-react-native</code></td><td><code>KeystoreSigner</code> and <code>OkHttpTransport</code> over a Kotlin module.</td><td>Android 8+</td></tr>
       </tbody>
     </table>
   </div>
@@ -837,13 +837,13 @@ const device = new FiscalDevice(identity, { signer, transport, storage });</code
   </div>
 
   <h3>Android</h3>
-  <p><code>@zimra-fdms/react-native</code> generates an ECDSA P-256 key in Android Keystore with
+  <p><code>zimra-fdms-react-native</code> generates an ECDSA P-256 key in Android Keystore with
   <code>PURPOSE_SIGN</code> only, StrongBox when the phone has one. The Kotlin module does three
   things: hold the key, sign bytes, and run HTTPS through OkHttp with a <code>KeyManager</code> bound
   to that key. Hermes has no WebCrypto and no <code>TextEncoder</code>; the core needs neither.</p>
 
   <div class="codewin" data-lang="ts" data-file="android.ts">
-<pre><code>import { KeystoreSigner, registerDevice, createFiscalDevice } from "@zimra-fdms/react-native";
+<pre><code>import { KeystoreSigner, registerDevice, createFiscalDevice } from "zimra-fdms-react-native";
 
 const signer = await KeystoreSigner.ensure("zimra-device-12345");
 const { certificatePem } = await registerDevice(identity, "ACTIVKEY", signer, { environment: "test" });

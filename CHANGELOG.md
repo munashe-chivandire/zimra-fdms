@@ -34,7 +34,7 @@ fiscal behaviour changes, and 0.3.x code keeps working.
 - **`renewCertificate()`** in the core reuses the device's key. The Node
   `FiscalDevice` keeps the 0.3.x rotate-the-key behaviour under
   `renewWithNewKey()`.
-- **`@zimra-fdms/react-native`** in `packages/react-native`: `KeystoreSigner`
+- **`zimra-fdms-react-native`** in `packages/react-native`: `KeystoreSigner`
   and `OkHttpTransport` over a Kotlin module. The keystore and mutual-TLS
   logic ran on an Android 16 emulator through `android/check`, a plain-Java
   twin built with the SDK tools, driven by `scripts/android-check.sh`: key

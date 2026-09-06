@@ -44,7 +44,7 @@ Three entry points:
 | --- | --- | --- |
 | `zimra-fdms` | The Node bundle: core plus `PemSigner`, `NodeTransport`, the CLI and MCP server. What 0.3.x code imports. | Node 18+ |
 | `zimra-fdms/core` | `FiscalDevice`, signing strings, counters, hash chain, QR, offline queue, `buildCsr`. You supply a `Signer` and a `Transport`. | Anything with ES2020 |
-| `@zimra-fdms/react-native` | `KeystoreSigner` and `OkHttpTransport` over a Kotlin module, in [packages/react-native](packages/react-native). | Android 8+ |
+| `zimra-fdms-react-native` | `KeystoreSigner` and `OkHttpTransport` over a Kotlin module, in [packages/react-native](packages/react-native). | Android 8+ |
 
 ## CLI — fiscalise without writing code
 
@@ -244,7 +244,7 @@ Green receipts. `device.clock.offsetMs` tells you how far off the device is.
 ### 8. Android
 
 ```ts
-import { KeystoreSigner, registerDevice, createFiscalDevice } from "@zimra-fdms/react-native";
+import { KeystoreSigner, registerDevice, createFiscalDevice } from "zimra-fdms-react-native";
 
 const signer = await KeystoreSigner.ensure("zimra-device-12345");   // StrongBox when available
 const { certificatePem } = await registerDevice(identity, "ACTIVKEY", signer, { environment: "test" });

@@ -1,4 +1,4 @@
-# @zimra-fdms/react-native
+# zimra-fdms-react-native
 
 Android adapter for [zimra-fdms](../../README.md). The device key is created
 inside Android Keystore (StrongBox where the phone has one) with
@@ -14,7 +14,7 @@ HTTPS with the key as the client identity.
 ## Install
 
 ```sh
-npm install zimra-fdms @zimra-fdms/react-native
+npm install zimra-fdms zimra-fdms-react-native
 ```
 
 Autolinking picks up the Android module. Expo managed projects need a
@@ -24,7 +24,7 @@ or later.
 ## Register once
 
 ```ts
-import { KeystoreSigner, registerDevice } from "@zimra-fdms/react-native";
+import { KeystoreSigner, registerDevice } from "zimra-fdms-react-native";
 
 const signer = await KeystoreSigner.ensure("zimra-device-12345");
 const { certificatePem } = await registerDevice(
@@ -39,7 +39,7 @@ const { certificatePem } = await registerDevice(
 ## Every day
 
 ```ts
-import { createFiscalDevice } from "@zimra-fdms/react-native";
+import { createFiscalDevice } from "zimra-fdms-react-native";
 
 const device = createFiscalDevice(
   { deviceId: 12345, serialNumber: "MYPOS001", modelName: "Android", modelVersion: "1" },

@@ -49,7 +49,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-react-native:
-    # @zimra-fdms/react-native peer-depends on the root package, so it goes
+    # zimra-fdms-react-native peer-depends on the root package, so it goes
     # out after it. A prerelease version (0.4.0-beta.1) lands on the beta
     # dist-tag; a plain version on latest.
     needs: publish
@@ -83,7 +83,7 @@ jobs:
             *-*) TAG=beta ;;
             *) TAG=latest ;;
           esac
-          echo "Publishing @zimra-fdms/react-native@$VERSION to $TAG"
+          echo "Publishing zimra-fdms-react-native@$VERSION to $TAG"
           npm publish --provenance --access public --tag "$TAG"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
