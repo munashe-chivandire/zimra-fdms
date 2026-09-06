@@ -71,7 +71,10 @@ class ZimraFdmsModule(reactContext: ReactApplicationContext) :
         val builder = { strongBox: Boolean ->
             KeyGenParameterSpec.Builder(alias, KeyProperties.PURPOSE_SIGN)
                 .setAlgorithmParameterSpec(ECGenParameterSpec("secp256r1"))
-                .setDigests(KeyProperties.DIGEST_SHA256)
+                // DIGEST_NONE as well as SHA-256: for TLS client authentication
+                // Conscrypt signs the already-hashed transcript with NONEwithECDSA.
+                // Found on the emulator; without it the mTLS handshake fails.
+                .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_NONE)
                 // Attestation lets a bank verify the key is hardware-backed.
                 .setAttestationChallenge(alias.toByteArray())
                 .apply { if (strongBox && Build.VERSION.SDK_INT >= 28) setIsStrongBoxBacked(true) }

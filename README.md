@@ -252,6 +252,10 @@ const device = createFiscalDevice(identity, { alias: "zimra-device-12345", certi
 ```
 
 See [packages/react-native/README.md](packages/react-native/README.md).
+`bash scripts/android-check.sh` builds a plain-Java check app with the SDK
+tools alone, installs it on a running emulator, and drives the real core
+through the emulator: keystore key, CSR, registration, mutual TLS, a fiscal
+day. It passes on an Android 16 emulator.
 
 ## Upgrading from 0.3.x
 
@@ -273,6 +277,10 @@ live and which come from the documentation.
   P1363; this SDK converts to DER by default.
 - **CSR subject CN** must be `ZIMRA-{serial}-{deviceId padded to 10 digits}`,
   ECDSA P-256 preferred.
+- **Android Keystore keys used for TLS need `DIGEST_NONE`** as well as
+  `SHA256`. Conscrypt signs the already-hashed handshake transcript with
+  `NONEwithECDSA`; without it the mTLS handshake fails with an unhelpful
+  I/O error on the device and a hang-up on the server.
 - **Receipt canonical string**: `deviceID + RECEIPTTYPE + CURRENCY +
   receiptGlobalNo + receiptDate(YYYY-MM-DDTHH:mm:ss, local, no TZ) +
   total-in-cents + taxes(sorted by taxID: percent "15.00"/"" if exempt +

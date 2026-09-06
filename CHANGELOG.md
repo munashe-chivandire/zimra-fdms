@@ -35,8 +35,13 @@ fiscal behaviour changes, and 0.3.x code keeps working.
   `FiscalDevice` keeps the 0.3.x rotate-the-key behaviour under
   `renewWithNewKey()`.
 - **`@zimra-fdms/react-native`** in `packages/react-native`: `KeystoreSigner`
-  and `OkHttpTransport` over a Kotlin module. Written, typechecked, not yet
-  run on a device.
+  and `OkHttpTransport` over a Kotlin module. The keystore and mutual-TLS
+  logic ran on an Android 16 emulator through `android/check`, a plain-Java
+  twin built with the SDK tools, driven by `scripts/android-check.sh`: key
+  in Android Keystore, CSR signed by it, RegisterDevice, mTLS, receipts,
+  reconcile, CloseDay. That run showed a keystore key needs `DIGEST_NONE`
+  for TLS client auth; the Kotlin module sets it. The Kotlin has not yet
+  been built with Gradle.
 - **Integer cents.** `ReceiptInput` amounts are a whole number of major
   units or `cents("11.50")`; a fractional JS number throws, naming the
   field. Tax, totals, payments and counters are computed in integer cents

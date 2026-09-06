@@ -19,6 +19,7 @@ const { values } = parseArgs({
     ca: { type: "string", short: "c", default: "zimra-simulator-ca.pem" },
     "activation-key": { type: "string", multiple: true },
     "close-delay": { type: "string", default: "300" },
+    san: { type: "string", multiple: true },
     help: { type: "boolean", short: "h" },
   },
 });
@@ -32,6 +33,8 @@ Options
   --ca <file>             Where to write the CA certificate (default zimra-simulator-ca.pem)
   --activation-key <key>  Accept only these keys for RegisterDevice (repeatable; default any 8 chars)
   --close-delay <ms>      Time before CloseDay settles (default 300)
+  --san <name-or-ip>      Extra subject alternative name for the server certificate
+                          (repeatable; --host 0.0.0.0 --san 10.0.2.2 for an Android emulator)
 
 The SDK needs the CA to trust the server:
   new FiscalDevice(id, pems, { baseUrl: "https://localhost:8443", ca: readFileSync("zimra-simulator-ca.pem", "utf-8") })
@@ -44,6 +47,7 @@ const sim = await FdmsSimulator.create({
   host: values.host,
   activationKeys: values["activation-key"],
   closeDelayMs: Number(values["close-delay"]),
+  hosts: values.san,
 });
 const { url, caPem } = await sim.start();
 writeFileSync(values.ca!, caPem);

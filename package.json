@@ -44,7 +44,8 @@
     "test:e2e:mcp": "node scripts/mcp-e2e.mjs",
     "lint:core": "node scripts/check-core-portable.mjs",
     "simulator": "tsx src/simulator/cli.ts",
-    "vectors": "tsx scripts/gen-vectors.ts"
+    "vectors": "tsx scripts/gen-vectors.ts",
+    "android:check": "bash scripts/android-check.sh"
   },
   "license": "MIT",
   "publishConfig": {

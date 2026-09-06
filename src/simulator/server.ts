@@ -27,6 +27,11 @@ import type { FiscalDayCounter, FiscalDayStatus, Receipt, ValidationError } from
 export interface SimulatorOptions {
   port?: number;
   host?: string;
+  /**
+   * Extra names for the server certificate, e.g. "10.0.2.2" so an Android
+   * emulator can reach the host. localhost and 127.0.0.1 are always included.
+   */
+  hosts?: string[];
   /** Activation keys accepted by RegisterDevice. Default: any 8 characters. */
   activationKeys?: string[];
   /** Delay before a CloseDay settles. Default 300 ms. */
@@ -97,8 +102,8 @@ export class FdmsSimulator {
 
   private server?: Server;
   private opCounter = 0;
-  private readonly options: Required<Omit<SimulatorOptions, "activationKeys" | "port" | "host">> &
-    Pick<SimulatorOptions, "activationKeys" | "port" | "host">;
+  private readonly options: Required<Omit<SimulatorOptions, "activationKeys" | "port" | "host" | "hosts">> &
+    Pick<SimulatorOptions, "activationKeys" | "port" | "host" | "hosts">;
 
   private constructor(readonly ca: SimulatorCa, options: SimulatorOptions) {
     this.options = {
@@ -123,7 +128,7 @@ export class FdmsSimulator {
   /** Start listening. Returns the base URL to point the SDK at. */
   async start(): Promise<{ url: string; port: number; caPem: string }> {
     const host = this.options.host ?? "127.0.0.1";
-    const identity = await this.ca.serverIdentity(["localhost"]);
+    const identity = await this.ca.serverIdentity(["localhost", ...(this.options.hosts ?? [])]);
     this.server = createServer(
       {
         key: identity.privateKeyPem,
@@ -136,6 +141,10 @@ export class FdmsSimulator {
       },
       (req, res) => void this.handle(req, res),
     );
+    // Handshake failures never reach the request handler; keep them in the log.
+    this.server.on("tlsClientError", (err, socket) => {
+      this.log.push({ method: "TLS", path: `${socket.remoteAddress ?? "?"} ${err.message}`, status: 0 });
+    });
     await new Promise<void>((resolve) => this.server!.listen(this.options.port ?? 0, host, resolve));
     const address = this.server.address();
     const port = typeof address === "object" && address ? address.port : 0;

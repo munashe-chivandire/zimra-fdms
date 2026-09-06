@@ -860,9 +860,12 @@ await device.openDay();</code></pre>
   <div class="note-box warn">
     <i class="ph-light ph-warning"></i>
     <div>
-      <p><b>Status.</b> The Android package is written against the public Android and React Native
-      APIs and its TypeScript side is typechecked in CI, but it has not yet run on a device or
-      emulator. Treat the first on-device run as part of adopting it.</p>
+      <p><b>Status.</b> The keystore and mutual-TLS logic has run on an Android 16 emulator through
+      <code>packages/react-native/android/check</code>, a plain-Java twin of the Kotlin module built
+      with the SDK tools alone; <code>scripts/android-check.sh</code> drives the real core through it
+      against the simulator (keystore key, CSR, registration, mTLS, receipts, reconcile, CloseDay).
+      That run showed a keystore key needs <code>DIGEST_NONE</code> for TLS client authentication;
+      the module sets it. The React Native module itself has not yet had a Gradle build.</p>
     </div>
   </div>
 

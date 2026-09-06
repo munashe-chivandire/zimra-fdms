@@ -68,7 +68,7 @@ export class SimulatorCa {
       signingKey: this.keys.privateKey,
       extensions: [
         new x509.SubjectAlternativeNameExtension([
-          ...hosts.map((h) => ({ type: "dns" as const, value: h })),
+          ...hosts.map((h) => ({ type: (/^\d+\.\d+\.\d+\.\d+$/.test(h) ? "ip" : "dns") as "ip" | "dns", value: h })),
           { type: "ip", value: "127.0.0.1" },
         ]),
         new x509.ExtendedKeyUsageExtension([x509.ExtendedKeyUsage.serverAuth]),
