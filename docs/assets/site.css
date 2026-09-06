@@ -151,6 +151,13 @@ body.menu-open{overflow:hidden}
   .navwrap nav .ghstats{order:2;margin-left:auto}
   .navwrap nav .tt{order:3}
   .navwrap nav .burger{order:4}
+  /* Both controls paint at 2.2rem, which is under the 44px a finger needs. The
+     bar positions inside .burger are tuned to that size, so grow the hit area
+     with a pseudo-element instead of the button. */
+  .tt::after,.burger::after{content:"";position:absolute;left:50%;top:50%;
+    transform:translate(-50%,-50%);width:2.75rem;height:2.75rem;border-radius:999px}
+  /* footer links sit 16px tall in a row; padding gives them a real strip to hit */
+  .foot .links a{display:inline-block;padding:.875rem 0;margin-left:1.25rem}
 }
 
 /* code chrome — shared */
@@ -185,6 +192,14 @@ body.menu-open{overflow:hidden}
 .term-bar .copybtn{margin-left:.6rem;padding:.3rem .6rem;font-size:.62rem;flex:none}
 .term-bar b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .term-bar .lang{flex:none}
+@media(max-width:900px){
+  /* Copy and the tab switches paint about 23px tall. The bar around them is 45px,
+     so the hit area can claim the full bar height and still stay inside .codewin,
+     which clips anything wider. */
+  .copybtn,.code-tab{position:relative}
+  .copybtn::after,.code-tab::after{content:"";position:absolute;left:50%;top:50%;
+    transform:translate(-50%,-50%);width:100%;height:2.75rem;min-width:2.75rem}
+}
 
 .codewin pre{padding:1rem 0 1.15rem;overflow-x:auto;counter-reset:cl}
 .codewin code{font-family:var(--font-m);font-size:.83rem;line-height:1.9;color:#c7d3ec;display:block;min-width:max-content}

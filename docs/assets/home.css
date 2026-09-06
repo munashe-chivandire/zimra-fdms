@@ -194,8 +194,12 @@ h2 .gold{color:var(--gold-hi)}
 
 @media(max-width:960px){
   /* single column: the window goes back in flow and caps its own height */
-  .code-split{grid-template-columns:1fr;gap:1.75rem}
-  .code-pane{position:static;min-height:0}
+  /* minmax(0,1fr), not 1fr: back in flow, the pane's min-content width is the
+     code block's max-content width, and a bare 1fr track floors at that. The
+     track then outgrows the phone, and Chrome answers by widening the layout
+     viewport to fit, which shrinks the whole page. */
+  .code-split{grid-template-columns:minmax(0,1fr);gap:1.75rem}
+  .code-pane{position:static;min-height:0;min-width:0}
   .code-pane .codewin{position:static;height:auto}
   .code-pane .codewin pre{max-height:28rem}
 }

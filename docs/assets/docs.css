@@ -60,6 +60,11 @@
   .dh-search span,.dh-search kbd{display:none}
   .dh-search{justify-content:center;padding:.45rem}
   .dh-search span.mobile{display:block}
+  /* stripped to its icon, the search button collapses to a 25px sliver */
+  .dh-search{min-width:2.75rem;min-height:2.75rem}
+  /* .dh-menu paints at 2.1rem; grow the hit area, not the button */
+  .dh-menu::after{content:"";position:absolute;left:50%;top:50%;
+    transform:translate(-50%,-50%);width:2.75rem;height:2.75rem}
 }
 
 /* ===================== docs layout ===================== */
@@ -96,10 +101,18 @@
 /* ---- mobile sidebar drawer ---- */
 .sb-scrim{display:none}
 @media(max-width:900px){
+  /* .doclayout is position:relative;z-index:1 to clear the fixed background layers.
+     That traps the drawer's z-index:60 inside it, so the body-level scrim at 55
+     painted over the open drawer and swallowed every tap. Dropping to auto lets
+     the drawer stack against the scrim directly; DOM order still keeps the
+     layout above .mesh and .grid-lines. */
+  .doclayout{z-index:auto}
   .sidebar{position:fixed;inset:0 auto 0 0;width:min(20rem,86vw);z-index:60;max-height:none;
     background:var(--panel);border-right:1px solid var(--hair2);padding:5rem 1.2rem 2rem;
     transform:translateX(-102%);transition:transform .5s var(--ease);box-shadow:0 0 60px -10px rgba(4,11,27,.6)}
   body.sb-open .sidebar{transform:none}
+  /* 31px rows are a poor target in a drawer meant to be used by thumb */
+  .sb-group a{padding-top:.75rem;padding-bottom:.75rem}
   .sb-scrim{display:block;position:fixed;inset:0;z-index:55;background:rgba(4,11,27,.5);opacity:0;pointer-events:none;
     transition:opacity .5s var(--ease)}
   body.sb-open .sb-scrim{opacity:1;pointer-events:auto}
