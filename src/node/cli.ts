@@ -24,6 +24,18 @@ import { join } from "node:path";
 import { DayNotClosableError, type ReceiptInput } from "../core/device.js";
 import { receiptInputFromJson } from "../core/money.js";
 import { registerDevice } from "./registration.js";
+import { NodeTransport } from "./transport.js";
+import type { FdmsEnvironment as Env } from "../core/types.js";
+
+/** RegisterDevice options honouring ZIMRA_BASE_URL and ZIMRA_CA. */
+function registerOptions(environment: Env) {
+  const o = endpointOverrides();
+  return {
+    environment,
+    baseUrl: o.baseUrl,
+    transport: o.ca ? new NodeTransport(undefined, { ca: o.ca }) : undefined,
+  };
+}
 import {
   ProfileError,
   clearDayState,
@@ -38,6 +50,7 @@ import {
   saveDayState,
   writeProfile,
   type Profile,
+  endpointOverrides,
 } from "./profile.js";
 import { FdmsApiError, type DeviceIdentity, type FdmsEnvironment } from "../core/types.js";
 
@@ -94,6 +107,12 @@ Commands:
 
 Global options:
   --profile <dir>   Profile directory (default ./.zimra, env ZIMRA_PROFILE)
+
+Environment
+  ZIMRA_PROFILE     Profile directory when --profile is not given
+  ZIMRA_BASE_URL    Talk to this server instead of the environment in device.json
+                    (e.g. https://localhost:8443 from zimra-fdms-simulator)
+  ZIMRA_CA          PEM file with extra CA certificates to trust (the simulator writes one)
   --json            Machine-readable output (status/config/submit)
   -h, --help        Help for a command
   -v, --version     Print version
@@ -189,7 +208,7 @@ Device ID, serial and activation key come from the FDMS taxpayer portal.`);
 
   console.log(`Registering device ${deviceId} (${device.serialNumber}) against FDMS ${environment}...`);
   try {
-    const result = await registerDevice(device, activationKey, { environment });
+    const result = await registerDevice(device, activationKey, registerOptions(environment));
     const { keyPath } = writeProfile(
       dir,
       { ...device, environment },
@@ -450,6 +469,13 @@ Payments must sum to the receipt total.`);
     if (Number.isNaN(d.getTime())) fail(`${file}: receiptDate is not a valid date.`);
     input.receiptDate = d;
   }
+  // Amounts in the file are decimal text; convert before any network call so
+  // a price with three decimals fails here, not after GetConfig.
+  try {
+    input = receiptInputFromJson(input);
+  } catch (e) {
+    fail(`${file}: ${(e as Error).message}`);
+  }
 
   const p = loadProfile(values.profile);
   const local = loadDayState(p);
@@ -466,7 +492,7 @@ Payments must sum to the receipt total.`);
   device.restoreState(local);
   try {
     await device.getConfig(); // for QR data
-    const res = await device.submitReceipt(receiptInputFromJson(input));
+    const res = await device.submitReceipt(input);
     saveDayState(p, device.getState()!);
 
     const validation = res.response.validationErrors ?? [];

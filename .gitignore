@@ -39,3 +39,6 @@ coverage/
 .claude/
 Design Inspiration/
 productIdea/
+
+# conformance vectors use a public test key; it is not a credential
+!vectors/test-key.pem

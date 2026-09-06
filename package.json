@@ -29,7 +29,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "vectors"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -41,7 +42,9 @@
     "spec:drift": "tsx scripts/spec-drift.ts",
     "pretest": "npm run build && npm run lint:core",
     "test:e2e:mcp": "node scripts/mcp-e2e.mjs",
-    "lint:core": "node scripts/check-core-portable.mjs"
+    "lint:core": "node scripts/check-core-portable.mjs",
+    "simulator": "tsx src/simulator/cli.ts",
+    "vectors": "tsx scripts/gen-vectors.ts"
   },
   "license": "MIT",
   "publishConfig": {
@@ -62,7 +65,9 @@
     "node": ">=18"
   },
   "bin": {
-    "zimra-fdms": "dist/node/cli.js"
+    "zimra-fdms": "dist/node/cli.js",
+    "zimra-fdms-simulator": "dist/simulator/cli.js",
+    "zimra-fdms-conformance": "dist/conformance/cli.js"
   },
   "exports": {
     ".": {
@@ -77,6 +82,11 @@
       "types": "./dist/node/index.d.ts",
       "import": "./dist/node/index.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./simulator": {
+      "types": "./dist/simulator/index.d.ts",
+      "import": "./dist/simulator/index.js"
+    },
+    "./vectors": "./vectors/zimra-fdms-vectors.json"
   }
 }

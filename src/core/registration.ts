@@ -13,6 +13,8 @@ import {
 
 export interface RegisterDeviceOptions {
   environment?: FdmsEnvironment;
+  /** Overrides the environment's URL, e.g. a local simulator. */
+  baseUrl?: string;
   /** CN prefix mandated by the tax authority. Defaults to "ZIMRA". */
   clientPrefix?: string;
   /**
@@ -45,6 +47,7 @@ export async function registerDevice(
   const csrPem = await buildCsr(signer, commonName);
   const client = new FdmsClient(device, options.transport ?? new FetchTransport(), {
     environment: options.environment,
+    baseUrl: options.baseUrl,
   });
   const body: RegisterDeviceRequest = { certificateRequest: csrPem, activationKey };
   const data = await client.request<RegisterDeviceResponse>(
@@ -63,9 +66,10 @@ export async function getServerCertificate(
   environment: FdmsEnvironment = "test",
   thumbprint?: string,
   transport: Transport = new FetchTransport(),
+  baseUrl: string = FDMS_BASE_URLS[environment],
 ): Promise<string[]> {
   const query = thumbprint ? "?thumbprint=" + encodeURIComponent(thumbprint) : "";
-  const url = FDMS_BASE_URLS[environment] + "/Public/v1/GetServerCertificate" + query;
+  const url = baseUrl + "/Public/v1/GetServerCertificate" + query;
   const res = await transport.request({ method: "GET", url, headers: {}, timeoutMs: 30_000 });
   if (res.status < 200 || res.status >= 300) throw new FdmsApiError(res.status, undefined);
   return (JSON.parse(res.text) as { certificate: string[] }).certificate;

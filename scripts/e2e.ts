@@ -18,7 +18,13 @@ const fd = new FiscalDevice(
     certificatePem: readFileSync("secrets/device-certificate.pem", "utf-8"),
     privateKeyPem: readFileSync("secrets/device-private-key.pem", "utf-8"),
   },
-  { environment: "test", signatureFormat: "der" },
+  {
+    environment: "test",
+    signatureFormat: "der",
+    // ZIMRA_BASE_URL / ZIMRA_CA run the same cycle against a local simulator.
+    baseUrl: process.env.ZIMRA_BASE_URL || undefined,
+    ca: process.env.ZIMRA_CA ? readFileSync(process.env.ZIMRA_CA, "utf-8") : undefined,
+  },
 );
 
 console.log("1) GetConfig (proves mTLS with the issued certificate)...");

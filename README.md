@@ -144,54 +144,65 @@ canonical signing strings and DER-encoded ECDSA signatures.
 Persist `device.getState()` after each receipt and `restoreState()` on
 startup — the hash chain must survive restarts.
 
-### 3. Offline sales (72-hour grace window)
+### 3. Amounts
+
+Amounts are integer cents underneath. Pass a whole number of major units
+(`price: 115`) or build one from a decimal string with `cents("11.50")`. A
+fractional JS number throws, because 11.5 and 11.499999 are the same float
+and FDMS signs over the cents:
 
 ```ts
-import { OfflineReceiptQueue } from "zimra-fdms";
+import { cents } from "zimra-fdms";
 
-const queue = new OfflineReceiptQueue(device /*, custom QueueStorage */);
-await queue.submitOrEnqueue(receiptInput); // queues on network failure
+lines: [{ name: "Bread", price: cents("2.50"), quantity: 2, taxId: 1, taxPercent: 15 }],
+payments: [{ moneyType: "Cash", amount: 5 }],
+```
+
+Amounts that arrive through JSON (a POS file, an HTTP body) were exact
+decimal text once; `receiptInputFromJson(input)` converts numbers with up to
+two places and refuses anything finer. The CLI and MCP server do this for
+you.
+
+### 4. Surviving a crash
+
+Give the device a `Storage` and it persists day state and a pending-submit
+marker before every FDMS call. On startup, `reconcile()` loads the state and
+settles a submit the process died in the middle of: it asks FDMS whether
+the receipt arrived, resubmits the identical signed receipt if not, and
+never issues a duplicate or skips a number.
+
+```ts
+import { FiscalDevice } from "zimra-fdms";
+
+const device = new FiscalDevice(identity, pems, { environment: "test", stateDir: "./.zimra" });
+await device.reconcile();     // on every start, before the first receipt
+```
+
+`submitReceipt()` and `closeDay()` refuse to run while a submit is
+unresolved (`PendingSubmitError`), so the failure cannot compound. The CLI
+profile directory is a `FileStorage`, and the CLI and MCP server reconcile
+on every command.
+
+### 5. Offline sales (72-hour grace window)
+
+```ts
+import { OfflineReceiptQueue, FileJournal } from "zimra-fdms";
+
+const queue = new OfflineReceiptQueue(device, new FileJournal("./.zimra"));
+await queue.submitOrEnqueue(receiptInput); // journals on network failure
 await queue.flush();                       // FIFO retry when back online
+queue.oldestPendingAgeMs;                  // warn before the 72 hours run out
 ```
 
-**Custom storage**
+Receipts are numbered, hash-chained and signed at sale time and appended
+to a journal; `flush()` submits them in order and moves a commit cursor.
+Appending is O(1), the file is never rewritten, and a crash between append
+and commit leaves either a receipt to resubmit (which `reconcile()` settles)
+or nothing, never a gap. Implement `Journal` (`append`, `readFrom`,
+`commit`, `committed`) for SQLite or a database; a 0.3.x `QueueStorage` is
+still accepted and wrapped.
 
-The queue keeps pending receipts in memory by default. To persist them across
-restarts — or to keep a separate queue per tenant — implement `QueueStorage`
-and pass it as the second constructor argument:
-
-```ts
-import { OfflineReceiptQueue } from "zimra-fdms";
-import type { QueueStorage, ReceiptInput } from "zimra-fdms";
-
-export class CustomQueueStorage implements QueueStorage {
-  constructor(private readonly tenantId: string) {}
-
-  async load(): Promise<ReceiptInput[]> {
-    // Oldest first. Order by a persisted sequence column — not by whatever
-    // order the database happens to return rows in.
-    return loadItemsFromDB(this.tenantId);
-  }
-
-  async save(pending: ReceiptInput[]): Promise<void> {
-    // Replace the whole snapshot; an empty array means "clear the queue".
-    await replaceItemsInDB(this.tenantId, pending);
-  }
-}
-
-const queue = new OfflineReceiptQueue(
-  device,
-  new CustomQueueStorage("<tenant id>"),
-);
-```
-
-Both rules matter after a crash. `flush()` calls `save()` with the remaining
-receipts after each successful submission, so an append-only implementation
-re-sends receipts that ZIMRA already accepted. And receipts are numbered and
-hash-chained at flush time, not at sale time — so whatever order `load()`
-returns is the order they are fiscalized in.
-
-### 4. Certificate renewal
+### 6. Certificate renewal
 
 ```ts
 const { certificatePem } = await device.renewCertificate(); // same key, new certificate
@@ -199,7 +210,7 @@ const { certificatePem } = await device.renewCertificate(); // same key, new cer
 const { keys, certificatePem: fresh } = await device.renewWithNewKey();
 ```
 
-### 5. Keys that cannot be exported
+### 7. Keys that cannot be exported
 
 The core never touches key material. It asks a `Signer` for signatures and
 a `Transport` for HTTP, and each platform provides its own:
@@ -230,7 +241,7 @@ Receipt dates come from a `ServerCorrectedClock` that learns the offset to
 FDMS from every response, so a terminal with a drifted clock still gets
 Green receipts. `device.clock.offsetMs` tells you how far off the device is.
 
-### 6. Android
+### 8. Android
 
 ```ts
 import { KeystoreSigner, registerDevice, createFiscalDevice } from "@zimra-fdms/react-native";
@@ -241,6 +252,14 @@ const device = createFiscalDevice(identity, { alias: "zimra-device-12345", certi
 ```
 
 See [packages/react-native/README.md](packages/react-native/README.md).
+
+## When FDMS says no
+
+Every `FdmsApiError` carries `explain()` (colour, cause, fix, whether the
+day is still closable) and a `supportCode` like `RCPT030-0HNOABB4T00A3`
+that a cashier can read out. The catalogue in
+[src/core/errors.ts](src/core/errors.ts) marks which entries were observed
+live and which come from the documentation.
 
 ## Hard-won implementation notes
 
@@ -262,12 +281,64 @@ See [packages/react-native/README.md](packages/react-native/README.md).
   stuck fiscal day and reset device activation — invaluable during
   development.
 
+## Simulator
+
+A local FDMS with real mutual TLS, for developing and testing without a
+registered device:
+
+```sh
+npx zimra-fdms-simulator --port 8443        # writes zimra-simulator-ca.pem
+ZIMRA_BASE_URL=https://localhost:8443 ZIMRA_CA=zimra-simulator-ca.pem \
+  npx zimra-fdms register --device-id 1 --serial DEV1 --activation-key ABCD1234
+```
+
+Or in a test suite:
+
+```ts
+import { FdmsSimulator } from "zimra-fdms/simulator";
+
+const sim = await FdmsSimulator.create();
+const { url, caPem } = await sim.start();
+const device = new FiscalDevice(identity, pems, { baseUrl: url, ca: caPem });
+sim.faults.dropAfterSubmit = 1;   // FDMS takes the receipt, the answer is lost
+```
+
+It issues certificates from the same CSR the SDK sends ZIMRA, verifies every
+receipt and CloseDay signature with the same canonical-string rules, and
+replays the validation behaviour observed live: RCPT010, RCPT011, RCPT012,
+RCPT013, RCPT014, RCPT020, RCPT021, RCPT030, RCPT031, the asynchronous close
+that settles to `FiscalDayClosed` or bounces with `BadCertificateSignature`
+or `ReceiptsWithValidationErrors`, and GetStatus reporting the receipt with
+the latest date rather than the highest number. Faults: dropped connections,
+5xx, delays, a skewed `Date` header, and a lost SubmitReceipt answer.
+
+It is not ZIMRA. Passing against it means the SDK is consistent with itself;
+the nightly run against the real test environment is still the authority.
+
+## Conformance vectors
+
+[vectors/zimra-fdms-vectors.json](vectors/zimra-fdms-vectors.json) holds
+canonical strings, SHA-256 hashes, DER signatures, tax summaries and QR
+payloads for a fixed P-256 test key, across currencies, tax mixes, a credit
+note and a large amount. A port in any language proves itself with the
+runner, which pipes each vector to a command as JSON and checks the answer:
+
+```sh
+npx zimra-fdms-conformance -- python3 my_port_responder.py
+```
+
+The protocol is in [src/conformance/cli.ts](src/conformance/cli.ts) and
+[reference.ts](src/conformance/reference.ts) is a responder built on this
+SDK to copy from. Signatures are verified against the public key rather
+than compared, since ECDSA is randomised.
+
 ## Testing
 
 ```sh
-npm test          # signing rules, core primitives, CLI and MCP (no network)
+npm test          # 120+ tests: signing rules, core primitives, crash safety, simulator, vectors, CLI, MCP
 npm run lint:core # fails if src/core references node:*, Buffer, process or fetch
 npm run test:e2e  # full live cycle against the FDMS test environment
+ZIMRA_BASE_URL=https://localhost:8443 ZIMRA_CA=zimra-simulator-ca.pem npm run test:e2e   # same cycle, simulator
 ```
 
 The regression tests pin the canonical signing strings, DER conversion, tax
@@ -289,7 +360,10 @@ context that has no `Buffer`, `process`, `require` or `fetch`.
 - `clock.ts` — `ServerCorrectedClock`
 - `sha256.ts`, `md5.ts`, `bytes.ts` — hashing and byte helpers in plain TypeScript
 - `qr.ts` — verification QR data
-- `queue.ts` — offline receipt queue
+- `queue.ts`, `journal.ts` — offline receipt queue over an append-only journal
+- `money.ts` — integer cents, `cents("11.50")`
+- `storage.ts` — the `Storage` interface behind crash-safe state
+- `errors.ts` — the error catalogue: colour, cause and fix per code, `explain()`
 - `registration.ts` — RegisterDevice / GetServerCertificate over any `Transport`
 
 `src/node/` is the Node adapter:
@@ -297,10 +371,13 @@ context that has no `Buffer`, `process`, `require` or `fetch`.
 - `pem-signer.ts` — `PemSigner` over WebCrypto, key imported once
 - `transport.ts` — `NodeTransport`: mTLS over node:https with a keep-alive agent
 - `keys.ts` — exportable key pair generation for backups
+- `storage.ts` — `FileStorage` (atomic JSON files) and `FileJournal` (JSONL)
 - `cli.ts`, `mcp.ts`, `profile.ts` — the CLI, the MCP server and their shared profile directory
 
-`packages/react-native/` is the Android adapter. `spec/` holds ZIMRA's
-OpenAPI specs, fetched from the official test Swagger.
+`src/simulator/` is the local FDMS, `src/conformance/` the vector runner and
+reference responder, `vectors/` the published vectors. `packages/react-native/`
+is the Android adapter. `spec/` holds ZIMRA's OpenAPI specs, fetched from the
+official test Swagger.
 
 ## Test environment
 

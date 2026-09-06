@@ -1,6 +1,7 @@
 /**
  * FDMS API types. Derived from ZIMRA's published OpenAPI specs (spec/*.json).
  */
+import { ERROR_CATALOGUE, explainCode, supportCodeFor, type Explanation } from "./errors.js";
 
 export type FdmsEnvironment = "test" | "production";
 
@@ -273,20 +274,15 @@ export interface ApiProblemDetails {
   [key: string]: unknown;
 }
 
-/** Human-readable explanations for FDMS's cryptic error codes. */
-export const FDMS_ERROR_HINTS: Record<string, string> = {
-  DEV01: "Device is not active (blacklisted, suspended or not yet approved).",
-  DEV02: "Certificate is about to expire — call IssueCertificate to renew.",
-  FDC01: "Fiscal day is already opened — close it before opening a new one.",
-  FDC02: "Fiscal day is not opened — call OpenDay first.",
-  RCPT010:
-    "Receipt signature verification failed — the canonical signing string is wrong (check field order, cents conversion, tax concatenation and previous-receipt hash).",
-  RCPT011: "Receipt counters are not sequential (receiptCounter/receiptGlobalNo).",
-  RCPT012: "Invoice number duplicated within the fiscal day.",
-};
+/** One-line hints per code, derived from the error catalogue. */
+export const FDMS_ERROR_HINTS: Record<string, string> = Object.fromEntries(
+  Object.values(ERROR_CATALOGUE).map((e) => [e.code, e.cause]),
+);
 
 export class FdmsApiError extends Error {
   readonly hint?: string;
+  /** `CODE-OPERATIONID`, for a user to read out to support. */
+  readonly supportCode: string;
   constructor(
     public readonly status: number,
     public readonly problem: ApiProblemDetails | undefined,
@@ -305,5 +301,22 @@ export class FdmsApiError extends Error {
     );
     this.name = "FdmsApiError";
     this.hint = hint;
+    this.supportCode = supportCodeFor(code ?? `HTTP${status}`, operationId);
   }
+
+  /** Cause, fix, colour and whether the day is still closable. */
+  explain(): Explanation {
+    return explainCode(this.problem?.errorCode ?? `HTTP${this.status}`, this.operationId);
+  }
+}
+
+/** Explain a validationErrors entry from SubmitReceipt. */
+export function explainValidationError(v: ValidationError, operationId?: string): Explanation {
+  const ex = explainCode(v.validationErrorCode ?? "?", operationId);
+  if (ex.colour === "Unknown" && v.validationErrorColor) {
+    ex.colour = v.validationErrorColor as Explanation["colour"];
+    ex.dayStillClosable = v.validationErrorColor.toLowerCase() !== "red";
+  }
+  if (v.validationErrorDescription && ex.cause.startsWith("No explanation")) ex.cause = v.validationErrorDescription;
+  return ex;
 }

@@ -87,3 +87,4 @@ export {
 export { MemoryStorage, guardedStorage, type Storage } from "./storage.js";
 export { MemoryJournal, type Journal, type JournalEntry } from "./journal.js";
 export * from "./types.js";
+export { ERROR_CATALOGUE, explainCode, supportCodeFor, type ErrorCatalogueEntry, type ErrorColour, type Explanation } from "./errors.js";

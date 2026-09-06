@@ -80,14 +80,23 @@
       <a href="#fiscal-day">Fiscal day lifecycle</a>
       <a href="#receipts">Receipts &amp; signing</a>
       <a href="#offline-queue">Offline queue</a>
+      <a href="#money">Amounts</a>
+      <a href="#crash-safety">Crash safety</a>
+      <a href="#runtimes">Runtimes &amp; Android</a>
       <a href="#certificate-renewal">Certificate renewal</a>
       <a href="#errors">Error handling</a>
+    </div>
+    <div class="sb-group">
+      <h4>Tools</h4>
+      <a href="#simulator">Simulator</a>
+      <a href="#conformance">Conformance vectors</a>
     </div>
     <div class="sb-group">
       <h4>API reference</h4>
       <a href="#api-fiscaldevice">FiscalDevice</a>
       <a href="#api-registration">registerDevice()</a>
       <a href="#api-queue">OfflineReceiptQueue</a>
+      <a href="#api-interfaces">Signer, Transport, Storage</a>
       <a href="#api-signing">Signing utilities</a>
       <a href="#api-crypto">Crypto, QR &amp; HTTP</a>
       <a href="#api-types">Types &amp; enums</a>
@@ -114,7 +123,7 @@
 <!-- ============================ CONTENT ============================ -->
 <main class="content">
 
-<span class="kicker"><span class="dot"></span><b>docs</b><span class="sep">—</span>v0.3.1
+<span class="kicker"><span class="dot"></span><b>docs</b><span class="sep">—</span>v0.4.0
   <span class="sep">·</span>MIT<span class="sep">·</span>Node 18+</span>
 <h1>Documentation</h1>
 <p class="lead">Everything needed to fiscalise with <code>zimra-fdms</code> — from a first registered
@@ -631,62 +640,238 @@ const { submitted, remaining, error } = await queue.flush();</code></pre>
     that stopped it.</li>
   </ul>
 
-  <div class="note-box warn">
+  <div class="note-box">
     <i class="ph-light ph-arrows-in-line-vertical"></i>
     <div>
-      <p><b>Receipts are numbered and hash-chained at flush time, not at sale time.</b> The queue
-      holds unsigned <code>ReceiptInput</code> values; numbering and signing happen when
-      <code>flush()</code> submits them. So whatever order <code>load()</code> returns is the order
-      they are fiscalised in — and <code>receiptDate</code> is the moment of submission unless you
-      set it explicitly on the input.</p>
-      <p>If the receipt must carry the real time of sale, pass
-      <code>receiptDate: new Date()</code> when you enqueue it.</p>
+      <p><b>Receipts are numbered, hash-chained and signed at sale time.</b> <code>enqueue()</code>
+      calls <code>signReceipt()</code>, advances the device counters and appends the signed receipt
+      to the journal. The chain is fixed the moment the sale happens; <code>flush()</code> only
+      delivers. <code>receiptDate</code> is the time of sale from the server-corrected clock.</p>
     </div>
   </div>
 
-  <h3>Persistent storage</h3>
-  <p>The default <code>MemoryQueueStorage</code> loses pending receipts on restart — which is exactly
-  when you need them. Implement <code>QueueStorage</code> to persist them, or to keep one queue per
-  tenant:</p>
+  <h3>Persistent storage: the journal</h3>
+  <p>The default <code>MemoryJournal</code> loses pending receipts on restart, which is exactly when
+  you need them. Node ships <code>FileJournal</code>, a JSONL file plus a cursor file; for SQLite or
+  a database implement <code>Journal</code>:</p>
 
-  <div class="codewin" data-lang="ts" data-file="queue-storage.ts">
-<pre><code>import { OfflineReceiptQueue } from "zimra-fdms";
-import type { QueueStorage, ReceiptInput } from "zimra-fdms";
+  <div class="codewin" data-lang="ts" data-file="journal.ts">
+<pre><code>import { OfflineReceiptQueue, FileJournal } from "zimra-fdms";
+import type { Journal, JournalEntry } from "zimra-fdms";
 
-export class DbQueueStorage implements QueueStorage {
-  constructor(private readonly tenantId: string) {}
+// Node: append-only file, never rewritten.
+const queue = new OfflineReceiptQueue(device, new FileJournal("./.zimra"));
 
-  async load(): Promise&lt;ReceiptInput[]&gt; {
-    // Oldest first. Order by a persisted sequence column — not by whatever
-    // order the database happens to return rows in.
-    return loadItemsFromDB(this.tenantId);
-  }
-
-  async save(pending: ReceiptInput[]): Promise&lt;void&gt; {
-    // Replace the whole snapshot; an empty array means "clear the queue".
-    await replaceItemsInDB(this.tenantId, pending);
-  }
-}
-
-const queue = new OfflineReceiptQueue(device, new DbQueueStorage("acme"));</code></pre>
+// Anywhere else: a table with an autoincrement id as the cursor.
+export class SqlJournal implements Journal {
+  async append(record: string): Promise&lt;void&gt; { /* INSERT */ }
+  async readFrom(cursor: number): Promise&lt;JournalEntry[]&gt; { /* SELECT id, record WHERE id &gt;= cursor ORDER BY id */ }
+  async commit(cursor: number): Promise&lt;void&gt; { /* UPDATE meta SET committed = cursor */ }
+  async committed(): Promise&lt;number&gt; { /* SELECT committed FROM meta */ }
+}</code></pre>
   </div>
 
-  <p>Both rules matter after a crash:</p>
-  <ol>
-    <li><code>save()</code> receives the <b>full remaining set</b> after each successful submission.
-    An append-only implementation will re-send receipts ZIMRA has already accepted.</li>
-    <li><code>load()</code> must return <b>oldest first</b>. The order it returns is the order the
-    receipts are numbered and chained in.</li>
-  </ol>
+  <p>Why append-only matters after a crash: enqueue is one <code>append</code>, delivery is one
+  <code>commit</code>, and nothing is ever rewritten. A process that dies between the two leaves a
+  receipt to resubmit, which <a href="#crash-safety"><code>reconcile()</code></a> settles without a
+  duplicate, or nothing at all. It never leaves a gap in the numbering.</p>
+
+  <p>A 0.3.x <code>QueueStorage</code> (<code>load</code>/<code>save</code> snapshots) is still
+  accepted and wrapped in a journal. Unsigned receipts from an old snapshot are signed, in order, the
+  first time the queue loads.</p>
 
   <div class="note-box">
     <i class="ph-light ph-timer"></i>
     <div>
       <p><b>The 72-hour window is yours to watch.</b> The SDK does not expire queued receipts. If a
-      device stays offline past the grace period, submission will be refused — alert on
-      <code>queue.size</code> and the age of the oldest entry.</p>
+      device stays offline past the grace period, submission will be refused. Alert on
+      <code>queue.size</code> and <code>queue.oldestPendingAgeMs</code>.</p>
     </div>
   </div>
+</section>
+
+<!-- ---------------- Amounts ---------------- -->
+<section class="doc-sec" id="money">
+  <h2>Amounts<a class="anchor" href="#money">#</a></h2>
+  <p>FDMS signs over amounts in cents, and a float that drifted by 1e-15 changes the canonical string
+  and earns an <code>RCPT010</code>. So the SDK keeps every amount as integer cents and refuses to
+  guess what a fractional JS number was meant to be.</p>
+
+  <div class="codewin" data-lang="ts" data-file="amounts.ts">
+<pre><code>import { cents } from "zimra-fdms";
+
+lines: [
+  { name: "Consulting", price: 115, quantity: 1, taxId: 513, taxPercent: 0 },        // whole units: exact
+  { name: "Bread", price: cents("2.50"), quantity: 2, taxId: 1, taxPercent: 15 },    // decimal string: exact
+  { name: "Milk", price: 1.25, quantity: 1, taxId: 1, taxPercent: 15 },              // throws: fractional float
+],
+payments: [{ moneyType: "Cash", amount: cents("120.00") }],</code></pre>
+  </div>
+
+  <p>The error names the field: <code>lines[2].price: 1.25 has a fractional part. Pass cents("1.25")
+  or a whole number of major units</code>. Tax is computed per line in cents and rounded per line, as
+  FDMS does; totals, payments and counters are summed in cents.</p>
+
+  <h3>Amounts from JSON</h3>
+  <p>A number in a JSON file or HTTP body was exact decimal text before it was parsed.
+  <code>receiptInputFromJson(input)</code> converts numbers with up to two decimal places to
+  <code>Money</code> and refuses anything finer. The CLI and the MCP server do this at the edge, so
+  <code>"price": 2.5</code> in a receipt file works.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Helper</th><th>Does</th></tr></thead>
+      <tbody>
+        <tr><td><code>cents("11.50")</code></td><td>Parses a decimal string with up to two places. Returns <code>{ cents: 1150 }</code>.</td></tr>
+        <tr><td><code>fromCents(1150)</code></td><td>Wraps a value already in cents.</td></tr>
+        <tr><td><code>amountToCents(v, field)</code></td><td>Cents from a <code>number | Money</code>; throws on a fractional number, naming <code>field</code>.</td></tr>
+        <tr><td><code>receiptInputFromJson(input)</code></td><td>Converts every amount in a <code>ReceiptInput</code> that came through JSON.</td></tr>
+        <tr><td><code>formatCents(1150)</code></td><td><code>"11.50"</code>, for display.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ---------------- Crash safety ---------------- -->
+<section class="doc-sec" id="crash-safety">
+  <h2>Crash safety<a class="anchor" href="#crash-safety">#</a></h2>
+  <p>A POS process can die at any instruction: power cut, OOM, a tablet going to sleep mid-request.
+  The dangerous window is between sending a receipt and learning whether FDMS took it. Guess wrong
+  one way and the next receipt reuses a global number (<code>RCPT012</code>, Red, day unclosable);
+  guess wrong the other way and a number is skipped.</p>
+
+  <p>Give the device a <code>Storage</code> and it removes the guess. Before every SubmitReceipt it
+  writes a <b>pending-submit marker</b> holding the signed receipt and the state that will apply once
+  it is accepted. After the response it commits the state and deletes the marker. On startup,
+  <code>reconcile()</code> looks for a marker and settles it against FDMS.</p>
+
+  <div class="codewin" data-lang="ts" data-file="startup.ts">
+<pre><code>import { FiscalDevice } from "zimra-fdms";
+
+const device = new FiscalDevice(identity, pems, { environment: "test", stateDir: "./.zimra" });
+
+const r = await device.reconcile();   // every start, before the first receipt
+// r.action: "none" | "confirmed" | "resubmitted" | "rejected"
+
+await device.submitReceipt(input);    // marker -> request -> commit -> marker deleted</code></pre>
+  </div>
+
+  <h3>What reconcile() does</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Found on disk</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td>Day state, no marker</td><td>Loads the state. <code>action: "none"</code>.</td></tr>
+        <tr><td>Marker, FDMS already holds that global number</td><td>The answer was lost after FDMS accepted. Commits the state. <code>"confirmed"</code>.</td></tr>
+        <tr><td>Marker, FDMS does not hold it</td><td>The request never arrived. Sends the <b>identical signed receipt</b> again. <code>"resubmitted"</code>.</td></tr>
+        <tr><td>Marker, FDMS refuses the resubmit</td><td>Counters stay where they were; the receipt is dropped. <code>"rejected"</code> with the error.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>While a marker exists, <code>submitReceipt()</code>, <code>openDay()</code> and
+  <code>closeDay()</code> throw <code>PendingSubmitError</code> rather than compound the problem. A
+  server rejection (4xx) during a normal submit clears the marker itself, since FDMS answered and did
+  not take the receipt.</p>
+
+  <h3>Storage</h3>
+  <p>Three keys are ever written: <code>day-state</code>, <code>pending-submit</code> and
+  <code>last-receipt-global-no</code>. Each <code>set</code> must be atomic for its key. Node ships
+  <code>FileStorage</code>, which writes to a temp file and renames, and uses the same file names
+  the CLI profile has always used (<code>day-state.json</code>,
+  <code>last-receipt-global-no.json</code>), so a profile directory is a valid store. On Android,
+  <code>@zimra-fdms/react-native</code> uses SQLite. In-memory is <code>MemoryStorage</code>.</p>
+
+  <div class="note-box">
+    <i class="ph-light ph-info"></i>
+    <div>
+      <p><b>The highest number ever issued is kept locally.</b> <code>GetStatus.lastReceiptGlobalNo</code>
+      is the number of the receipt with the latest <i>date</i>, not the highest number, so after a
+      future-dated receipt it under-reports. <code>openDay()</code> takes the larger of the server's
+      value, the stored value and <code>opts.lastReceiptGlobalNo</code>. The same quirk means
+      <code>reconcile()</code> can take the resubmit path for a receipt FDMS already has, which FDMS
+      then answers with a Red <code>RCPT012</code>; it is rare and only follows an RCPT031.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ---------------- Runtimes ---------------- -->
+<section class="doc-sec" id="runtimes">
+  <h2>Runtimes &amp; Android<a class="anchor" href="#runtimes">#</a></h2>
+  <p>The fiscal engine has no platform imports: no <code>node:*</code>, no <code>Buffer</code>, no
+  <code>fetch</code>, no <code>structuredClone</code>. SHA-256, MD5 and base64 are plain TypeScript.
+  Everything a platform differs on goes through four small interfaces, and Node is one adapter over
+  the engine, not the other way round.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Import</th><th>What you get</th><th>Runs on</th></tr></thead>
+      <tbody>
+        <tr><td><code>zimra-fdms</code></td><td>The Node bundle: core plus <code>PemSigner</code>, <code>NodeTransport</code>, <code>FileStorage</code>, <code>FileJournal</code>, the CLI and the MCP server. What 0.3.x code imports.</td><td>Node 18+</td></tr>
+        <tr><td><code>zimra-fdms/core</code></td><td><code>FiscalDevice</code>, signing, counters, hash chain, QR, queue, <code>buildCsr</code>. You supply a <code>Signer</code> and a <code>Transport</code>.</td><td>Anything with ES2020</td></tr>
+        <tr><td><code>zimra-fdms/simulator</code></td><td>A local FDMS. See <a href="#simulator">Simulator</a>.</td><td>Node</td></tr>
+        <tr><td><code>@zimra-fdms/react-native</code></td><td><code>KeystoreSigner</code> and <code>OkHttpTransport</code> over a Kotlin module.</td><td>Android 8+</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Keys that cannot leave the hardware</h3>
+  <p>0.3.x assumed the private key was an exportable PEM, which ruled out Android Keystore, StrongBox,
+  an HSM and cloud KMS. Now the core never sees key material. It asks a <code>Signer</code> for
+  signatures, and builds the PKCS#10 registration request itself with a small DER writer so the
+  <code>Signer</code> can sign that too. A key generated inside a secure element registers, signs
+  receipts and authenticates the TLS connection without ever being exported.</p>
+
+  <div class="codewin" data-lang="ts" data-file="hsm.ts">
+<pre><code>import { FiscalDevice, buildCsr, registerDevice } from "zimra-fdms/core";
+import type { Signer, Transport } from "zimra-fdms/core";
+
+const signer: Signer = {
+  sign: (data) =&gt; hsm.signEcdsaSha256Der(slot, data),     // DER ECDSA P-256 over SHA-256 of data
+  publicKeySpki: () =&gt; hsm.publicKeyDer(slot),            // SubjectPublicKeyInfo
+};
+const transport: Transport = myMtlsTransport;              // owns TLS with the same key
+
+const { certificatePem } = await registerDevice(identity, "ACTIVKEY", signer, { transport });
+const device = new FiscalDevice(identity, { signer, transport, storage });</code></pre>
+  </div>
+
+  <h3>Android</h3>
+  <p><code>@zimra-fdms/react-native</code> generates an ECDSA P-256 key in Android Keystore with
+  <code>PURPOSE_SIGN</code> only, StrongBox when the phone has one. The Kotlin module does three
+  things: hold the key, sign bytes, and run HTTPS through OkHttp with a <code>KeyManager</code> bound
+  to that key. Hermes has no WebCrypto and no <code>TextEncoder</code>; the core needs neither.</p>
+
+  <div class="codewin" data-lang="ts" data-file="android.ts">
+<pre><code>import { KeystoreSigner, registerDevice, createFiscalDevice } from "@zimra-fdms/react-native";
+
+const signer = await KeystoreSigner.ensure("zimra-device-12345");
+const { certificatePem } = await registerDevice(identity, "ACTIVKEY", signer, { environment: "test" });
+// persist certificatePem (public); the key stays in the keystore
+
+const device = createFiscalDevice(identity, { alias: "zimra-device-12345", certificatePem });
+await device.reconcile();
+await device.openDay();</code></pre>
+  </div>
+
+  <p><code>signer.attestationChain()</code> returns the key attestation certificates, so a bank or
+  auditor can verify the key is hardware-backed and at which security level.</p>
+
+  <div class="note-box warn">
+    <i class="ph-light ph-warning"></i>
+    <div>
+      <p><b>Status.</b> The Android package is written against the public Android and React Native
+      APIs and its TypeScript side is typechecked in CI, but it has not yet run on a device or
+      emulator. Treat the first on-device run as part of adopting it.</p>
+    </div>
+  </div>
+
+  <h3>Server-corrected time</h3>
+  <p>A device with a wrong clock produces receipts FDMS dates in the future (<code>RCPT031</code>) and
+  then cannot date anything after them (<code>RCPT030</code>, Red). <code>FiscalDevice</code> learns
+  the offset to FDMS from every response <code>Date</code> header and stamps receipts and day-open
+  times with server time. <code>device.clock.offsetMs</code> and <code>.confidence</code> are
+  readable.</p>
 </section>
 
 <!-- ---------------- Certificate renewal ---------------- -->
@@ -750,19 +935,46 @@ try {
 }</code></pre>
   </div>
 
-  <h3>Known error codes</h3>
-  <p>Exported as <code>FDMS_ERROR_HINTS</code>, and folded into the error message automatically:</p>
+  <h3>explain() and the support code</h3>
+  <p>Every <code>FdmsApiError</code> also carries <code>explain()</code> and a
+  <code>supportCode</code>. Validation errors on an accepted receipt go through
+  <code>explainValidationError()</code>:</p>
+  <div class="codewin" data-lang="ts" data-file="explain.ts">
+<pre><code>import { FdmsApiError, explainValidationError } from "zimra-fdms";
+
+const { colour, cause, fix, dayStillClosable, supportCode } = err.explain();
+// colour: "Red" | "Yellow" | "Grey" | "Unknown"
+// supportCode: "RCPT030-0HNOABB4T00A3", the thing a cashier reads out
+
+for (const v of sale.response.validationErrors ?? []) {
+  const ex = explainValidationError(v, sale.response.operationID);
+  if (!ex.dayStillClosable) alert(`${ex.cause} ${ex.fix}`);
+}</code></pre>
+  </div>
+
+  <h3>The catalogue</h3>
+  <p>Exported as <code>ERROR_CATALOGUE</code>. Red: the receipt was accepted but the device can no
+  longer close the day. Yellow: accepted, warning only. Grey: the request was refused. Entries marked
+  observed were seen on the test environment; the rest come from the documentation.</p>
   <div class="tablewrap">
     <table>
-      <thead><tr><th>Code</th><th>What it means</th></tr></thead>
+      <thead><tr><th>Code</th><th>Colour</th><th>Cause</th><th>Observed</th></tr></thead>
       <tbody>
-        <tr><td><code>DEV01</code></td><td>Device is not active — blacklisted, suspended, or not yet approved.</td></tr>
-        <tr><td><code>DEV02</code></td><td>Certificate is about to expire — call <a href="#certificate-renewal">renewCertificate()</a>.</td></tr>
-        <tr><td><code>FDC01</code></td><td>Fiscal day is already open — close it before opening a new one.</td></tr>
-        <tr><td><code>FDC02</code></td><td>Fiscal day is not open — call <code>openDay()</code> first.</td></tr>
-        <tr><td><code>RCPT010</code></td><td>Receipt signature verification failed — the canonical string is wrong (field order, cents conversion, tax concatenation, previous hash).</td></tr>
-        <tr><td><code>RCPT011</code></td><td>Receipt counters are not sequential.</td></tr>
-        <tr><td><code>RCPT012</code></td><td>Invoice number duplicated within the fiscal day.</td></tr>
+        <tr><td><code>RCPT010</code></td><td>Red</td><td>Device signature does not verify: canonical string or hash chain differs.</td><td></td></tr>
+        <tr><td><code>RCPT011</code></td><td>Red</td><td><code>receiptCounter</code> not the next number in the day.</td><td></td></tr>
+        <tr><td><code>RCPT012</code></td><td>Red</td><td><code>receiptGlobalNo</code> not one more than the highest FDMS holds. Usually follows opening from an under-reported <code>lastReceiptGlobalNo</code>.</td><td>yes</td></tr>
+        <tr><td><code>RCPT013</code></td><td>Red</td><td>Tax ID not in the device tax table.</td><td></td></tr>
+        <tr><td><code>RCPT014</code></td><td>Yellow</td><td><code>receiptDate</code> earlier than the day was opened.</td><td>yes</td></tr>
+        <tr><td><code>RCPT020</code></td><td>Red</td><td>Total does not equal the lines (plus tax when exclusive).</td><td></td></tr>
+        <tr><td><code>RCPT021</code></td><td>Red</td><td>Payments do not add up to the total.</td><td></td></tr>
+        <tr><td><code>RCPT030</code></td><td>Red</td><td><code>receiptDate</code> not later than the previous receipt's.</td><td>yes</td></tr>
+        <tr><td><code>RCPT031</code></td><td>Yellow</td><td><code>receiptDate</code> ahead of server time. Every later receipt must be dated after it.</td><td>yes</td></tr>
+        <tr><td><code>DEV01</code></td><td>Grey</td><td>Device not active: blacklisted, suspended or not yet approved.</td><td></td></tr>
+        <tr><td><code>DEV02</code></td><td>Grey</td><td>Certificate about to expire; <a href="#certificate-renewal">renew</a>.</td><td></td></tr>
+        <tr><td><code>FDC01</code></td><td>Grey</td><td>A fiscal day is already open.</td><td></td></tr>
+        <tr><td><code>FDC02</code></td><td>Grey</td><td>No fiscal day is open.</td><td></td></tr>
+        <tr><td><code>BadCertificateSignature</code></td><td>Grey</td><td>CloseDay signed over the wrong date. FDMS signs over the day's opening date, which GetStatus never reports.</td><td>yes</td></tr>
+        <tr><td><code>ReceiptsWithValidationErrors</code></td><td>Grey</td><td>A Red receipt is in the day; only ZIMRA can close it.</td><td>yes</td></tr>
       </tbody>
     </table>
   </div>
@@ -773,6 +985,8 @@ try {
     <li><code>Cannot open a fiscal day while status is …</code> — <code>openDay()</code> on a device that is not closed.</li>
     <li><code>No fiscal day state. Call openDay(), or restoreState() …</code> — submitting or closing without state.</li>
     <li><code>Payments (x) do not equal receipt total (y)</code> — the payment check.</li>
+    <li><code>lines[i].price: 1.25 has a fractional part</code> — see <a href="#money">Amounts</a>.</li>
+    <li><code>PendingSubmitError</code> — a previous submit is unresolved; call <code>reconcile()</code>. See <a href="#crash-safety">Crash safety</a>.</li>
     <li><code>FDMS request timed out after 30000ms</code> — transport timeout, tunable via <code>timeoutMs</code>.</li>
   </ul>
 
@@ -952,9 +1166,16 @@ try {
   <h2>OfflineReceiptQueue<a class="anchor" href="#api-queue">#</a></h2>
 
   <div class="api">
-    <h4><span class="rt">new</span> <span class="nm">OfflineReceiptQueue</span>(device, storage?)</h4>
-    <p><code>storage</code> defaults to <code>new MemoryQueueStorage()</code>. Pending receipts are
-    loaded from storage lazily, on the first operation.</p>
+    <h4><span class="rt">new</span> <span class="nm">OfflineReceiptQueue</span>(device, journal?)</h4>
+    <p><code>journal</code> is a <code>Journal</code> (default <code>new MemoryJournal()</code>) or a
+    0.3.x <code>QueueStorage</code>, which is wrapped. Pending receipts are loaded lazily on the first
+    operation; if the journal is ahead of the device state (a crash between append and commit), the
+    device state is caught up.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">oldestPendingAgeMs</span>: <span class="rt">number | undefined</span></h4>
+    <p>Milliseconds since the oldest pending receipt was issued. Alert well before 72 hours.</p>
   </div>
 
   <div class="api">
@@ -964,8 +1185,9 @@ try {
   </div>
 
   <div class="api">
-    <h4><span class="nm">enqueue</span>(input): <span class="rt">Promise&lt;void&gt;</span><span class="badge async">async</span></h4>
-    <p>Appends a receipt to the queue and persists the new snapshot. Does not attempt submission.</p>
+    <h4><span class="nm">enqueue</span>(input): <span class="rt">Promise&lt;PreparedReceipt&gt;</span><span class="badge async">async</span></h4>
+    <p>Numbers, hash-chains and signs the receipt now, advances the device counters, and appends it
+    to the journal. Does not attempt submission.</p>
   </div>
 
   <div class="api">
@@ -977,8 +1199,9 @@ try {
 
   <div class="api">
     <h4><span class="nm">flush</span>(): <span class="rt">Promise&lt;FlushResult&gt;</span><span class="badge async">async</span></h4>
-    <p>Submits queued receipts FIFO, stopping at the first failure, and saves the remaining snapshot
-    after each success.</p>
+    <p>Submits queued receipts FIFO, stopping at the first failure, and commits the journal cursor
+    after each success. A receipt whose previous attempt left a pending marker on the device is settled
+    through <code>reconcile()</code> rather than sent twice.</p>
     <div class="tablewrap">
       <table>
         <thead><tr><th>Returns</th><th>Type</th><th>Notes</th></tr></thead>
@@ -991,7 +1214,8 @@ try {
     </div>
   </div>
 
-  <h3>QueueStorage</h3>
+  <h3>QueueStorage (0.3.x)</h3>
+  <p>Still accepted; see <a href="#api-interfaces">Journal</a> for the current interface.</p>
   <div class="api">
     <h4><span class="nm">interface QueueStorage</span></h4>
     <div class="tablewrap">
@@ -1133,26 +1357,85 @@ console.log(sha256Base64(canonical));</code></pre>
 
   <h3>HTTP</h3>
   <div class="api">
-    <h4><span class="nm">class FdmsHttpClient</span></h4>
-    <p>The mTLS transport, built on <code>node:https</code> with no HTTP dependency. Reach for it only
-    when you need an endpoint the SDK does not wrap yet.</p>
+    <h4><span class="nm">class FdmsClient</span></h4>
+    <p>Typed FDMS calls over any <code>Transport</code>: builds device paths and headers, parses JSON,
+    turns problem-details bodies into <code>FdmsApiError</code>, and feeds response <code>Date</code>
+    headers to the clock. Reach for it only when you need an endpoint the SDK does not wrap yet.</p>
     <div class="tablewrap">
       <table>
         <thead><tr><th>Member</th><th>Signature</th><th>Notes</th></tr></thead>
         <tbody>
-          <tr><td><code>constructor</code></td><td><code>(device, identity, options?)</code></td><td><code>identity</code> may be <code>undefined</code> for public endpoints.</td></tr>
+          <tr><td><code>constructor</code></td><td><code>(device, transport, options?)</code></td><td><code>options.baseUrl</code> overrides the environment URL.</td></tr>
           <tr><td><code>request</code></td><td><code>&lt;T&gt;(method, path, body?) =&gt; Promise&lt;T&gt;</code></td><td><code>"GET"</code> or <code>"POST"</code>. Throws <code>FdmsApiError</code> on non-2xx.</td></tr>
           <tr><td><code>devicePath</code></td><td><code>(endpoint) =&gt; string</code></td><td>Builds <code>/Device/v1/{deviceId}/{endpoint}</code>.</td></tr>
+          <tr><td><code>publicPath</code></td><td><code>(endpoint) =&gt; string</code></td><td>Builds <code>/Public/v1/{deviceId}/{endpoint}</code>.</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
   <div class="codewin" data-lang="ts" data-file="raw-call.ts">
-<pre><code>import { FdmsHttpClient } from "zimra-fdms";
+<pre><code>import { FdmsClient, NodeTransport } from "zimra-fdms";
 
-const http = new FdmsHttpClient(device, { certificatePem, privateKeyPem });
+const http = new FdmsClient(device, new NodeTransport({ certificatePem, privateKeyPem }));
 const res = await http.request("POST", http.devicePath("Ping"));</code></pre>
+  </div>
+</section>
+
+<!-- ---------------- API: interfaces ---------------- -->
+<section class="doc-sec" id="api-interfaces">
+  <h2>Signer, Transport, Clock, Storage, Journal<a class="anchor" href="#api-interfaces">#</a></h2>
+  <p>The five interfaces a platform implements. Exported from <code>zimra-fdms/core</code>; the Node
+  implementations are exported from <code>zimra-fdms</code>.</p>
+
+  <div class="api">
+    <h4><span class="nm">interface Signer</span></h4>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Method</th><th>Contract</th></tr></thead>
+        <tbody>
+          <tr><td><code>sign(data: Uint8Array)</code></td><td>ASN.1 DER ECDSA P-256 signature over SHA-256 of <code>data</code>. The implementation hashes. FDMS rejects raw P1363.</td></tr>
+          <tr><td><code>publicKeySpki()</code></td><td>The public key as DER SubjectPublicKeyInfo, for the CSR.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Node: <code>PemSigner(privateKeyPem)</code>, <code>generatePemSigner()</code>. Android:
+    <code>KeystoreSigner</code>. Helpers: <code>p1363ToDer</code>, <code>derToP1363</code>,
+    <code>signCanonicalString(signer, canonical)</code>, <code>buildCsr(signer, commonName)</code>.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">interface Transport</span></h4>
+    <p><code>request({ method, url, headers, body?, timeoutMs })</code> returns
+    <code>{ status, headers, text }</code> with lower-cased header names. The adapter owns TLS,
+    including the client identity, which must be the same key as the Signer. Throw
+    <code>TransportError</code> for connect, DNS and timeout failures so the offline queue can tell
+    them from rejections. Node: <code>NodeTransport(identity?, { ca?, keepAliveMs? })</code>, one
+    keep-alive agent per device. Any runtime with fetch: <code>FetchTransport</code> for the Public
+    endpoints. Android: <code>OkHttpTransport</code>.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">interface Clock</span></h4>
+    <p><code>now(): Date</code>. <code>FiscalDevice</code> wraps it in <code>ServerCorrectedClock</code>,
+    which learns the offset from FDMS response dates; <code>offsetMs</code> and <code>confidence</code>
+    are readable on <code>device.clock</code>.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">interface Storage</span></h4>
+    <p><code>get(key)</code>, <code>set(key, value)</code>, <code>delete(key)</code> over strings. Each
+    <code>set</code> must be atomic for its key. Node: <code>FileStorage(dir)</code>. In memory:
+    <code>MemoryStorage</code>. Tests: <code>guardedStorage(inner, guard)</code> to kill at a chosen write.</p>
+  </div>
+
+  <div class="api">
+    <h4><span class="nm">interface Journal</span></h4>
+    <p><code>append(record)</code>, <code>readFrom(cursor)</code>, <code>commit(cursor)</code>,
+    <code>committed()</code>. Append-only; records are single-line strings. Node:
+    <code>FileJournal(dir, name?)</code> with <code>compact()</code>. In memory:
+    <code>MemoryJournal</code>. A 0.3.x <code>QueueStorage</code> is wrapped by
+    <code>journalFromQueueStorage()</code>.</p>
   </div>
 </section>
 
@@ -1265,6 +1548,8 @@ npx zimra-fdms day close</code></pre>
         <tr><td><code>device-certificate.pem</code></td><td>The mTLS certificate issued by FDMS.</td></tr>
         <tr><td><code>device-private-key.pem</code></td><td>The matching private key, written <code>0600</code> where the OS supports it.</td></tr>
         <tr><td><code>day-state.json</code></td><td>The open fiscal day: counters, hash chain, receipt numbers.</td></tr>
+        <tr><td><code>pending-submit.json</code></td><td>A receipt whose submit is unresolved. Present only between a request and its answer, or after a crash; every command reconciles it first.</td></tr>
+        <tr><td><code>last-receipt-global-no.json</code></td><td>Highest global number ever issued, kept across days.</td></tr>
       </tbody>
     </table>
   </div>
@@ -1289,6 +1574,18 @@ npx zimra-fdms day close</code></pre>
         <tr><td><code>--json</code></td><td>Machine-readable output. Supported by <code>status</code>, <code>config</code> and <code>submit</code>.</td></tr>
         <tr><td><code>-h</code>, <code>--help</code></td><td>Help for a command.</td></tr>
         <tr><td><code>-v</code>, <code>--version</code></td><td>Print the package version.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Environment variables</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Variable</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><code>ZIMRA_PROFILE</code></td><td>Profile directory when <code>--profile</code> is not given.</td></tr>
+        <tr><td><code>ZIMRA_BASE_URL</code></td><td>Talk to this server instead of the environment in <code>device.json</code>, e.g. <code>https://localhost:8443</code> from the <a href="#simulator">simulator</a>.</td></tr>
+        <tr><td><code>ZIMRA_CA</code></td><td>PEM file with extra CA certificates to trust. The simulator writes one.</td></tr>
       </tbody>
     </table>
   </div>
@@ -1533,14 +1830,21 @@ npx zimra-fdms mcp --profile ./.zimra</code></pre>
   <h2>Testing<a class="anchor" href="#testing">#</a></h2>
 
   <div class="codewin nolines" data-lang="sh" data-file="terminal">
-<pre><code>npm test              # regression suite for the signing rules (no network)
+<pre><code>npm test              # signing rules, core primitives, crash safety, simulator, vectors, CLI, MCP
+npm run lint:core     # fails if src/core references node:*, Buffer, process or fetch
 npm run test:e2e      # full live cycle against the FDMS test environment
-npm run test:e2e:mcp  # the same live cycle, driven through the MCP server</code></pre>
+npm run test:e2e:mcp  # the same live cycle, driven through the MCP server
+ZIMRA_BASE_URL=https://localhost:8443 ZIMRA_CA=zimra-simulator-ca.pem npm run test:e2e   # same cycle, simulator</code></pre>
   </div>
 
-  <p>The regression suite pins the canonical signing strings, DER conversion, tax computation, counter
-  accumulation and QR format — precisely the things a silent ZIMRA spec revision would break. Run it
-  before every release.</p>
+  <p>The suite pins the canonical signing strings, DER conversion, tax computation, counter
+  accumulation and QR format against the <a href="#conformance">published vectors</a>; checks the
+  pure SHA-256, MD5 and base64 against <code>node:crypto</code> and the CSR builder against
+  <code>@peculiar/x509</code>; runs a full fiscal day through <code>dist/core</code> inside a VM
+  context with no <code>Buffer</code>, <code>process</code>, <code>require</code> or
+  <code>fetch</code>; kills the device at every storage write and network call and reconciles; and
+  drives the SDK and the compiled CLI against the <a href="#simulator">simulator</a> over real mutual
+  TLS. Run it before every release.</p>
 
   <h3>Spec drift watching</h3>
   <p>ZIMRA can change the FDMS API without announcing it. <code>npm run spec:drift</code> compares the
@@ -1553,6 +1857,130 @@ npm run test:e2e:mcp  # the same live cycle, driven through the MCP server</code
   <p>Comparison is on the API contract — paths, parameters, required flags, enum values, maxLength —
   so formatting and key-order churn do not register as drift. Run
   <code>npm run spec:drift -- --update</code> to accept the current live state as the new baseline.</p>
+</section>
+
+<!-- ---------------- Simulator ---------------- -->
+<section class="doc-sec" id="simulator">
+  <h2>Simulator<a class="anchor" href="#simulator">#</a></h2>
+  <p>A local FDMS with real mutual TLS, for developing and testing without a registered device. It
+  runs a generated certificate authority, issues device certificates from the same PKCS#10 request
+  the SDK sends ZIMRA, and verifies every receipt and CloseDay signature with the same
+  canonical-string rules.</p>
+
+  <div class="codewin nolines" data-lang="sh" data-file="terminal">
+<pre><code>npx zimra-fdms-simulator --port 8443              # writes zimra-simulator-ca.pem
+
+export ZIMRA_BASE_URL=https://localhost:8443
+export ZIMRA_CA=zimra-simulator-ca.pem
+npx zimra-fdms register --device-id 1 --serial DEV1 --activation-key ABCD1234
+npx zimra-fdms day open
+npx zimra-fdms submit receipt.json
+npx zimra-fdms day close</code></pre>
+  </div>
+
+  <p>In a test suite, start it in-process and inject faults:</p>
+  <div class="codewin" data-lang="ts" data-file="sim.test.ts">
+<pre><code>import { FdmsSimulator } from "zimra-fdms/simulator";
+import { FiscalDevice, registerDevice, NodeTransport } from "zimra-fdms";
+
+const sim = await FdmsSimulator.create({ closeDelayMs: 50 });
+const { url, caPem } = await sim.start();
+
+const reg = await registerDevice(identity, "ABCD1234", {
+  baseUrl: url,
+  transport: new NodeTransport(undefined, { ca: caPem }),
+});
+const device = new FiscalDevice(identity, { certificatePem: reg.certificatePem, privateKeyPem: reg.keys.privateKeyPem }, { baseUrl: url, ca: caPem });
+
+sim.faults.dropAfterSubmit = 1;      // FDMS takes the receipt; the client never sees the answer
+await assert.rejects(device.submitReceipt(input));
+assert.equal((await device.reconcile()).action, "confirmed");
+
+await sim.stop();</code></pre>
+  </div>
+
+  <h3>What it replays</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Behaviour</th><th>Trigger</th></tr></thead>
+      <tbody>
+        <tr><td><code>RCPT010</code> Red</td><td>Signature or hash does not verify against the device certificate.</td></tr>
+        <tr><td><code>RCPT011</code> Red</td><td><code>receiptCounter</code> not sequential within the day.</td></tr>
+        <tr><td><code>RCPT012</code> Red</td><td><code>receiptGlobalNo</code> not one more than the highest held.</td></tr>
+        <tr><td><code>RCPT013</code> Red</td><td>Tax ID not in the device tax table.</td></tr>
+        <tr><td><code>RCPT014</code> Yellow</td><td><code>receiptDate</code> before the day was opened.</td></tr>
+        <tr><td><code>RCPT020</code>, <code>RCPT021</code> Red</td><td>Total does not match the lines; payments do not match the total.</td></tr>
+        <tr><td><code>RCPT030</code> Red</td><td><code>receiptDate</code> not after the previous receipt.</td></tr>
+        <tr><td><code>RCPT031</code> Yellow</td><td><code>receiptDate</code> ahead of server time (tolerance configurable).</td></tr>
+        <tr><td>Asynchronous close</td><td>CloseDay answers at once; status goes <code>FiscalDayCloseInitiated</code> then <code>FiscalDayClosed</code>, or back to <code>FiscalDayOpened</code> with <code>fiscalDayClosingErrorCode</code> <code>BadCertificateSignature</code> (signed over the wrong date) or <code>ReceiptsWithValidationErrors</code> (a Red receipt in the day).</td></tr>
+        <tr><td>GetStatus under-reports</td><td><code>lastReceiptGlobalNo</code> is the receipt with the latest date, not the highest number, as observed live.</td></tr>
+        <tr><td><code>FDC01</code>, <code>FDC02</code>, <code>DEV01</code>, 401</td><td>Day already open; day not open; unknown device; missing or mismatched client certificate.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Faults</h3>
+  <p>Set fields on <code>sim.faults</code>; counters are consumed as they fire.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Field</th><th>Effect</th></tr></thead>
+      <tbody>
+        <tr><td><code>dropConnections</code></td><td>Destroy the next N connections before answering (a <code>TransportError</code>).</td></tr>
+        <tr><td><code>serverErrors</code></td><td>Answer the next N requests with HTTP 503.</td></tr>
+        <tr><td><code>delayMs</code></td><td>Delay every response.</td></tr>
+        <tr><td><code>dateSkewMs</code></td><td>Offset the <code>Date</code> header, to test the client's clock correction.</td></tr>
+        <tr><td><code>dropAfterSubmit</code></td><td>Process the next N SubmitReceipts, then drop the socket so the answer is lost. The crash-safety case.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note-box warn">
+    <i class="ph-light ph-warning"></i>
+    <div>
+      <p><b>It is not ZIMRA.</b> Passing against the simulator means the SDK is consistent with itself.
+      The canonical-string rules are the SDK's own; the <a href="#conformance">conformance
+      vectors</a> pin those, and the nightly run against the real test environment is the authority.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ---------------- Conformance ---------------- -->
+<section class="doc-sec" id="conformance">
+  <h2>Conformance vectors<a class="anchor" href="#conformance">#</a></h2>
+  <p><code>vectors/zimra-fdms-vectors.json</code> (also <code>import "zimra-fdms/vectors"</code>)
+  holds canonical strings, SHA-256 hashes, DER signatures, tax summaries and QR payloads for a fixed
+  P-256 test key: USD and ZWG, inclusive and exclusive tax, mixed rates with an exempt line, a credit
+  note, fractional quantities, an amount near the 32-bit cents boundary, and fiscal-day counters
+  across currencies and money types. The first receipt vector is receipt 24 on device 37367 as
+  accepted by the FDMS test environment.</p>
+
+  <p>A port in any language proves itself with the runner. It pipes each vector to a command as one
+  JSON object on stdin and reads one JSON object back:</p>
+
+  <div class="codewin nolines" data-lang="sh" data-file="terminal">
+<pre><code>npx zimra-fdms-conformance -- python3 my_responder.py
+npx zimra-fdms-conformance -- ./build/kotlin-responder
+npx zimra-fdms-conformance --vectors other.json -- node dist/conformance/reference.js</code></pre>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Request</th><th>Expected answer</th></tr></thead>
+      <tbody>
+        <tr><td><code>{"kind":"receipt","deviceId","receipt","previousReceiptHash"}</code></td><td><code>{"canonical","hash","signature"?}</code></td></tr>
+        <tr><td><code>{"kind":"fiscalDay","deviceId","fiscalDayNo","fiscalDayDate","counters"}</code></td><td><code>{"canonical","hash","signature"?}</code></td></tr>
+        <tr><td><code>{"kind":"qr","qrUrl","deviceId","receiptDate","receiptGlobalNo","deviceSignatureBase64"}</code></td><td><code>{"qrData"}</code></td></tr>
+        <tr><td><code>{"kind":"sha256","input"}</code></td><td><code>{"sha256Base64"}</code></td></tr>
+        <tr><td><code>{"kind":"taxes","lines","taxInclusive"}</code></td><td><code>{"taxes"}</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Canonical strings and hashes must match byte for byte. Signatures are verified against the
+  public key in the vectors file rather than compared, since ECDSA is randomised; a responder that
+  does not sign leaves the field out and is checked on formatting only. The private key is in the
+  file so a responder can sign with it (<code>ZIMRA_VECTOR_KEY</code> for the reference).
+  <code>src/conformance/reference.ts</code> is a responder built on this SDK; port that file first.</p>
 </section>
 
 <!-- ---------------- Environment ---------------- -->

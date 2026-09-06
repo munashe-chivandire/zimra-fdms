@@ -101,11 +101,21 @@ export function writeProfile(
   return { keyPath };
 }
 
+/**
+ * ZIMRA_BASE_URL and ZIMRA_CA point the CLI and MCP server at a local
+ * simulator instead of the environment in device.json.
+ */
+export function endpointOverrides(): { baseUrl?: string; ca?: string } {
+  const baseUrl = process.env.ZIMRA_BASE_URL || undefined;
+  const caPath = process.env.ZIMRA_CA;
+  return { baseUrl, ca: caPath ? readFileSync(caPath, "utf-8") : undefined };
+}
+
 export function fiscalDeviceFrom(p: Profile): FiscalDevice {
   return new FiscalDevice(
     p.device,
     { certificatePem: p.certificatePem, privateKeyPem: p.privateKeyPem },
-    { environment: p.device.environment, stateDir: p.dir },
+    { environment: p.device.environment, stateDir: p.dir, ...endpointOverrides() },
   );
 }
 
@@ -222,10 +232,11 @@ export async function closeFromServerCounters(
   p: Profile,
   opts: { fiscalDayDate?: string } = {},
 ): Promise<ServerCountersClose> {
+  const overrides = endpointOverrides();
   const http = new FdmsClient(
     p.device,
-    new NodeTransport({ certificatePem: p.certificatePem, privateKeyPem: p.privateKeyPem }),
-    { environment: p.device.environment },
+    new NodeTransport({ certificatePem: p.certificatePem, privateKeyPem: p.privateKeyPem }, { ca: overrides.ca }),
+    { environment: p.device.environment, baseUrl: overrides.baseUrl },
   );
   const status = await http.request<GetStatusResponse>(
     "GET",

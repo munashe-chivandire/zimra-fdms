@@ -68,7 +68,7 @@
 
 <header>
   <div>
-    <div class="kicker" data-intro><span class="dot"></span><b>main</b><span class="sep">—</span>v0.3.1
+    <div class="kicker" data-intro><span class="dot"></span><b>main</b><span class="sep">—</span>v0.4.0
       <span class="sep">·</span>MIT<span class="sep">·</span>Harare, Zimbabwe</div>
     <h1 id="headline">
       <span class="w"><span>Fiscalisation,</span></span><br>
@@ -150,8 +150,9 @@
     <div class="card w7"><div class="card-in">
       <span class="ico gold"><i class="ph-light ph-cell-signal-slash"></i></span>
       <h3>Offline queue — built for real infrastructure</h3>
-      <p>Power cuts and dead links don't stop sales. Receipts sign and number locally, queue in order,
-      and flush when connectivity returns — inside FDMS's 72-hour grace window, with pluggable storage.</p>
+      <p>Power cuts and dead links don't stop sales. Receipts sign and number at the moment of sale,
+      append to a journal that is never rewritten, and flush in order when connectivity returns,
+      inside FDMS's 72-hour grace window.</p>
     </div></div>
     <div class="card"><div class="card-in">
       <span class="ico"><i class="ph-light ph-qr-code"></i></span>
@@ -161,13 +162,42 @@
     <div class="card"><div class="card-in">
       <span class="ico"><i class="ph-light ph-warning-diamond"></i></span>
       <h3>Errors that explain themselves</h3>
-      <p>Typed errors with plain-language hints for FDMS's cryptic codes — <code>DEV01</code>,
-      <code>FISC01</code>, <code>RCPT010</code> and friends.</p>
+      <p>Every code carries a colour, a cause, a fix and whether the day can still be closed, plus a
+      support code a cashier can read out. <code>RCPT030</code>, <code>RCPT012</code> and friends,
+      as observed live.</p>
     </div></div>
     <div class="card"><div class="card-in">
       <span class="ico"><i class="ph-light ph-lock-key"></i></span>
-      <h3>mTLS, zero dependencies</h3>
-      <p>Mutual TLS on plain <code>node:https</code>. One runtime dependency in the whole package.</p>
+      <h3>mTLS, no HTTP dependency</h3>
+      <p>Mutual TLS on plain <code>node:https</code> with one keep-alive agent per device. The fiscal
+      core itself depends on nothing at all.</p>
+    </div></div>
+    <div class="card w5"><div class="card-in">
+      <span class="ico"><i class="ph-light ph-device-mobile"></i></span>
+      <h3>Runs anywhere, including Android</h3>
+      <p>The engine has no platform imports: no <code>node:*</code>, no <code>Buffer</code>, no
+      WebCrypto. Hashing is plain TypeScript. Node, Bun, Deno, browsers, and React Native with the
+      device key sealed in Android Keystore.</p>
+    </div></div>
+    <div class="card w7"><div class="card-in">
+      <span class="ico gold"><i class="ph-light ph-lightning-slash"></i></span>
+      <h3>Crash-safe by construction</h3>
+      <p>A pending-submit marker goes to disk before every request. Kill the process at any
+      instruction, restart, call <code>reconcile()</code>: FDMS ends up with every global number
+      exactly once. Tested by killing the device at every write and every network call.</p>
+    </div></div>
+    <div class="card w7"><div class="card-in">
+      <span class="ico"><i class="ph-light ph-flask"></i></span>
+      <h3>A simulator and published vectors</h3>
+      <p><code>npx zimra-fdms-simulator</code> is a local FDMS with real mutual TLS that replays the
+      validation codes seen live. Conformance vectors let a port in any language prove it signs
+      exactly as FDMS expects.</p>
+    </div></div>
+    <div class="card w5"><div class="card-in">
+      <span class="ico"><i class="ph-light ph-coins"></i></span>
+      <h3>Integer cents, always</h3>
+      <p>FDMS signs over cents. Amounts are whole units or <code>cents("11.50")</code>; a float that
+      might be 11.499999 is refused instead of rounded, so a signature never drifts.</p>
     </div></div>
   </div>
   <a class="sec-cta" href="/docs#api-fiscaldevice" data-rv>

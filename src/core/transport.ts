@@ -27,6 +27,8 @@ export interface Transport {
 
 export interface FdmsClientOptions {
   environment?: FdmsEnvironment;
+  /** Overrides the environment's URL, e.g. a local simulator. No trailing slash. */
+  baseUrl?: string;
   /** Request timeout in ms. Default 30_000. */
   timeoutMs?: number;
   /** Called with every response Date header, so a Clock can learn the offset. */
@@ -46,7 +48,7 @@ export class FdmsClient {
     private readonly transport: Transport,
     private readonly options: FdmsClientOptions = {},
   ) {
-    this.baseUrl = FDMS_BASE_URLS[options.environment ?? "test"];
+    this.baseUrl = options.baseUrl ?? FDMS_BASE_URLS[options.environment ?? "test"];
     this.timeoutMs = options.timeoutMs ?? 30_000;
   }
 

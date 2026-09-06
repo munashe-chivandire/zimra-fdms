@@ -37,6 +37,50 @@ fiscal behaviour changes, and 0.3.x code keeps working.
 - **`@zimra-fdms/react-native`** in `packages/react-native`: `KeystoreSigner`
   and `OkHttpTransport` over a Kotlin module. Written, typechecked, not yet
   run on a device.
+- **Integer cents.** `ReceiptInput` amounts are a whole number of major
+  units or `cents("11.50")`; a fractional JS number throws, naming the
+  field. Tax, totals, payments and counters are computed in integer cents
+  and rounded per line. `receiptInputFromJson()` converts amounts that came
+  through JSON with up to two places; the CLI and MCP server apply it.
+- **Crash safety.** With a `Storage`, `FiscalDevice` writes a
+  pending-submit marker before every SubmitReceipt and `reconcile()` settles
+  it on the next start: confirms with GetStatus, resubmits the identical
+  signed receipt, or reports a rejection. `submitReceipt()`, `openDay()`
+  and `closeDay()` throw `PendingSubmitError` while a marker exists. The
+  highest global number ever issued is kept in storage and `openDay()`
+  takes the largest of server, stored and given values. `FileStorage` on
+  Node writes atomically and uses the CLI profile file names, so the CLI
+  and MCP server get this for free (`stateDir`, and they reconcile on every
+  command).
+- **Append-only journal.** `OfflineReceiptQueue` signs at sale time
+  (`signReceipt()` + `applyPrepared()`), appends to a `Journal`, and
+  commits a cursor per delivered receipt. `FileJournal` (JSONL) on Node,
+  `MemoryJournal` in core, `journalFromQueueStorage()` wraps a 0.3.x
+  `QueueStorage` and upgrades its unsigned entries on load.
+  `oldestPendingAgeMs` for the 72-hour window. A flush that died after
+  writing the marker is settled through `reconcile()`, not sent twice.
+- **`zimra-fdms/simulator`** and `npx zimra-fdms-simulator`: a local FDMS
+  with a generated CA and real mutual TLS. Issues certificates from the
+  SDK's CSR, verifies every signature with the shared canonical-string
+  code, replays RCPT010/011/012/013/014/020/021/030/031, the asynchronous
+  close with `BadCertificateSignature` and `ReceiptsWithValidationErrors`,
+  and the GetStatus under-report. Faults: dropped connections, 5xx, delay,
+  skewed `Date`, lost SubmitReceipt answer. `baseUrl` on the client options
+  and `ZIMRA_BASE_URL` / `ZIMRA_CA` on the CLI, MCP server and e2e script
+  point at it.
+- **Conformance vectors** in `vectors/zimra-fdms-vectors.json` (also
+  `zimra-fdms/vectors`) for a fixed test key, and `npx zimra-fdms-conformance
+  -- <command>` to check any implementation against them over a stdin/stdout
+  JSON protocol. `src/conformance/reference.ts` is the responder to port.
+- **Error catalogue.** `ERROR_CATALOGUE`, `explainCode()`,
+  `FdmsApiError.explain()` and `.supportCode`, `explainValidationError()`.
+  Colour, cause, fix and whether the day is still closable per code, with
+  observed entries marked. Fixes the old RCPT012 hint, which described a
+  duplicate invoice number; the live meaning is a non-sequential global
+  number.
+- CI runs on Node 18, 20, 22 and 24, lints the core for platform imports,
+  runs the conformance runner against the reference, and typechecks the
+  Android bindings against real React Native types.
 
 ### Changed
 
@@ -53,6 +97,12 @@ fiscal behaviour changes, and 0.3.x code keeps working.
 - `package-lock.json` regenerated against registry.npmjs.org; 0.3.1's
   lockfile resolved every package to a mirror.
 - TypeScript target is ES2020 so the compiled core runs on Hermes.
+- `closeDay()` no longer clears stored day state on an accepted close; the
+  close is asynchronous and a rejected one needs the counters for a retry.
+  `clearPersistedState()` deletes it once GetStatus reports
+  `FiscalDayClosed`.
+- `README` dependency count corrected: three runtime dependencies, none in
+  the core.
 
 ## 0.3.1 — 2026-08-23
 

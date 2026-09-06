@@ -21,6 +21,18 @@ import { z } from "zod";
 import { DayNotClosableError, type ReceiptInput } from "../core/device.js";
 import { receiptInputFromJson } from "../core/money.js";
 import { registerDevice } from "./registration.js";
+import { NodeTransport } from "./transport.js";
+import type { FdmsEnvironment as Env } from "../core/types.js";
+
+/** RegisterDevice options honouring ZIMRA_BASE_URL and ZIMRA_CA. */
+function registerOptions(environment: Env) {
+  const o = endpointOverrides();
+  return {
+    environment,
+    baseUrl: o.baseUrl,
+    transport: o.ca ? new NodeTransport(undefined, { ca: o.ca }) : undefined,
+  };
+}
 import {
   ProfileError,
   clearDayState,
@@ -33,6 +45,7 @@ import {
   profileDir,
   saveDayState,
   writeProfile,
+  endpointOverrides,
 } from "./profile.js";
 import { FdmsApiError, type FdmsEnvironment } from "../core/types.js";
 
@@ -226,7 +239,7 @@ export function createZimraMcpServer(defaultProfile?: string): McpServer {
         modelVersion: args.modelVersion,
       };
       const environment = args.environment as FdmsEnvironment;
-      const result = await registerDevice(device, args.activationKey, { environment });
+      const result = await registerDevice(device, args.activationKey, registerOptions(environment));
       const { keyPath } = writeProfile(
         dir,
         { ...device, environment },
