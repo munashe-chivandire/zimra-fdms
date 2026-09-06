@@ -230,11 +230,21 @@ describe("simulator", () => {
   });
 
   describe("fault injection", () => {
-    it("dropped connections surface as TransportError", async () => {
+    it("idempotent calls retry through dropped connections; more drops than retries surface as TransportError", async () => {
       const { fd } = await freshDevice();
-      sim.faults.dropConnections = 1;
+      sim.faults.dropConnections = 2;
+      await fd.ping(); // two retries by default
+      sim.faults.dropConnections = 3;
       await assert.rejects(fd.ping(), TransportError);
-      await fd.ping();
+      sim.faults.dropConnections = 0;
+    });
+
+    it("SubmitReceipt is never retried by the client", async () => {
+      const { fd } = await freshDevice();
+      await fd.openDay();
+      sim.faults.dropConnections = 1;
+      await assert.rejects(fd.submitReceipt(SALE), TransportError);
+      sim.faults.dropConnections = 0;
     });
 
     it("5xx surfaces as FdmsApiError with the status", async () => {

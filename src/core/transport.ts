@@ -33,6 +33,12 @@ export interface FdmsClientOptions {
   timeoutMs?: number;
   /** Called with every response Date header, so a Clock can learn the offset. */
   onServerDate?: (serverDate: Date, roundTripMs: number) => void;
+  /**
+   * Retries for idempotent calls (GET endpoints and Ping) after a network
+   * failure, with jittered backoff. Default 2. SubmitReceipt, OpenDay and
+   * CloseDay are never retried here; a lost answer goes through reconcile().
+   */
+  retries?: number;
 }
 
 /**
@@ -54,8 +60,7 @@ export class FdmsClient {
 
   async request<T>(method: "GET" | "POST", path: string, body?: unknown): Promise<T> {
     const payload = body === undefined ? undefined : JSON.stringify(body);
-    const started = Date.now();
-    const res = await this.transport.request({
+    const req: TransportRequest = {
       method,
       url: this.baseUrl + path,
       headers: {
@@ -66,7 +71,23 @@ export class FdmsClient {
       },
       body: payload,
       timeoutMs: this.timeoutMs,
-    });
+    };
+    const idempotent = method === "GET" || path.endsWith("/Ping");
+    const attempts = idempotent ? 1 + (this.options.retries ?? 2) : 1;
+
+    let started = Date.now();
+    let res: TransportResponse | undefined;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        started = Date.now();
+        res = await this.transport.request(req);
+        break;
+      } catch (err) {
+        if (attempt >= attempts || !isNetworkError(err)) throw err;
+        const backoff = 200 * 2 ** (attempt - 1) + Math.random() * 200;
+        await new Promise((r) => setTimeout(r, backoff));
+      }
+    }
 
     const date = res.headers["date"];
     if (date && this.options.onServerDate) {

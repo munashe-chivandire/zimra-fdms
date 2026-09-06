@@ -78,6 +78,10 @@ fiscal behaviour changes, and 0.3.x code keeps working.
   observed entries marked. Fixes the old RCPT012 hint, which described a
   duplicate invoice number; the live meaning is a non-sequential global
   number.
+- Idempotent calls (GET endpoints and Ping) retry twice with jittered
+  backoff on a network failure (`retries` in the client options).
+  SubmitReceipt, OpenDay and CloseDay are never retried by the client.
+- `MIGRATION.md` walks through every 0.3.x change.
 - CI runs on Node 18, 20, 22 and 24, lints the core for platform imports,
   runs the conformance runner against the reference, and typechecks the
   Android bindings against real React Native types.

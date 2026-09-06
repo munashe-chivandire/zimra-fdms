@@ -253,6 +253,11 @@ const device = createFiscalDevice(identity, { alias: "zimra-device-12345", certi
 
 See [packages/react-native/README.md](packages/react-native/README.md).
 
+## Upgrading from 0.3.x
+
+See [MIGRATION.md](MIGRATION.md). Most code compiles unchanged; fractional
+amounts and `signCanonicalString` are the two things that need a hand.
+
 ## When FDMS says no
 
 Every `FdmsApiError` carries `explain()` (colour, cause, fix, whether the
