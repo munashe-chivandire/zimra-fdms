@@ -133,3 +133,143 @@ wireCopy('copycode',()=>document.querySelector('.codewin pre:not([hidden]) code'
   tabSdk.addEventListener('click',()=>pick(false));
   tabMcp.addEventListener('click',()=>pick(true));
 })();
+
+/* testimonial wall — curated tweets from data/tweets.json */
+/* The section ships hidden and only unhides once there is something real to show, */
+/* so an empty or unreachable file leaves no empty shelf on the page. */
+(async () => {
+  const sec  = document.getElementById('voices');
+  const grid = document.getElementById('tweets');
+  if (!sec || !grid) return;
+
+  /* placeholder entries are for judging the layout locally; they never reach production */
+  const local = ['localhost', '127.0.0.1', ''].includes(location.hostname);
+
+  let data;
+  try {
+    const res = await fetch('data/tweets.json', { cache: 'no-cache' });
+    if (!res.ok) return;
+    data = await res.json();
+  } catch (e) { return; }
+
+  const list = (data.tweets || []).filter(t => local || !t.placeholder);
+  if (!list.length) return;
+
+  const esc = s => String(s ?? '').replace(/[&<>"']/g,
+    c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  /* tint @handles and #tags after escaping, never before */
+  const rich = s => esc(s)
+    .replace(/(^|\s)(@[A-Za-z0-9_]{1,15})/g, '$1<b>$2</b>')
+    .replace(/(^|\s)(#[A-Za-z0-9_]+)/g, '$1<b>$2</b>');
+
+  const HUES = [212, 38, 268, 152, 340];
+  const hueOf = s => {
+    let h = 0;
+    for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) | 0;
+    return HUES[Math.abs(h) % HUES.length];
+  };
+
+  const when = d => {
+    const t = new Date(d);
+    return isNaN(t) ? '' : t.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+
+  const X_PATH = 'M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z';
+
+  grid.innerHTML = list.map(t => {
+    const label = (t.name || t.handle || '?').replace(/^@/, '');
+    const initial = esc(label.charAt(0).toUpperCase());
+    const hue = hueOf(t.handle || label);
+    /* initial and hue ride along so a dead image can rebuild the monogram */
+    const avatar = t.avatar
+      ? `<img class="tw-av" src="${esc(t.avatar)}" alt="" loading="lazy" data-initial="${initial}" data-hue="${hue}">`
+      : `<span class="tw-av" style="background:hsl(${hue} 58% 42%)">${initial}</span>`;
+    return `<a class="tw" href="${esc(t.url || '#')}" target="_blank" rel="noopener">
+  <div class="tw-in">
+    <div class="tw-top">${avatar}
+      <span class="tw-id"><b>${esc(t.name || t.handle)}</b><span>${esc(t.handle)}</span></span>
+      <svg class="tw-x" viewBox="0 0 24 24" aria-hidden="true"><path d="${X_PATH}"/></svg>
+    </div>
+    <div class="tw-body">${rich(t.text)}</div>
+    <div class="tw-foot"><span>${esc(when(t.date))}</span>${t.placeholder ? '<span class="tw-flag">placeholder</span>' : ''}</div>
+  </div></a>`;
+  }).join('');
+
+  sec.hidden = false;
+
+
+  const cards = [...grid.children];
+
+  /* same spotlight the bento cards use; those were bound before these existed */
+  /* hotlinked pbs.twimg.com URLs rotate; a 404 becomes the monogram, not a broken icon */
+  const wireAvatars = scope => scope.querySelectorAll('img.tw-av').forEach(img => {
+    img.addEventListener('error', () => {
+      const span = document.createElement('span');
+      span.className = 'tw-av';
+      span.style.background = `hsl(${img.dataset.hue} 58% 42%)`;
+      span.textContent = img.dataset.initial || '?';
+      img.replaceWith(span);
+    }, { once: true });
+  });
+  wireAvatars(grid);
+  const spotlight = card => card.addEventListener('pointermove', e => {
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%');
+    card.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%');
+  });
+  cards.forEach(spotlight);
+
+  /* the section was display:none at load, so triggers below it need remeasuring */
+  if (window.ScrollTrigger) ScrollTrigger.refresh();
+
+  /* no GSAP or reduced motion: the plain grid above is the fallback */
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !window.gsap) return;
+
+  /* ---------- looping marquee, right to left ---------- */
+  const track = document.createElement('div');
+  track.className = 'tw-track';
+  cards.forEach(c => track.appendChild(c));
+  grid.appendChild(track);
+  grid.classList.add('marquee');
+
+  const gap = parseFloat(getComputedStyle(track).gap) || 0;
+  /* the loop distance has to include one trailing gap, or the seam shows */
+  const setWidth = track.scrollWidth + gap;
+
+  /* clone whole sets until the track can cover the viewport plus one full set */
+  while (track.scrollWidth < grid.clientWidth + setWidth) {
+    cards.forEach(c => {
+      const copy = c.cloneNode(true);
+      copy.setAttribute('aria-hidden', 'true');
+      copy.tabIndex = -1;
+      spotlight(copy);
+      wireAvatars(copy);
+      track.appendChild(copy);
+    });
+  }
+
+  let x = 0, hovering = false, onScreen = true, running = false;
+  grid.addEventListener('pointerenter', () => { hovering = true; });
+  grid.addEventListener('pointerleave', () => { hovering = false; });
+
+  gsap.ticker.add(() => {
+    if (!onScreen || !running) return;
+    x -= 0.75 * gsap.ticker.deltaRatio(60) * (hovering ? 0.25 : 1);   // slow down to read
+    if (x <= -setWidth) x += setWidth;
+    gsap.set(track, { x });
+  });
+
+  /* cards fly in on load; the marquee stays parked until the intro lands */
+  gsap.from(track.children, {
+    y: 36, scale: .94, opacity: 0, duration: 1.05, ease: "power4.out",
+    stagger: { amount: .7 }, delay: .45
+  });
+  /* spread over a fixed window, so clone count never stretches the intro */
+  gsap.delayedCall(1.15, () => { running = true; });
+
+  if (window.ScrollTrigger) {
+    ScrollTrigger.create({ trigger: sec, start: 'top bottom', end: 'bottom top',
+      onToggle: self => { onScreen = self.isActive; } });
+  }
+})();

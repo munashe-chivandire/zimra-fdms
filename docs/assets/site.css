@@ -83,14 +83,15 @@ body{color:var(--ink);font-family:var(--font-b);-webkit-font-smoothing:antialias
 /* nav */
 .navwrap{position:fixed;top:1.25rem;left:0;right:0;z-index:50;display:flex;justify-content:center;pointer-events:none}
 .navwrap nav{position:relative;pointer-events:auto;
-  display:flex;align-items:center;gap:1.5rem;padding:.55rem .6rem .55rem .9rem;
+  display:flex;align-items:center;gap:.95rem;padding:.55rem .6rem .55rem 1.2rem;
+  width:min(1120px,calc(100vw - 3rem));
   background:var(--nav-bg);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
   border:1px solid var(--hair);border-radius:999px;white-space:nowrap;
   box-shadow:0 12px 40px -18px rgba(4,11,27,.5), inset 0 1px 0 rgba(255,255,255,.06)}
 .navwrap nav .mark{width:1.7rem;height:1.7rem;border-radius:.5rem;object-fit:cover}
 .navwrap nav .brand{font-family:var(--font-d);font-weight:600;font-size:.95rem;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:.6rem}
 .navwrap nav .brand i{font-style:normal;color:var(--blue-hi)}
-.navwrap nav .links{display:flex;gap:1.4rem}
+.navwrap nav .links{display:flex;gap:1.7rem;margin-inline:auto}
 .navwrap nav .links a{position:relative;color:var(--dim);text-decoration:none;font-size:.86rem;font-weight:600;padding:.2rem 0;transition:color .45s var(--ease)}
 .navwrap nav .links a::after{content:"";position:absolute;left:0;bottom:-2px;height:1px;width:100%;background:var(--blue-hi);
   transform:scaleX(0);transform-origin:100% 50%;transition:transform .5s var(--ease)}
@@ -144,8 +145,12 @@ body.menu-open{overflow:hidden}
   .navwrap nav .links{display:none}
   .burger{display:flex}
   .navwrap{top:.9rem;padding:0 .9rem}
-  .navwrap nav{width:100%;justify-content:space-between;gap:.6rem}
+  .navwrap nav{width:100%;justify-content:flex-start;gap:.55rem;padding-left:.9rem}
   .navwrap nav .pillbtn{display:none}
+  /* brand stays left; the counter, theme and burger cluster on the right */
+  .navwrap nav .ghstats{order:2;margin-left:auto}
+  .navwrap nav .tt{order:3}
+  .navwrap nav .burger{order:4}
 }
 
 /* code chrome — shared */
@@ -197,3 +202,68 @@ footer{padding:2.5rem 0 2rem;border-top:1px solid var(--hair);margin-top:2rem}
 .foot .links a:hover{color:var(--ink)}
 .foot .fine{width:100%;margin-top:1.5rem;color:var(--faint);font-size:.76rem;line-height:1.65;max-width:64ch;font-weight:500}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ==================== github live counter (both headers) ==================== */
+/* One glass capsule, two segments. Stays display:none until real numbers land, */
+/* so a rate-limited or offline fetch leaves no hole in the nav.                */
+.ghstats{display:none;align-items:center;flex:none;position:relative;overflow:hidden;
+  padding:.2rem .26rem;border-radius:999px;
+  border:1px solid rgba(231,184,79,.46);
+  background:linear-gradient(118deg,rgba(231,184,79,.22),rgba(90,162,255,.17) 62%,rgba(231,184,79,.10));
+  box-shadow:0 10px 28px -18px rgba(231,184,79,.75), inset 0 1px 0 rgba(255,255,255,.08)}
+.ghstats.ready{display:inline-flex;animation:ghin .75s var(--ease) both}
+@keyframes ghin{from{opacity:0;transform:translateY(-6px) scale(.94)}to{opacity:1;transform:none}}
+:root[data-theme="light"] .ghstats{border-color:rgba(200,144,26,.5);
+  background:linear-gradient(118deg,rgba(200,144,26,.24),rgba(35,117,213,.16) 62%,rgba(200,144,26,.10));
+  box-shadow:0 10px 28px -18px rgba(200,144,26,.6), inset 0 1px 0 rgba(255,255,255,.5)}
+
+/* a glint sweeps the capsule every few seconds so it reads as live, not static */
+.ghstats::after{content:"";position:absolute;top:0;bottom:0;left:-45%;width:36%;pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.26),transparent);
+  animation:ghsheen 5.5s var(--ease) infinite}
+@keyframes ghsheen{0%,74%{left:-45%}100%{left:118%}}
+
+.ghstat{display:inline-flex;align-items:center;gap:.5rem;flex:none;text-decoration:none;
+  position:relative;z-index:1;padding:.26rem .62rem;border-radius:999px;
+  transition:background .45s var(--ease),transform .45s var(--ease)}
+.ghstat:hover{background:rgba(127,127,127,.14)}
+.ghstat:active{transform:scale(.95)}
+.gh-div{width:1px;align-self:stretch;margin:.32rem 0;flex:none;position:relative;z-index:1;background:var(--hair2)}
+
+.gh-n{display:inline-flex;align-items:baseline;gap:.36rem;line-height:1}
+/* monospace + tabular figures: the capsule cannot twitch while the number counts up */
+.gh-n .num{font-family:var(--font-m);font-weight:700;font-size:.86rem;color:var(--ink);
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.gh-n em{font-family:var(--font-m);font-style:normal;font-weight:600;font-size:.56rem;
+  letter-spacing:.15em;text-transform:uppercase}
+.ghstat.stars .gh-n em{color:#f0c76a}
+.ghstat.forks .gh-n em{color:var(--blue-hi)}
+:root[data-theme="light"] .ghstat.stars .gh-n em{color:#9a6c0c}
+
+.gh-star{width:1.02rem;height:1.02rem;flex:none;fill:#e7b84f;
+  filter:drop-shadow(0 0 7px rgba(231,184,79,.55));
+  transition:transform .6s var(--ease),filter .6s var(--ease)}
+.ghstat.stars:hover .gh-star{transform:rotate(72deg) scale(1.2);filter:drop-shadow(0 0 11px rgba(231,184,79,.95))}
+:root[data-theme="light"] .gh-star{fill:#c8901a;filter:drop-shadow(0 0 7px rgba(200,144,26,.45))}
+.ghstat.forks i{font-size:1rem;line-height:1;color:var(--blue-hi);transition:transform .55s var(--ease)}
+.ghstat.forks:hover i{transform:translateY(-1px) scale(1.16)}
+
+/* a refetch that lands on a new number pulses that segment */
+.ghstat.bumped{animation:ghbump .8s var(--ease)}
+@keyframes ghbump{0%{transform:scale(1)}28%{transform:scale(1.14)}100%{transform:scale(1)}}
+
+@media(max-width:900px){
+  /* keep it visible on mobile, but drop the labels and stop the glint */
+  .ghstats.ready{display:inline-flex}
+  .ghstats::after{animation:none;display:none}
+  .gh-n em{display:none}
+  .ghstat{padding:.24rem .5rem;gap:.4rem}
+}
+@media(max-width:560px){
+  /* stars alone earn the space on a small phone */
+  .gh-div,.ghstat.forks{display:none}
+}
+
+/* mobile menu numbering is a counter, so a hidden entry never leaves a gap in the sequence */
+#mmenu{counter-reset:mm}
+#mmenu a:not([hidden]) .no::before{counter-increment:mm;content:"0" counter(mm)}

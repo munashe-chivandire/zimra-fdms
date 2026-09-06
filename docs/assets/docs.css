@@ -242,3 +242,11 @@ td code,th code{font-size:.8rem}
 @media(max-width:600px){.spot{padding:4vh .8rem 1rem}.spot-foot span:not(.spot-count){display:none}}
 
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* github live counter — the docs header runs a tighter scale than the marketing nav */
+.dochead .ghstats{padding:.16rem .22rem}
+.dochead .ghstat{padding:.22rem .52rem;gap:.44rem}
+.dochead .gh-n .num{font-size:.8rem}
+.dochead .gh-n em{font-size:.47rem}
+.dochead .gh-star{width:.94rem;height:.94rem}
+.dochead .ghstat.forks i{font-size:.92rem}

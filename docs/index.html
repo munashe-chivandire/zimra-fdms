@@ -40,6 +40,15 @@
   <button class="tt" id="tt" type="button" aria-label="Toggle theme">
     <i class="ph-light ph-moon i-moon"></i><i class="ph-light ph-sun i-sun"></i>
   </button>
+  <div class="ghstats" id="ghstats" aria-live="polite">
+    <a class="ghstat stars" id="gh-stars" href="https://github.com/munashe-chivandire/zimra-fdms/stargazers" aria-label="Stars on GitHub">
+      <svg class="gh-star" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/></svg>
+      <span class="gh-n"><b class="num">0</b><em>stars</em></span></a>
+    <span class="gh-div"></span>
+    <a class="ghstat forks" id="gh-forks" href="https://github.com/munashe-chivandire/zimra-fdms/forks" aria-label="Forks on GitHub">
+      <i class="ph-light ph-git-fork"></i>
+      <span class="gh-n"><b class="num">0</b><em>forks</em></span></a>
+  </div>
   <a class="pillbtn magnet" href="https://github.com/munashe-chivandire/zimra-fdms">
     <i class="ph ph-github-logo"></i>GitHub
     <span class="orb2"><i class="ph ph-arrow-up-right"></i></span></a>
@@ -47,12 +56,12 @@
 </nav></div>
 
 <div id="mmenu">
-  <a href="#features"><i class="ph-light ph-squares-four"></i>Features<span class="no">01</span></a>
-  <a href="#code"><i class="ph-light ph-code"></i>Code &amp; MCP<span class="no">02</span></a>
-  <a href="#notes"><i class="ph-light ph-notebook"></i>Field notes<span class="no">03</span></a>
-  <a href="/docs"><i class="ph-light ph-book-open"></i>Docs<span class="no">04</span></a>
-  <a href="https://www.npmjs.com/package/zimra-fdms"><i class="ph-light ph-package"></i>npm<span class="no">05</span></a>
-  <a href="https://github.com/munashe-chivandire/zimra-fdms"><i class="ph-light ph-github-logo"></i>GitHub<span class="no">06</span></a>
+  <a href="#features"><i class="ph-light ph-squares-four"></i>Features<span class="no"></span></a>
+  <a href="#code"><i class="ph-light ph-code"></i>Code &amp; MCP<span class="no"></span></a>
+  <a href="#notes"><i class="ph-light ph-notebook"></i>Field notes<span class="no"></span></a>
+  <a href="/docs"><i class="ph-light ph-book-open"></i>Docs<span class="no"></span></a>
+  <a href="https://www.npmjs.com/package/zimra-fdms"><i class="ph-light ph-package"></i>npm<span class="no"></span></a>
+  <a href="https://github.com/munashe-chivandire/zimra-fdms"><i class="ph-light ph-github-logo"></i>GitHub<span class="no"></span></a>
 </div>
 
 <div class="wrap" id="top">
@@ -104,6 +113,12 @@
 </div>
 
 <div class="wrap">
+
+<!-- Curated testimonial wall. Content lives in data/tweets.json; the renderer in home.js
+     unhides this section only when there is at least one publishable tweet. -->
+<section id="voices" hidden aria-label="What people are saying about zimra-fdms">
+  <div class="tweets" id="tweets"></div>
+</section>
 
 <section id="features">
   <div class="sec-head">
@@ -182,6 +197,7 @@
       <div class="step" data-rv><span class="n">04</span><div><b>One profile, one hash chain</b>
         <p>Day state lives on disk in the CLI's profile directory, never in the session — open a day from the terminal, sell through the agent, close from either.</p></div></div>
     </div>
+    <div class="code-pane">
     <div class="codewin" data-rv>
       <div class="term-bar"><span></span><span></span><span></span>
         <button class="code-tab active" id="tab-sdk" type="button">pos.ts</button>
@@ -216,6 +232,7 @@
 <span class="ln hl">  <span class="ts">QR data ready to print. Hash chain advanced.</span></span>
 <span class="ln">&nbsp;</span>
 <span class="ln"><span class="tc">// verified live: npm run test:e2e:mcp</span></span></code></pre>
+    </div>
     </div>
   </div>
   <a class="sec-cta" href="/docs#fiscal-day" data-rv>

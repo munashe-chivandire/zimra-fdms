@@ -1,0 +1,90 @@
+{
+  "_howto": [
+    "Curated testimonial wall for the landing page. To add a tweet: open it on X, copy the",
+    "permalink into 'url', paste the text verbatim into 'text', and fill in name + handle.",
+    "'avatar' is optional — leave it out and the card draws a coloured monogram instead.",
+    "Entries with \"placeholder\": true render ONLY on localhost and never reach production.",
+    "An empty list hides the whole section, so the page never shows an empty shelf.",
+    "",
+    "Avatars hotlink pbs.twimg.com. X rotates those URLs when someone changes their",
+    "picture, so the renderer falls back to a coloured monogram if an image 404s.",
+    "",
+    "Pulled 2026-08-25 from replies and quote-tweets on these two threads:",
+    "https://x.com/shaunchivandire/status/2082425405772894709",
+    "https://x.com/shaunchivandire/status/2083157918656913832"
+  ],
+  "tweets": [
+    {
+      "name": "Schneider Shayne",
+      "handle": "@kloudCoder",
+      "date": "2026-07-30",
+      "url": "https://x.com/kloudCoder/status/2082843870400819595",
+      "avatar": "https://pbs.twimg.com/profile_images/1798016054406385664/73lefLg3_400x400.jpg",
+      "text": "This is huge. Shaun deserves appreciation from Zimra and all stakeholders for this work he has done. This takes Zimra a few steps forward in fiscalization. Thank you Shaun"
+    },
+    {
+      "name": "Honourable Stella",
+      "handle": "@Stella_grooves",
+      "date": "2026-07-30",
+      "url": "https://x.com/Stella_grooves/status/2082910749542772765",
+      "avatar": "https://pbs.twimg.com/profile_images/2066073527724204032/E9wSB_7V_400x400.jpg",
+      "text": "Wow! I hope you understand the enormity of this!! Incredible work right here!!"
+    },
+    {
+      "name": "K",
+      "handle": "@begottensun",
+      "date": "2026-07-31",
+      "url": "https://x.com/begottensun/status/2083268239811842243",
+      "avatar": "https://pbs.twimg.com/profile_images/1749718744480317440/dJpUV_Lp_400x400.jpg",
+      "text": "Thank you thank you. I would have paid good money for this"
+    },
+    {
+      "name": "vincent_hog",
+      "handle": "@vincent_hog",
+      "date": "2026-07-30",
+      "url": "https://x.com/vincent_hog/status/2082756495578382401",
+      "text": "You have done a contribution to humanity brother!",
+      "avatar": "https://pbs.twimg.com/profile_images/1957471767712206849/aiEhniMi_400x400.jpg"
+    },
+    {
+      "name": "Simba Siege Musonza",
+      "handle": "@SimbaSiege",
+      "date": "2026-07-30",
+      "url": "https://x.com/SimbaSiege/status/2082750678896701864",
+      "text": "This is quite heroic 🙏",
+      "avatar": "https://pbs.twimg.com/profile_images/1984792291081371648/dIDJYMtU_400x400.jpg"
+    },
+    {
+      "name": "NtuBuilds",
+      "handle": "@ntubuilds",
+      "date": "2026-07-30",
+      "url": "https://x.com/ntubuilds/status/2082820370801820085",
+      "text": "You're a star!!!",
+      "avatar": "https://pbs.twimg.com/profile_images/2010072475447513088/BpDEbZyt_400x400.jpg"
+    },
+    {
+      "name": "Arthur Chikara",
+      "handle": "@eightytwotwelve",
+      "date": "2026-07-30",
+      "url": "https://x.com/eightytwotwelve/status/2082902320145125444",
+      "text": "Well done Shaun",
+      "avatar": "https://pbs.twimg.com/profile_images/2061194356694933504/8GuWqGy1_400x400.jpg"
+    },
+    {
+      "name": "@SOKO",
+      "handle": "@soko_wafawanaka",
+      "date": "2026-07-30",
+      "url": "https://x.com/soko_wafawanaka/status/2082929419102879747",
+      "text": "Salute Muningina, Tinotenda too 👏",
+      "avatar": "https://pbs.twimg.com/profile_images/2034985606581772289/o2_q9jdB_400x400.jpg"
+    },
+    {
+      "name": "Paul Kofa",
+      "handle": "@pauroWezhira",
+      "date": "2026-07-29",
+      "url": "https://x.com/pauroWezhira/status/2082583976930157026",
+      "text": "Great work.",
+      "avatar": "https://pbs.twimg.com/profile_images/1328582814107901953/-vGrJj_i_400x400.jpg"
+    }
+  ]
+}

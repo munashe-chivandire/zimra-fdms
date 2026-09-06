@@ -75,8 +75,7 @@ h2 .gold{color:var(--gold-hi)}
   border-radius:.35rem;padding:.06rem .38rem}
 
 /* code section */
-.code-split{display:grid;grid-template-columns:5fr 7fr;gap:2.75rem;align-items:start}
-@media(max-width:960px){.code-split{grid-template-columns:1fr;gap:1.75rem}}
+.code-split{display:grid;grid-template-columns:5fr 7fr;gap:2.75rem;align-items:stretch}
 .code-copy .step{display:flex;gap:1rem;padding:1.15rem 0;border-bottom:1px solid var(--hair)}
 .code-copy .step:last-child{border-bottom:0}
 .code-copy .n{font-family:var(--font-m);font-size:.72rem;color:var(--blue-hi);padding-top:.25rem}
@@ -134,3 +133,69 @@ h2 .gold{color:var(--gold-hi)}
 .code-tab.active{color:#5aa2ff;background:rgba(47,125,225,.13)}
 .term-bar .code-tab:first-of-type{margin-left:.6rem}
 .codewin pre[hidden]{display:none}
+
+/* ===================== testimonial wall (curated tweets) ===================== */
+/* Cards borrow the bento surface tokens so the wall reads as the same material. */
+.tweets{display:grid;grid-template-columns:repeat(auto-fill,minmax(20rem,1fr));gap:.9rem;align-items:start}
+.tw{position:relative;display:block;border-radius:1.35rem;padding:1px;overflow:hidden;
+  background:var(--card-edge);text-decoration:none;will-change:transform}
+.tw::before{content:"";position:absolute;inset:0;border-radius:inherit;opacity:0;transition:opacity .6s var(--ease);
+  background:radial-gradient(16rem 16rem at var(--mx,50%) var(--my,50%),rgba(90,162,255,.4),transparent 65%)}
+.tw:hover::before{opacity:1}
+.tw-in{position:relative;z-index:1;height:100%;border-radius:calc(1.35rem - 1px);padding:1.25rem;
+  background:var(--card-face);box-shadow:var(--card-inset);display:flex;flex-direction:column;gap:.85rem}
+
+.tw-top{display:flex;align-items:center;gap:.7rem}
+.tw-av{width:2.3rem;height:2.3rem;border-radius:999px;flex:none;object-fit:cover;
+  display:grid;place-items:center;font-family:var(--font-d);font-weight:700;font-size:.95rem;color:#fff}
+.tw-id{display:flex;flex-direction:column;gap:.18rem;min-width:0}
+.tw-id b{font-family:var(--font-d);font-weight:600;font-size:.92rem;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tw-id span{font-family:var(--font-m);font-size:.72rem;color:var(--dim)}
+.tw-x{margin-left:auto;flex:none;width:1.02rem;height:1.02rem;fill:var(--dim);
+  transition:fill .45s var(--ease),transform .45s var(--ease)}
+.tw:hover .tw-x{fill:var(--ink);transform:translate(2px,-2px)}
+
+/* white-space:pre-line keeps the author's own line breaks */
+.tw-body{color:var(--ink);font-size:.95rem;line-height:1.62;font-weight:500;white-space:pre-line}
+.tw-body b{color:var(--blue-hi);font-weight:600}
+.tw-foot{margin-top:auto;display:flex;align-items:center;gap:.5rem;padding-top:.15rem;
+  font-family:var(--font-m);font-size:.7rem;color:var(--faint)}
+.tw-flag{margin-left:auto;font-family:var(--font-m);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--gold-hi);background:var(--gold-dim);border-radius:.4rem;padding:.16rem .45rem}
+@media(max-width:640px){.tweets{grid-template-columns:1fr}}
+
+
+/* ---- marquee: one row looping right to left, grid above is the no-JS fallback ---- */
+.tweets.marquee{display:block;position:relative;overflow:hidden;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.tw-track{display:flex;align-items:stretch;gap:.9rem;width:max-content;will-change:transform}
+.tweets.marquee .tw{width:21rem;flex:none}
+/* equal-height row, so a long quote clamps rather than stretching the whole strip */
+.tweets.marquee .tw-body{display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+@media(max-width:640px){.tweets.marquee .tw{width:17.5rem}}
+/* the strip sits tight under the hero, so it does not carry full section padding */
+#voices{padding:.5rem 0 3.5rem}
+
+/* ---- code window matches the copy column and scrolls its own overflow ---- */
+/* The pane is the grid item, so the row height comes from the copy column alone; */
+/* the window is taken out of flow inside it and can never stretch the row.       */
+.code-pane{position:relative;min-height:24rem}
+.code-pane .codewin{position:absolute;inset:0;display:flex;flex-direction:column}
+.code-pane .codewin pre{flex:1;min-height:0;overflow:auto;
+  scrollbar-width:thin;scrollbar-color:rgba(148,180,255,.28) transparent}
+.code-pane .codewin pre::-webkit-scrollbar{width:10px;height:10px}
+.code-pane .codewin pre::-webkit-scrollbar-track{background:transparent}
+.code-pane .codewin pre::-webkit-scrollbar-thumb{background:rgba(148,180,255,.22);
+  border:3px solid transparent;background-clip:content-box;border-radius:99px}
+.code-pane .codewin pre::-webkit-scrollbar-thumb:hover{background:rgba(148,180,255,.45);
+  border:3px solid transparent;background-clip:content-box}
+
+@media(max-width:960px){
+  /* single column: the window goes back in flow and caps its own height */
+  .code-split{grid-template-columns:1fr;gap:1.75rem}
+  .code-pane{position:static;min-height:0}
+  .code-pane .codewin{position:static;height:auto}
+  .code-pane .codewin pre{max-height:28rem}
+}
