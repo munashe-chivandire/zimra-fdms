@@ -148,7 +148,9 @@ export class FdmsSimulator {
     await new Promise<void>((resolve) => this.server!.listen(this.options.port ?? 0, host, resolve));
     const address = this.server.address();
     const port = typeof address === "object" && address ? address.port : 0;
-    return { url: `https://localhost:${port}`, port, caPem: this.ca.caPem };
+    // 127.0.0.1 rather than localhost: Node 18 resolves localhost to ::1 first
+    // and does not fall back to IPv4. The certificate carries both.
+    return { url: `https://127.0.0.1:${port}`, port, caPem: this.ca.caPem };
   }
 
   async stop(): Promise<void> {

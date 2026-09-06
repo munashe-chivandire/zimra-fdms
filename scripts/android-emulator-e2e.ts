@@ -40,7 +40,7 @@ function deviceTransport(caPem: string, certificatePem?: string): Transport {
   return {
     async request(req: TransportRequest): Promise<TransportResponse> {
       // The emulator reaches the host at 10.0.2.2.
-      const url = req.url.replace("https://localhost:", "https://10.0.2.2:");
+      const url = req.url.replace(/https:\/\/(localhost|127\.0\.0\.1):/, "https://10.0.2.2:");
       try {
         return await bridge<TransportResponse>("/request", {
           alias: certificatePem ? ALIAS : null,
