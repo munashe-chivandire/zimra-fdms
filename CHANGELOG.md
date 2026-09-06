@@ -3,6 +3,57 @@
 All changes verified live against ZIMRA's FDMS test environment on device 37367
 unless noted.
 
+## 0.4.0 — unreleased
+
+The core now runs anywhere. This is the first step of the 1.0 plan: no
+fiscal behaviour changes, and 0.3.x code keeps working.
+
+### Added
+
+- **`zimra-fdms/core`**: the fiscal engine with no platform imports. No
+  `node:*`, no `Buffer`, no `fetch`, no `structuredClone`. SHA-256, MD5 and
+  base64 are implemented in plain TypeScript, so hashing stays synchronous
+  and works on Hermes, Deno, Bun and browsers without polyfills. A lint step
+  (`npm run lint:core`) fails the build if a platform reference creeps in,
+  and a test drives a full fiscal day through `dist/core` inside a VM
+  context that has none of those globals.
+- **`Signer`** interface. `FiscalDevice` takes a `Signer` and never sees key
+  material, so the key can live in a PEM, Android Keystore, an HSM or a
+  cloud KMS. `PemSigner` in the Node package wraps the 0.3.x PEM and imports
+  the key once instead of once per receipt.
+- **CSR built in the core.** `buildCsr(signer, commonName)` writes the
+  PKCS#10 request with a small DER encoder and has the `Signer` sign it, so a
+  key that cannot be exported can still register. Output is byte-identical
+  to the @peculiar/x509 request 0.3.x sent, minus the randomised signature.
+- **`Transport`** interface. `NodeTransport` uses one keep-alive `https.Agent`
+  per device so the TLS handshake and PEM parse happen once per process.
+  `FetchTransport` covers the Public endpoints on any runtime with `fetch`.
+- **`ServerCorrectedClock`.** `FiscalDevice` learns the offset to FDMS from
+  every response `Date` header and stamps receipts and day-open times with
+  server time. `device.clock.offsetMs` and `.confidence` are readable.
+- **`renewCertificate()`** in the core reuses the device's key. The Node
+  `FiscalDevice` keeps the 0.3.x rotate-the-key behaviour under
+  `renewWithNewKey()`.
+- **`@zimra-fdms/react-native`** in `packages/react-native`: `KeystoreSigner`
+  and `OkHttpTransport` over a Kotlin module. Written, typechecked, not yet
+  run on a device.
+
+### Changed
+
+- Sources moved to `src/core` and `src/node`. `import ... from "zimra-fdms"`
+  still resolves to the Node bundle; deep imports of `src/*.ts` paths change.
+- `p1363ToDer` takes and returns `Uint8Array`. A `Buffer` is a `Uint8Array`,
+  so callers passing one are unaffected; callers doing
+  `.toString("base64")` on the result should use `toBase64()` from the core.
+- `signCanonicalString(signer, canonical, format)` takes a `Signer` instead
+  of a PEM string. Wrap the PEM: `new PemSigner(privateKeyPem)`.
+- `registerDevice(device, key, signer, options)` is the core signature. The
+  Node export keeps `registerDevice(device, key, options)` generating an
+  exportable PEM as before.
+- `package-lock.json` regenerated against registry.npmjs.org; 0.3.1's
+  lockfile resolved every package to a mirror.
+- TypeScript target is ES2020 so the compiled core runs on Hermes.
+
 ## 0.3.1 — 2026-08-23
 
 Recovery fixes. Everything here came out of one stuck fiscal day.

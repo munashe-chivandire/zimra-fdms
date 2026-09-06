@@ -11,7 +11,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
-import { createZimraMcpServer } from "../dist/mcp.js";
+import { createZimraMcpServer } from "../dist/node/mcp.js";
 
 async function connected(profile?: string) {
   const server = createZimraMcpServer(profile);

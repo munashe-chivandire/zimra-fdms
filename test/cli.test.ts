@@ -1,5 +1,5 @@
 /**
- * CLI tests — spawn the compiled bin (dist/cli.js) exactly as npx would run
+ * CLI tests — spawn the compiled bin (dist/node/cli.js) exactly as npx would run
  * it, and assert on exit codes, stdout and stderr. Everything here is offline:
  * commands that would touch FDMS are only exercised up to their local
  * validation (missing profile, bad flags, existing certificate).
@@ -11,7 +11,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const CLI = join(process.cwd(), "dist", "cli.js");
+const CLI = join(process.cwd(), "dist", "node", "cli.js");
 
 function run(args: string[], opts: { cwd?: string } = {}) {
   const res = spawnSync(process.execPath, [CLI, ...args], {

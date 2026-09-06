@@ -5,7 +5,7 @@
  * yields RCPT010 signature-validation failures. Rules cross-checked against
  * the API documentation and community reference implementations.
  */
-import { createHash, webcrypto } from "node:crypto";
+import { sha256Base64 } from "./sha256.js";
 import type {
   FiscalDayCounter,
   Receipt,
@@ -143,60 +143,11 @@ export function fiscalDaySigningString(
   return `${deviceId}${fiscalDayNo}${fiscalDayDate}${counterStr}`;
 }
 
-/** base64(SHA-256(utf8 string)) — the `hash` field of SignatureData. */
-export function sha256Base64(data: string): string {
-  return createHash("sha256").update(data, "utf-8").digest("base64");
-}
-
-export type EcdsaSignatureFormat = "p1363" | "der";
-
-/** Convert a raw IEEE P1363 (r||s) ECDSA signature to ASN.1 DER encoding. */
-export function p1363ToDer(p1363: Buffer): Buffer {
-  const half = p1363.length / 2;
-  const encodeInt = (bytes: Buffer): Buffer => {
-    let i = 0;
-    while (i < bytes.length - 1 && bytes[i] === 0) i++;
-    let v = bytes.subarray(i);
-    if (v[0]! & 0x80) v = Buffer.concat([Buffer.from([0]), v]);
-    return Buffer.concat([Buffer.from([0x02, v.length]), v]);
-  };
-  const r = encodeInt(p1363.subarray(0, half));
-  const s = encodeInt(p1363.subarray(half));
-  return Buffer.concat([Buffer.from([0x30, r.length + s.length]), r, s]);
-}
-
-/**
- * Sign a canonical string with the device's ECDSA P-256 key.
- * FDMS verifies ASN.1 DER-encoded ECDSA signatures (confirmed against the
- * live test environment — raw P1363 is rejected with RCPT020 /
- * BadCertificateSignature), so DER is the default.
- */
-export async function signCanonicalString(
-  privateKeyPem: string,
-  canonical: string,
-  format: EcdsaSignatureFormat = "der",
-): Promise<SignatureData> {
-  const pem = privateKeyPem
-    .replace(/-----(BEGIN|END) PRIVATE KEY-----/g, "")
-    .replace(/\s+/g, "");
-  const keyData = Buffer.from(pem, "base64");
-  const key = await webcrypto.subtle.importKey(
-    "pkcs8",
-    keyData,
-    { name: "ECDSA", namedCurve: "P-256" },
-    false,
-    ["sign"],
-  );
-  const raw = Buffer.from(
-    await webcrypto.subtle.sign(
-      { name: "ECDSA", hash: "SHA-256" },
-      key,
-      Buffer.from(canonical, "utf-8"),
-    ),
-  );
-  const signature = format === "der" ? p1363ToDer(raw) : raw;
-  return {
-    hash: sha256Base64(canonical),
-    signature: signature.toString("base64"),
-  };
-}
+export { sha256Base64 };
+export {
+  p1363ToDer,
+  derToP1363,
+  signCanonicalString,
+  type EcdsaSignatureFormat,
+  type Signer,
+} from "./signer.js";

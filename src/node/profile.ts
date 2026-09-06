@@ -18,18 +18,21 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join, resolve } from "node:path";
-import { FiscalDevice, type FiscalDayState } from "./device.js";
-import { FdmsHttpClient } from "./http.js";
+import type { FiscalDayState } from "../core/device.js";
+import { FdmsClient } from "../core/transport.js";
+import { signCanonicalString } from "../core/signer.js";
+import { FiscalDevice } from "./device.js";
+import { PemSigner } from "./pem-signer.js";
+import { NodeTransport } from "./transport.js";
 import {
   fiscalDaySigningString,
-  signCanonicalString,
   toCents,
-} from "./signing.js";
+} from "../core/signing.js";
 import type {
   DeviceIdentity,
   FdmsEnvironment,
   GetStatusResponse,
-} from "./types.js";
+} from "../core/types.js";
 
 /** A problem with the profile itself (missing files, mismatched device, ...). */
 export class ProfileError extends Error {}
@@ -102,7 +105,7 @@ export function fiscalDeviceFrom(p: Profile): FiscalDevice {
   return new FiscalDevice(
     p.device,
     { certificatePem: p.certificatePem, privateKeyPem: p.privateKeyPem },
-    { environment: p.device.environment },
+    { environment: p.device.environment, stateDir: p.dir },
   );
 }
 
@@ -219,9 +222,9 @@ export async function closeFromServerCounters(
   p: Profile,
   opts: { fiscalDayDate?: string } = {},
 ): Promise<ServerCountersClose> {
-  const http = new FdmsHttpClient(
+  const http = new FdmsClient(
     p.device,
-    { certificatePem: p.certificatePem, privateKeyPem: p.privateKeyPem },
+    new NodeTransport({ certificatePem: p.certificatePem, privateKeyPem: p.privateKeyPem }),
     { environment: p.device.environment },
   );
   const status = await http.request<GetStatusResponse>(
@@ -253,7 +256,7 @@ export async function closeFromServerCounters(
     fiscalDayDate,
     counters,
   );
-  const signature = await signCanonicalString(p.privateKeyPem, canonical, "der");
+  const signature = await signCanonicalString(new PemSigner(p.privateKeyPem), canonical, "der");
   await http.request("POST", http.devicePath("CloseDay"), {
     fiscalDayNo,
     fiscalDayCounters: counters,

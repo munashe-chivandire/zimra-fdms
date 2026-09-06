@@ -1,4 +1,5 @@
-import { createHash } from "node:crypto";
+import { fromBase64, toHex } from "./bytes.js";
+import { md5 } from "./md5.js";
 
 /**
  * Data content of the verification QR code printed on every fiscal receipt:
@@ -17,8 +18,7 @@ export function receiptQrData(params: {
   /** base64 device signature of the receipt (receiptDeviceSignature.signature). */
   deviceSignatureBase64: string;
 }): string {
-  const sigBytes = Buffer.from(params.deviceSignatureBase64, "base64");
-  const md5_16 = createHash("md5").update(sigBytes).digest("hex").slice(0, 16);
+  const md5_16 = toHex(md5(fromBase64(params.deviceSignatureBase64))).slice(0, 16);
 
   const p = (n: number) => String(n).padStart(2, "0");
   const d = params.receiptDate;

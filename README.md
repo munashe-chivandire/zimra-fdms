@@ -15,6 +15,11 @@ Everything here is verified live against ZIMRA's FDMS test environment:
 device registration, mTLS, receipt signing (including the hash chain), QR
 generation and signed fiscal-day close all pass ZIMRA's own validation.
 
+The fiscal engine has no platform imports. The same code runs on Node, Bun,
+Deno, in a browser, and on Android through React Native with the device key
+held in Android Keystore. Node is one adapter over it, not the other way
+round.
+
 ## Why this exists
 
 Every Zimbabwean POS/invoicing/accounting product has to integrate FDMS, and
@@ -29,7 +34,17 @@ those parts once, correctly, in the open.
 npm install zimra-fdms
 ```
 
-Node 18+. One runtime dependency (`@peculiar/x509`, for CSR generation).
+Node 18+. Three runtime dependencies: `@peculiar/x509` (certificate
+parsing), `@modelcontextprotocol/server` and `zod` (the MCP server). The
+core itself depends on nothing.
+
+Three entry points:
+
+| Import | What you get | Runs on |
+| --- | --- | --- |
+| `zimra-fdms` | The Node bundle: core plus `PemSigner`, `NodeTransport`, the CLI and MCP server. What 0.3.x code imports. | Node 18+ |
+| `zimra-fdms/core` | `FiscalDevice`, signing strings, counters, hash chain, QR, offline queue, `buildCsr`. You supply a `Signer` and a `Transport`. | Anything with ES2020 |
+| `@zimra-fdms/react-native` | `KeystoreSigner` and `OkHttpTransport` over a Kotlin module, in [packages/react-native](packages/react-native). | Android 8+ |
 
 ## CLI — fiscalise without writing code
 
@@ -179,9 +194,53 @@ returns is the order they are fiscalized in.
 ### 4. Certificate renewal
 
 ```ts
-const { keys, certificatePem } = await device.renewCertificate();
-// persist and reconnect with the new pair before the old cert expires
+const { certificatePem } = await device.renewCertificate(); // same key, new certificate
+// or, to rotate the key as 0.3.x did:
+const { keys, certificatePem: fresh } = await device.renewWithNewKey();
 ```
+
+### 5. Keys that cannot be exported
+
+The core never touches key material. It asks a `Signer` for signatures and
+a `Transport` for HTTP, and each platform provides its own:
+
+```ts
+interface Signer {
+  sign(data: Uint8Array): Promise<Uint8Array>;   // DER ECDSA P-256 over SHA-256
+  publicKeySpki(): Promise<Uint8Array>;          // for the CSR
+}
+interface Transport {
+  request(req: TransportRequest): Promise<TransportResponse>; // owns mTLS
+}
+```
+
+`buildCsr(signer, commonName)` writes the PKCS#10 request and has the
+`Signer` sign it, so a key in Android Keystore, an HSM or a cloud KMS can
+register without ever being exported. On Node the defaults are
+`PemSigner(privateKeyPem)` and `NodeTransport({ certificatePem, privateKeyPem })`,
+which is what the PEM constructor above builds for you.
+
+```ts
+import { FiscalDevice } from "zimra-fdms/core";
+
+const device = new FiscalDevice(identity, { signer: myHsmSigner, transport: myTransport });
+```
+
+Receipt dates come from a `ServerCorrectedClock` that learns the offset to
+FDMS from every response, so a terminal with a drifted clock still gets
+Green receipts. `device.clock.offsetMs` tells you how far off the device is.
+
+### 6. Android
+
+```ts
+import { KeystoreSigner, registerDevice, createFiscalDevice } from "@zimra-fdms/react-native";
+
+const signer = await KeystoreSigner.ensure("zimra-device-12345");   // StrongBox when available
+const { certificatePem } = await registerDevice(identity, "ACTIVKEY", signer, { environment: "test" });
+const device = createFiscalDevice(identity, { alias: "zimra-device-12345", certificatePem });
+```
+
+See [packages/react-native/README.md](packages/react-native/README.md).
 
 ## Hard-won implementation notes
 
@@ -206,27 +265,42 @@ const { keys, certificatePem } = await device.renewCertificate();
 ## Testing
 
 ```sh
-npm test        # regression suite for the signing rules (no network)
+npm test          # signing rules, core primitives, CLI and MCP (no network)
+npm run lint:core # fails if src/core references node:*, Buffer, process or fetch
 npm run test:e2e  # full live cycle against the FDMS test environment
 ```
 
 The regression tests pin the canonical signing strings, DER conversion, tax
 computation, counter accumulation and QR format — the exact things a ZIMRA
-spec revision would silently break. Run them before every release.
+spec revision would silently break. The core tests check the pure SHA-256,
+MD5 and base64 against `node:crypto`, the CSR builder against
+`@peculiar/x509`, and run a whole fiscal day through `dist/core` inside a VM
+context that has no `Buffer`, `process`, `require` or `fetch`.
 
 ## Project layout
 
-- `src/registration.ts` — RegisterDevice / GetServerCertificate (bootstrap, no client cert)
-- `src/crypto.ts` — ECDSA P-256 key + CSR generation
-- `src/device.ts` — `FiscalDevice`: config, status, open/close day, receipts
-- `src/signing.ts` — canonical strings, SHA-256 hashes, DER signatures
-- `src/qr.ts` — verification QR data
-- `src/queue.ts` — offline receipt queue
-- `src/http.ts` — mTLS transport (zero-dependency, node:https)
-- `src/cli.ts` — the `zimra-fdms` CLI
-- `src/mcp.ts` — the MCP server (`zimra-fdms mcp`)
-- `src/profile.ts` — profile directory + day-state persistence (shared by CLI and MCP)
-- `spec/` — ZIMRA's OpenAPI specs, fetched from the official test Swagger
+`src/core/` has no platform imports and is what every runtime shares:
+
+- `device.ts` — `FiscalDevice`: config, status, open/close day, receipts
+- `signing.ts` — canonical strings and tax maths
+- `signer.ts` — the `Signer` interface, DER and P1363 conversion
+- `csr.ts`, `asn1.ts` — PKCS#10 request built with a small DER writer
+- `transport.ts` — the `Transport` interface and `FdmsClient` (headers, paths, errors)
+- `clock.ts` — `ServerCorrectedClock`
+- `sha256.ts`, `md5.ts`, `bytes.ts` — hashing and byte helpers in plain TypeScript
+- `qr.ts` — verification QR data
+- `queue.ts` — offline receipt queue
+- `registration.ts` — RegisterDevice / GetServerCertificate over any `Transport`
+
+`src/node/` is the Node adapter:
+
+- `pem-signer.ts` — `PemSigner` over WebCrypto, key imported once
+- `transport.ts` — `NodeTransport`: mTLS over node:https with a keep-alive agent
+- `keys.ts` — exportable key pair generation for backups
+- `cli.ts`, `mcp.ts`, `profile.ts` — the CLI, the MCP server and their shared profile directory
+
+`packages/react-native/` is the Android adapter. `spec/` holds ZIMRA's
+OpenAPI specs, fetched from the official test Swagger.
 
 ## Test environment
 

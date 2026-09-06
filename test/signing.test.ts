@@ -12,11 +12,12 @@ import {
   sha256Base64,
   signCanonicalString,
   toCents,
-} from "../src/signing.js";
-import { generateDeviceCsr, deviceCommonName } from "../src/crypto.js";
-import { receiptQrData } from "../src/qr.js";
-import { buildReceiptTaxes, accumulateCounters } from "../src/device.js";
-import type { FiscalDayCounter, Receipt, ReceiptLine } from "../src/types.js";
+} from "../src/core/signing.js";
+import { generateDeviceCsr, deviceCommonName } from "../src/node/keys.js";
+import { PemSigner } from "../src/node/pem-signer.js";
+import { receiptQrData } from "../src/core/qr.js";
+import { buildReceiptTaxes, accumulateCounters } from "../src/core/device.js";
+import type { FiscalDayCounter, Receipt, ReceiptLine } from "../src/core/types.js";
 
 describe("toCents", () => {
   it("converts amounts without float drift", () => {
@@ -195,7 +196,7 @@ describe("p1363ToDer", () => {
 describe("signCanonicalString", () => {
   it("produces a DER signature that verifies against the public key", async () => {
     const { privateKeyPem, publicKeyPem } = await generateDeviceCsr("TEST01", 1);
-    const sig = await signCanonicalString(privateKeyPem, "hello fdms", "der");
+    const sig = await signCanonicalString(new PemSigner(privateKeyPem), "hello fdms", "der");
 
     assert.equal(sig.hash, sha256Base64("hello fdms"));
     const der = Buffer.from(sig.signature, "base64");

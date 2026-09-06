@@ -18,7 +18,8 @@ import { join } from "node:path";
 import { McpServer } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import { z } from "zod";
-import { DayNotClosableError, type ReceiptInput } from "./device.js";
+import { DayNotClosableError, type ReceiptInput } from "../core/device.js";
+import { receiptInputFromJson } from "../core/money.js";
 import { registerDevice } from "./registration.js";
 import {
   ProfileError,
@@ -33,7 +34,7 @@ import {
   saveDayState,
   writeProfile,
 } from "./profile.js";
-import { FdmsApiError, type FdmsEnvironment } from "./types.js";
+import { FdmsApiError, type FdmsEnvironment } from "../core/types.js";
 
 // ---------------------------------------------------------------------------
 // Schemas
@@ -180,7 +181,7 @@ const SAMPLE_RECEIPT: ReceiptInput = {
 
 export function createZimraMcpServer(defaultProfile?: string): McpServer {
   const version: string = JSON.parse(
-    readFileSync(new URL("../package.json", import.meta.url), "utf-8"),
+    readFileSync(new URL("../../package.json", import.meta.url), "utf-8"),
   ).version;
   const server = new McpServer(
     { name: "zimra-fdms", version },
@@ -316,6 +317,7 @@ export function createZimraMcpServer(defaultProfile?: string): McpServer {
     handling(async (args) => {
       const p = load(args.profile);
       const device = fiscalDeviceFrom(p);
+      await device.reconcile();
       const res = await device.openDay(undefined, new Date(), {
         lastReceiptGlobalNo: loadLastGlobalNo(p),
       });
@@ -355,6 +357,7 @@ export function createZimraMcpServer(defaultProfile?: string): McpServer {
       let recovery: string | undefined;
       if (local) {
         const device = fiscalDeviceFrom(p);
+        await device.reconcile();
         device.restoreState(local);
         try {
           await device.closeDay({ force: args.force });
@@ -419,6 +422,7 @@ export function createZimraMcpServer(defaultProfile?: string): McpServer {
         );
       }
       const device = fiscalDeviceFrom(p);
+      await device.reconcile();
       device.restoreState(local);
       await device.getConfig(); // for QR data
       const { receiptDate, ...rest } = args.receipt;
@@ -429,7 +433,7 @@ export function createZimraMcpServer(defaultProfile?: string): McpServer {
       if (input.receiptDate && Number.isNaN(input.receiptDate.getTime())) {
         return toolError(new Error("receiptDate is not a valid date."));
       }
-      const res = await device.submitReceipt(input);
+      const res = await device.submitReceipt(receiptInputFromJson(input));
       saveDayState(p, device.getState()!);
       const validation = res.response.validationErrors ?? [];
       const dayBlocked = Boolean(device.getState()?.redErrors?.length);

@@ -4,7 +4,7 @@
  */
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { resolveFiscalDayDate, ProfileError } from "../src/profile.js";
+import { resolveFiscalDayDate, ProfileError } from "../src/node/profile.js";
 
 describe("resolveFiscalDayDate", () => {
   it("uses the explicit date and does not flag it as assumed", () => {
@@ -32,7 +32,8 @@ describe("resolveFiscalDayDate", () => {
   });
 });
 
-import { FiscalDevice, DayNotClosableError } from "../src/device.js";
+import { FiscalDevice } from "../src/node/device.js";
+import { DayNotClosableError } from "../src/core/device.js";
 
 const DUMMY_DEVICE = new FiscalDevice(
   { deviceId: 1, serialNumber: "X", modelName: "Server", modelVersion: "v1" },
@@ -73,7 +74,7 @@ describe("closeDay with Red validation errors", () => {
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { loadLastGlobalNo, saveLastGlobalNo, saveDayState, type Profile } from "../src/profile.js";
+import { loadLastGlobalNo, saveLastGlobalNo, saveDayState, type Profile } from "../src/node/profile.js";
 
 describe("last receipt global number", () => {
   const dir = mkdtempSync(join(tmpdir(), "zimra-profile-test-"));

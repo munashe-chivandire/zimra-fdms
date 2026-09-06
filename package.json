@@ -1,7 +1,7 @@
 {
   "name": "zimra-fdms",
-  "version": "0.3.1",
-  "description": "TypeScript SDK for the ZIMRA Fiscalisation Data Management System (FDMS) — direct device registration, mTLS, receipt signing, fiscal days, offline queue and QR codes",
+  "version": "0.4.0",
+  "description": "TypeScript SDK for the ZIMRA Fiscalisation Data Management System (FDMS): a portable fiscal core with device registration, mTLS, receipt signing, fiscal days, offline queue and QR codes, plus Node, CLI and MCP adapters",
   "keywords": [
     "zimra",
     "fdms",
@@ -35,12 +35,13 @@
     "build": "tsc -p tsconfig.json",
     "prepublishOnly": "npm test && npm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "tsx --test test/*.test.ts",
+    "test": "tsx --experimental-vm-modules --test test/*.test.ts",
     "test:e2e": "tsx scripts/e2e.ts",
     "register": "tsx scripts/register.ts",
     "spec:drift": "tsx scripts/spec-drift.ts",
-    "pretest": "npm run build",
-    "test:e2e:mcp": "node scripts/mcp-e2e.mjs"
+    "pretest": "npm run build && npm run lint:core",
+    "test:e2e:mcp": "node scripts/mcp-e2e.mjs",
+    "lint:core": "node scripts/check-core-portable.mjs"
   },
   "license": "MIT",
   "publishConfig": {
@@ -61,6 +62,21 @@
     "node": ">=18"
   },
   "bin": {
-    "zimra-fdms": "dist/cli.js"
+    "zimra-fdms": "dist/node/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
+    },
+    "./node": {
+      "types": "./dist/node/index.d.ts",
+      "import": "./dist/node/index.js"
+    },
+    "./package.json": "./package.json"
   }
 }

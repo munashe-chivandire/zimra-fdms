@@ -21,7 +21,8 @@
 import { parseArgs } from "node:util";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { DayNotClosableError, type ReceiptInput } from "./device.js";
+import { DayNotClosableError, type ReceiptInput } from "../core/device.js";
+import { receiptInputFromJson } from "../core/money.js";
 import { registerDevice } from "./registration.js";
 import {
   ProfileError,
@@ -38,7 +39,7 @@ import {
   writeProfile,
   type Profile,
 } from "./profile.js";
-import { FdmsApiError, type DeviceIdentity, type FdmsEnvironment } from "./types.js";
+import { FdmsApiError, type DeviceIdentity, type FdmsEnvironment } from "../core/types.js";
 
 function loadProfile(flag?: string): Profile {
   try {
@@ -125,7 +126,7 @@ const SAMPLE_RECEIPT: ReceiptInput = {
 
 function version(): string {
   const pkg = JSON.parse(
-    readFileSync(new URL("../package.json", import.meta.url), "utf-8"),
+    readFileSync(new URL("../../package.json", import.meta.url), "utf-8"),
   );
   return pkg.version;
 }
@@ -314,6 +315,7 @@ async function cmdDayOpen(argv: string[]): Promise<void> {
   }
   const p = loadProfile(values.profile);
   const device = fiscalDeviceFrom(p);
+  await device.reconcile();
   try {
     const res = await device.openDay(undefined, new Date(), {
       lastReceiptGlobalNo: loadLastGlobalNo(p),
@@ -356,6 +358,7 @@ only ZIMRA can close it. The command refuses up front; --force submits anyway.`)
   }
   const p = loadProfile(values.profile);
   const device = fiscalDeviceFrom(p);
+  await device.reconcile();
   const local = loadDayState(p);
 
   try {
@@ -458,10 +461,12 @@ Payments must sum to the receipt total.`);
   }
 
   const device = fiscalDeviceFrom(p);
+
+  await device.reconcile();
   device.restoreState(local);
   try {
     await device.getConfig(); // for QR data
-    const res = await device.submitReceipt(input);
+    const res = await device.submitReceipt(receiptInputFromJson(input));
     saveDayState(p, device.getState()!);
 
     const validation = res.response.validationErrors ?? [];

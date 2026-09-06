@@ -4,18 +4,20 @@
  * The date is the day the fiscal day was OPENED (check the ops portal); defaults to today.
  */
 import { readFileSync } from "node:fs";
-import { FdmsHttpClient } from "../src/http.js";
+import { FdmsClient } from "../src/core/transport.js";
+import { NodeTransport } from "../src/node/transport.js";
+import { PemSigner } from "../src/node/pem-signer.js";
 import {
   fiscalDaySigningString,
   signCanonicalString,
   type EcdsaSignatureFormat,
-} from "../src/signing.js";
-import { toCents } from "../src/signing.js";
+} from "../src/core/signing.js";
+import { toCents } from "../src/core/signing.js";
 import type {
   CloseDayRequest,
   CloseDayResponse,
   GetStatusResponse,
-} from "../src/types.js";
+} from "../src/core/types.js";
 
 const format = (process.argv[2] ?? "der") as EcdsaSignatureFormat;
 const receiptCounterArg = process.argv[3] ? Number(process.argv[3]) : undefined;
@@ -32,7 +34,7 @@ const identity = {
   privateKeyPem: readFileSync("secrets/device-private-key.pem", "utf-8"),
 };
 
-const http = new FdmsHttpClient(device, identity, { environment: "test" });
+const http = new FdmsClient(device, new NodeTransport(identity), { environment: "test" });
 
 const status = await http.request<GetStatusResponse>(
   "GET",
@@ -79,7 +81,7 @@ console.log(`Canonical: ${canonical}`);
 console.log(`Signature format: ${format}, receiptCounter: ${receiptCounter}`);
 
 const signature = await signCanonicalString(
-  identity.privateKeyPem,
+  new PemSigner(identity.privateKeyPem),
   canonical,
   format,
 );
