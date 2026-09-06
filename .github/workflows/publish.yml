@@ -47,3 +47,43 @@ jobs:
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-react-native:
+    # @zimra-fdms/react-native peer-depends on the root package, so it goes
+    # out after it. A prerelease version (0.4.0-beta.1) lands on the beta
+    # dist-tag; a plain version on latest.
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - run: npm ci
+      - run: npm run build
+
+      - working-directory: packages/react-native
+        run: npm install --no-package-lock --legacy-peer-deps
+
+      - working-directory: packages/react-native
+        run: npm run build
+
+      - name: Publish
+        working-directory: packages/react-native
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          case "$VERSION" in
+            *-*) TAG=beta ;;
+            *) TAG=latest ;;
+          esac
+          echo "Publishing @zimra-fdms/react-native@$VERSION to $TAG"
+          npm publish --provenance --access public --tag "$TAG"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
