@@ -50,20 +50,47 @@ describe("date formatting", () => {
 });
 
 describe("concatenateReceiptTaxes", () => {
-  it("sorts by taxID and renders percent/cents", () => {
+  it("sorts by taxID then taxCode, includes taxCode in output", () => {
     const s = concatenateReceiptTaxes([
-      { taxID: 3, taxPercent: 15, taxAmount: 15, salesAmountWithTax: 115 },
-      { taxID: 1, taxPercent: null, taxAmount: 0, salesAmountWithTax: 10 },
+      { taxID: 3, taxCode: "C", taxPercent: 15, taxAmount: 15, salesAmountWithTax: 115 },
+      { taxID: 1, taxCode: "A", taxPercent: null, taxAmount: 0, salesAmountWithTax: 10 },
     ]);
-    // taxID 1 (exempt: no percent) then taxID 3
-    assert.equal(s, "01000" + "15.00150011500");
+    // taxID 1 (exempt: no percent, taxCode A) then taxID 3 (taxCode C)
+    assert.equal(s, "A01000" + "C15.00150011500");
   });
 
-  it("renders zero-rate as 0.00", () => {
+  it("renders zero-rate as 0.00 with taxCode", () => {
+    const s = concatenateReceiptTaxes([
+      { taxID: 513, taxCode: "B", taxPercent: 0, taxAmount: 0, salesAmountWithTax: 115 },
+    ]);
+    assert.equal(s, "B0.00011500");
+  });
+
+  it("omits taxCode when not provided", () => {
     const s = concatenateReceiptTaxes([
       { taxID: 513, taxPercent: 0, taxAmount: 0, salesAmountWithTax: 115 },
     ]);
     assert.equal(s, "0.00011500");
+  });
+
+  it("sorts same taxID by taxCode alphabetically", () => {
+    const s = concatenateReceiptTaxes([
+      { taxID: 3, taxCode: "D", taxPercent: 15, taxAmount: 300, salesAmountWithTax: 2300 },
+      { taxID: 3, taxCode: "C", taxPercent: 15, taxAmount: 150, salesAmountWithTax: 1150 },
+    ]);
+    // C before D for same taxID
+    assert.equal(s, "C15.0015000115000" + "D15.0030000230000");
+  });
+
+  it("matches ZIMRA spec example No 1", () => {
+    // From FDMS API spec v7.2, section 13.2.1, FiscalInvoice Example No 1
+    const s = concatenateReceiptTaxes([
+      { taxID: 1, taxCode: "A", taxPercent: null, taxAmount: 0, salesAmountWithTax: 2500 },
+      { taxID: 2, taxCode: "B", taxPercent: 0, taxAmount: 0, salesAmountWithTax: 3500 },
+      { taxID: 3, taxCode: "C", taxPercent: 15, taxAmount: 150, salesAmountWithTax: 1150 },
+      { taxID: 3, taxCode: "D", taxPercent: 15, taxAmount: 300, salesAmountWithTax: 2300 },
+    ]);
+    assert.equal(s, "A0250000B0.000350000C15.0015000115000D15.0030000230000");
   });
 });
 
