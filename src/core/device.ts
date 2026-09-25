@@ -6,6 +6,7 @@ import { receiptQrData } from "./qr.js";
 import { amountToCents, centsToAmount, type Money } from "./money.js";
 import type { Storage } from "./storage.js";
 import {
+  compareReceiptTaxes,
   fdmsDate,
   fdmsDateTime,
   fiscalDaySigningString,
@@ -670,6 +671,8 @@ function cloneState(state: FiscalDayState): FiscalDayState {
 /**
  * Group lines by tax and compute the receipt tax summary. Arithmetic is in
  * integer cents; each line's tax is rounded on its own, as FDMS does.
+ * taxCode is part of the group, so two codes under one taxID stay separate
+ * entries, as in the spec's own example.
  */
 export function buildReceiptTaxes(
   lines: ReceiptLine[],
@@ -677,7 +680,7 @@ export function buildReceiptTaxes(
 ): ReceiptTax[] {
   const groups = new Map<string, { tax: ReceiptTax; taxCents: number; salesCents: number }>();
   for (const line of lines) {
-    const key = `${line.taxID}|${line.taxPercent ?? ""}`;
+    const key = `${line.taxID}|${line.taxPercent ?? ""}|${line.taxCode ?? ""}`;
     const g = groups.get(key) ?? {
       tax: {
         taxCode: line.taxCode ?? null,
@@ -704,7 +707,7 @@ export function buildReceiptTaxes(
       taxAmount: centsToAmount(g.taxCents),
       salesAmountWithTax: centsToAmount(g.salesCents),
     }))
-    .sort((a, b) => a.taxID - b.taxID);
+    .sort(compareReceiptTaxes);
 }
 
 /** Fold a submitted receipt into the running fiscal-day counters. */

@@ -1,10 +1,10 @@
 {
-  "version": 1,
-  "generatedAt": "2026-09-06T11:09:51.473Z",
+  "version": 2,
+  "generatedAt": "2026-09-25T12:19:03.016Z",
   "description": "Conformance vectors for the ZIMRA FDMS receipt and fiscal-day signing rules. Canonical strings and hashes must match byte for byte. Signatures are ECDSA P-256 over SHA-256, ASN.1 DER, and verify against publicKeyPem; a port verifies its own signatures rather than comparing bytes.",
   "deviceId": 37367,
   "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEh8nmP/AQlfEVE+L+RYJYxRXBO1SA\n+zPqCud2+U7mjL9yY4saoLZv1m4PfuwhWwdQlhdUKzDOMKINMYOyXnmdpA==\n-----END PUBLIC KEY-----\n",
-  "privateKeyPem": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgaNJafm355AiY7ch+\npUS00lYjYX8V1W0Zb7N2NkfleTChRANCAASHyeY/8BCV8RUT4v5FgljFFcE7VID7\nM+oK53b5TuaMv3Jjixqgtm/Wbg9+7CFbB1CWF1QrMM4wog0xg7JeeZ2k\n-----END PRIVATE KEY-----\n",
+  "privateKeyPem": "-----BEGIN PRIVATE KEY-----\r\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgaNJafm355AiY7ch+\r\npUS00lYjYX8V1W0Zb7N2NkfleTChRANCAASHyeY/8BCV8RUT4v5FgljFFcE7VID7\r\nM+oK53b5TuaMv3Jjixqgtm/Wbg9+7CFbB1CWF1QrMM4wog0xg7JeeZ2k\r\n-----END PRIVATE KEY-----\r\n",
   "receipts": [
     {
       "name": "USD, one 15% line, tax inclusive, first receipt of the day (no previous hash)",
@@ -30,14 +30,14 @@
             "receiptLinePrice": 115,
             "receiptLineQuantity": 1,
             "receiptLineTotal": 115,
-            "taxCode": "A",
+            "taxCode": null,
             "taxPercent": 15,
             "taxID": 1
           }
         ],
         "receiptTaxes": [
           {
-            "taxCode": "A",
+            "taxCode": null,
             "taxPercent": 15,
             "taxID": 1,
             "taxAmount": 15,
@@ -56,7 +56,7 @@
       "taxBlock": "15.00150011500",
       "canonical": "37367FISCALINVOICEUSD242026-09-06T12:18:391150015.00150011500",
       "hash": "CvrXmTts5VuLcDDKK2tTRd73GMGm9Lewsn/2z2MtTj8=",
-      "signature": "MEUCIHTRKpI8zkdz4lVjW5UQ1Uh9VtkVGLw/U429fRLpWLBHAiEAp4moEIGvmPfmR/Btcdfh3aVvdmJH35hV4L+sFdATX8k="
+      "signature": "MEQCIEFD5hrfUyoV791H3W5fbW5BNVT60Dx0q29Mxd3zz8NWAiBYnQRRTG/bQzOhMht7tQ6nP8etJqYBUfGtHLSdUb/DFA=="
     },
     {
       "name": "USD, mixed 15%, 0% and exempt lines, tax inclusive, chained",
@@ -147,10 +147,10 @@
         "receiptTotal": 36.75,
         "receiptPrintForm": "Receipt48"
       },
-      "taxBlock": "15.00655000.000100002175",
-      "canonical": "37367FISCALINVOICEUSD252026-09-06T12:19:01367515.00655000.000100002175ungWv48Bz+pBQUDeXa4iI7ADYaOWF3qctBD/YfIAFa0=",
-      "hash": "JRl6tS0MFdvE4Lfe2dFxNm6oEHreoxkKEVCjxKAAT3c=",
-      "signature": "MEQCIE1xOV6fx2sJKG5Tb80uKDOyXauJQsWbpmllPy9eUki1AiBTW6OKPkKdQXuO0tHC/JRLMuzDMwxG79spTTxWbUAm4w=="
+      "taxBlock": "A15.0065500B0.0001000C02175",
+      "canonical": "37367FISCALINVOICEUSD252026-09-06T12:19:013675A15.0065500B0.0001000C02175ungWv48Bz+pBQUDeXa4iI7ADYaOWF3qctBD/YfIAFa0=",
+      "hash": "OgvIEx2O+adUZtasac15ZGG4GYyTNGR5ILx8pK50Ds8=",
+      "signature": "MEUCIBpzsWQ8vSIN4VTrkSHziNexkXtJjtRfR9dtQdGIDPZYAiEAtrYxo/tdjFv5czvIsuJE87y23dgv/aY8o+rrKYjkyFo="
     },
     {
       "name": "ZWG, tax exclusive, quantities with fractions",
@@ -214,7 +214,7 @@
       "taxBlock": "15.0012369473",
       "canonical": "37367FISCALINVOICEZWG262026-09-06T13:00:00947315.001236947347DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
       "hash": "VY1Sa/RKfYDibrFaH0Lf1/IExG33l7k90k5pfqDw8sk=",
-      "signature": "MEUCIQCouji8dtE2nu2gB3BIuueR1jXilFms6mELU9dlNGiYpAIgStMEestFsaFUc6deyTK6bNXeIsLUNkPZFCNqtEnzv0w="
+      "signature": "MEUCIGZ5hqFAsSSKHU10kwEAjt5IKg4e8eQMHNM+31KAsN3hAiEArXBpz14uOW2zzkc/602qv5w2Nqdaw2/VjtJqggYv0E8="
     },
     {
       "name": "Credit note against an earlier receipt",
@@ -263,10 +263,10 @@
         "receiptTotal": 115,
         "receiptPrintForm": "Receipt48"
       },
-      "taxBlock": "15.00150011500",
-      "canonical": "37367CREDITNOTEUSD272026-09-06T14:30:151150015.00150011500n4bQgYhMfWWaL+qgxVrQFaO/TxsrC4Is0V1sFbDwCgg=",
-      "hash": "NBTavs4IPeSIyvgo5fjTjsAH+B35jWabcyEIv/j3dw4=",
-      "signature": "MEYCIQDfEpbX0FTxAxbStZBMRNmFegqbi6mVUL20Ibqy/tR1mQIhANq5qlEJRdCOplw/yuLN5POOrex/cVdfz/Dr8H4P9sTr"
+      "taxBlock": "A15.00150011500",
+      "canonical": "37367CREDITNOTEUSD272026-09-06T14:30:1511500A15.00150011500n4bQgYhMfWWaL+qgxVrQFaO/TxsrC4Is0V1sFbDwCgg=",
+      "hash": "Y/ocyc3KWm9ZP+Q+VqpVpt0UIepKON1MXJu9GGOR61s=",
+      "signature": "MEUCIQDM7/8qVahrNG2PU4oOjdz/a88BCIh4zxxW2cf7abhutgIgZk2V0tT2yyuLoDNjzh2Vihq4Nq2bwHK2H53z9tQXDMA="
     },
     {
       "name": "Large amounts near the 2^31 cents boundary",
@@ -318,7 +318,116 @@
       "taxBlock": "15.002801065632147483647",
       "canonical": "37367FISCALINVOICEZWG282026-09-07T08:00:00214748364715.002801065632147483647",
       "hash": "/sYxDXAXndpGcQK6TniU7NVSYVUf7/MSRrjpeN+i6YU=",
-      "signature": "MEUCIBRImv7T6r96Gq09NhUxWl13nffjUfLPeu8X9jqceexzAiEAo+UtQWYWnJrtY9iFQbSMqRIhzMh1qH2KQMa1dT0Zqrc="
+      "signature": "MEUCIDli/LwLoLYMgjb41tA6E8JD2BQsORk4lgQFnm/VfGYLAiEAlyyFsa0pwEtmEzsCXkOt94/Ru99lOXw3z4N4ZBElFaY="
+    },
+    {
+      "name": "Spec v7.2 section 13.2.1 Example No 1: two tax codes under one taxID",
+      "deviceId": 37367,
+      "previousReceiptHash": null,
+      "receipt": {
+        "receiptType": "FiscalInvoice",
+        "receiptCurrency": "USD",
+        "receiptCounter": 1,
+        "receiptGlobalNo": 29,
+        "invoiceNo": "INV-SPEC1",
+        "buyerData": null,
+        "receiptNotes": null,
+        "receiptDate": "2026-09-08T08:00:00",
+        "creditDebitNote": null,
+        "receiptLinesTaxInclusive": true,
+        "receiptLines": [
+          {
+            "receiptLineType": "Sale",
+            "receiptLineNo": 1,
+            "receiptLineHSCode": null,
+            "receiptLineName": "Exempt",
+            "receiptLinePrice": 2500,
+            "receiptLineQuantity": 1,
+            "receiptLineTotal": 2500,
+            "taxCode": "A",
+            "taxPercent": null,
+            "taxID": 1
+          },
+          {
+            "receiptLineType": "Sale",
+            "receiptLineNo": 2,
+            "receiptLineHSCode": null,
+            "receiptLineName": "Zero-rated",
+            "receiptLinePrice": 3500,
+            "receiptLineQuantity": 1,
+            "receiptLineTotal": 3500,
+            "taxCode": "B",
+            "taxPercent": 0,
+            "taxID": 2
+          },
+          {
+            "receiptLineType": "Sale",
+            "receiptLineNo": 3,
+            "receiptLineHSCode": null,
+            "receiptLineName": "Standard C",
+            "receiptLinePrice": 1150,
+            "receiptLineQuantity": 1,
+            "receiptLineTotal": 1150,
+            "taxCode": "C",
+            "taxPercent": 15,
+            "taxID": 3
+          },
+          {
+            "receiptLineType": "Sale",
+            "receiptLineNo": 4,
+            "receiptLineHSCode": null,
+            "receiptLineName": "Standard D",
+            "receiptLinePrice": 2300,
+            "receiptLineQuantity": 1,
+            "receiptLineTotal": 2300,
+            "taxCode": "D",
+            "taxPercent": 15,
+            "taxID": 3
+          }
+        ],
+        "receiptTaxes": [
+          {
+            "taxCode": "A",
+            "taxPercent": null,
+            "taxID": 1,
+            "taxAmount": 0,
+            "salesAmountWithTax": 2500
+          },
+          {
+            "taxCode": "B",
+            "taxPercent": 0,
+            "taxID": 2,
+            "taxAmount": 0,
+            "salesAmountWithTax": 3500
+          },
+          {
+            "taxCode": "C",
+            "taxPercent": 15,
+            "taxID": 3,
+            "taxAmount": 150,
+            "salesAmountWithTax": 1150
+          },
+          {
+            "taxCode": "D",
+            "taxPercent": 15,
+            "taxID": 3,
+            "taxAmount": 300,
+            "salesAmountWithTax": 2300
+          }
+        ],
+        "receiptPayments": [
+          {
+            "moneyTypeCode": "Cash",
+            "paymentAmount": 9450
+          }
+        ],
+        "receiptTotal": 9450,
+        "receiptPrintForm": "Receipt48"
+      },
+      "taxBlock": "A0250000B0.000350000C15.0015000115000D15.0030000230000",
+      "canonical": "37367FISCALINVOICEUSD292026-09-08T08:00:00945000A0250000B0.000350000C15.0015000115000D15.0030000230000",
+      "hash": "bhua9a/7uJ8szzwuoYdXOXpqY3moOJpNzUbOqvWlx3o=",
+      "signature": "MEUCIQCqYfzRsQoKycKU6S9oO9NZFajN1XQ9Cavjt7sG1XyT/gIgAnoFJ8zhx/+r6eGtsLbbZf4fgfOLRo6oFjEJ9ZlRYD0="
     }
   ],
   "fiscalDays": [
@@ -419,7 +528,7 @@
       ],
       "canonical": "37367192026-09-06SALEBYTAXUSD15.0012000SALEBYTAXUSD0.001000SALEBYTAXUSD2175SALEBYTAXZWG15.009473SALETAXBYTAXUSD15.001565SALETAXBYTAXZWG15.001236CREDITNOTEBYTAXUSD15.00-11500CREDITNOTETAXBYTAXUSD15.00-1500BALANCEBYMONEYTYPEUSDCASH2000BALANCEBYMONEYTYPEUSDCARD1675BALANCEBYMONEYTYPEZWGMOBILEWALLET9472",
       "hash": "7LdHAuLOxLMfPeRv/Uda8boZ+E8imupsNwQTnMiREuY=",
-      "signature": "MEYCIQDvP/NSQFT6dqycl1TCMpSlNuOpACVBpG4GHBBKMvny4wIhANzpj8U4L0J2sfz4//L8rGUKRE2Bbv9sWcNfBihGJtlj"
+      "signature": "MEUCIFqCbKAUyfFzvSxJ4NgF6hCFpNGEOkHzP0knLmmivE8+AiEAirYJcMd6o3wNEwAgy507iqKwijY7/V6h+HKLQqdYLHE="
     },
     {
       "name": "Balance counters sort by money type enum order, not alphabetically; zero counters skipped",
@@ -468,7 +577,7 @@
       ],
       "canonical": "37367202026-09-07SALEBYTAXUSD600BALANCEBYMONEYTYPEUSDCASH200BALANCEBYMONEYTYPEUSDCARD300BALANCEBYMONEYTYPEUSDOTHER100",
       "hash": "AFH+wt7em555KkxN0MeE76rA0+uV3z+gHeOh3leXpKY=",
-      "signature": "MEYCIQDAZXNkKwGGOz5Vv2FM7sve+g5yXJcX7pdpFHi1ZH2dDAIhAMLvp2gh4g4P7aeCmUAdy7kTz9TI01vswNAk83qbiwld"
+      "signature": "MEYCIQDF7I0fPlifqT8d4XwJx90E11GRRfWrtfzoY8ue12crSQIhAJ9l331Q0Txkwk+RLjfzBiPfIRK8M4jPaL+Fj0TtgP6s"
     },
     {
       "name": "Two currencies interleaved; currency sorts within a counter type",
@@ -519,7 +628,7 @@
       ],
       "canonical": "37367212026-09-08SALEBYTAXUSD15.005000SALEBYTAXZWG15.0010000SALETAXBYTAXUSD15.00652SALETAXBYTAXZWG15.001304BALANCEBYMONEYTYPEUSDCASH5000BALANCEBYMONEYTYPEZWGCASH10000",
       "hash": "lmVeQ17kuvndPB6gY/CT5PWxbJmB3/3yQ23/GlAVtYE=",
-      "signature": "MEUCIET8+jhCsGcXWAWDlWQuz4e6ez8M8MhTcTWddL29qnntAiEArs6jSRoeHwNd5iUZEgEd7NSiVMw6nS6F2TmvNBS4fSQ="
+      "signature": "MEUCIHZ+NRZsfwAmppPFAVPCioTLdkI7rKRMOoH5o9tJJsLQAiEA7jNeUT30vlsMRO/ndddTk7RiE0XkB9zM6ICVBCkXheM="
     }
   ],
   "qr": [
@@ -529,8 +638,8 @@
       "deviceId": 37367,
       "receiptDate": "2026-09-06T12:18:39",
       "receiptGlobalNo": 24,
-      "deviceSignatureBase64": "MEUCIHTRKpI8zkdz4lVjW5UQ1Uh9VtkVGLw/U429fRLpWLBHAiEAp4moEIGvmPfmR/Btcdfh3aVvdmJH35hV4L+sFdATX8k=",
-      "expected": "https://fdmstest.zimra.co.zw/00000373670609202600000000244a1e7f5748785b23"
+      "deviceSignatureBase64": "MEQCIEFD5hrfUyoV791H3W5fbW5BNVT60Dx0q29Mxd3zz8NWAiBYnQRRTG/bQzOhMht7tQ6nP8etJqYBUfGtHLSdUb/DFA==",
+      "expected": "https://fdmstest.zimra.co.zw/00000373670609202600000000241ffffbc7516cdf86"
     },
     {
       "name": "qrUrl with trailing slash, single-digit day and month",
@@ -538,8 +647,8 @@
       "deviceId": 12,
       "receiptDate": "2026-01-05T00:00:01",
       "receiptGlobalNo": 1,
-      "deviceSignatureBase64": "MEQCIE1xOV6fx2sJKG5Tb80uKDOyXauJQsWbpmllPy9eUki1AiBTW6OKPkKdQXuO0tHC/JRLMuzDMwxG79spTTxWbUAm4w==",
-      "expected": "https://fdms.zimra.co.zw/0000000012050120260000000001e750f818326095e0"
+      "deviceSignatureBase64": "MEUCIBpzsWQ8vSIN4VTrkSHziNexkXtJjtRfR9dtQdGIDPZYAiEAtrYxo/tdjFv5czvIsuJE87y23dgv/aY8o+rrKYjkyFo=",
+      "expected": "https://fdms.zimra.co.zw/000000001205012026000000000169454c567033d58d"
     }
   ],
   "sha256": [
