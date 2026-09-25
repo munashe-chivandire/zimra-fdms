@@ -39,14 +39,30 @@ export function fdmsDate(d: Date = new Date()): string {
 }
 
 /**
- * Tax block of the receipt signing string: taxes sorted by taxID, each as
- * [taxPercent 2dp, empty if exempt][taxAmount cents][salesAmountWithTax cents]
+ * Receipt tax order: taxID ascending, then taxCode alphabetical. taxCode
+ * compares by code point, not localeCompare, so the signing string does not
+ * depend on the runtime's locale. A missing taxCode sorts first.
+ */
+export function compareReceiptTaxes(a: ReceiptTax, b: ReceiptTax): number {
+  if (a.taxID !== b.taxID) return a.taxID - b.taxID;
+  const ca = a.taxCode ?? "";
+  const cb = b.taxCode ?? "";
+  return ca < cb ? -1 : ca > cb ? 1 : 0;
+}
+
+/**
+ * Tax block of the receipt signing string: taxes in compareReceiptTaxes
+ * order, each as taxCode + taxPercent(2dp, empty if exempt) +
+ * taxAmount(cents) + salesAmountWithTax(cents).
+ *
+ * Reference: FDMS API spec v7.2, section 13.2.1.
  */
 export function concatenateReceiptTaxes(taxes: ReceiptTax[]): string {
   return [...taxes]
-    .sort((a, b) => a.taxID - b.taxID)
+    .sort(compareReceiptTaxes)
     .map(
       (t) =>
+        `${t.taxCode ?? ""}` +
         `${t.taxPercent !== undefined && t.taxPercent !== null ? formatTaxPercent(t.taxPercent) : ""}` +
         `${toCents(t.taxAmount)}` +
         `${toCents(t.salesAmountWithTax)}`,

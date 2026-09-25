@@ -50,20 +50,58 @@ describe("date formatting", () => {
 });
 
 describe("concatenateReceiptTaxes", () => {
-  it("sorts by taxID and renders percent/cents", () => {
+  it("sorts by taxID then taxCode, includes taxCode in output", () => {
     const s = concatenateReceiptTaxes([
-      { taxID: 3, taxPercent: 15, taxAmount: 15, salesAmountWithTax: 115 },
-      { taxID: 1, taxPercent: null, taxAmount: 0, salesAmountWithTax: 10 },
+      { taxID: 3, taxCode: "C", taxPercent: 15, taxAmount: 15, salesAmountWithTax: 115 },
+      { taxID: 1, taxCode: "A", taxPercent: null, taxAmount: 0, salesAmountWithTax: 10 },
     ]);
-    // taxID 1 (exempt: no percent) then taxID 3
-    assert.equal(s, "01000" + "15.00150011500");
+    // taxID 1 (exempt: no percent, taxCode A) then taxID 3 (taxCode C)
+    assert.equal(s, "A01000" + "C15.00150011500");
   });
 
-  it("renders zero-rate as 0.00", () => {
+  it("renders zero-rate as 0.00 with taxCode", () => {
+    const s = concatenateReceiptTaxes([
+      { taxID: 513, taxCode: "B", taxPercent: 0, taxAmount: 0, salesAmountWithTax: 115 },
+    ]);
+    assert.equal(s, "B0.00011500");
+  });
+
+  it("omits taxCode when not provided", () => {
     const s = concatenateReceiptTaxes([
       { taxID: 513, taxPercent: 0, taxAmount: 0, salesAmountWithTax: 115 },
     ]);
     assert.equal(s, "0.00011500");
+  });
+
+  it("sorts same taxID by taxCode alphabetically", () => {
+    const s = concatenateReceiptTaxes([
+      { taxID: 3, taxCode: "D", taxPercent: 15, taxAmount: 300, salesAmountWithTax: 2300 },
+      { taxID: 3, taxCode: "C", taxPercent: 15, taxAmount: 150, salesAmountWithTax: 1150 },
+    ]);
+    // C before D for same taxID
+    assert.equal(s, "C15.0015000115000" + "D15.0030000230000");
+  });
+
+  it("matches ZIMRA spec example No 1", () => {
+    // From FDMS API spec v7.2, section 13.2.1, FiscalInvoice Example No 1
+    const s = concatenateReceiptTaxes([
+      { taxID: 1, taxCode: "A", taxPercent: null, taxAmount: 0, salesAmountWithTax: 2500 },
+      { taxID: 2, taxCode: "B", taxPercent: 0, taxAmount: 0, salesAmountWithTax: 3500 },
+      { taxID: 3, taxCode: "C", taxPercent: 15, taxAmount: 150, salesAmountWithTax: 1150 },
+      { taxID: 3, taxCode: "D", taxPercent: 15, taxAmount: 300, salesAmountWithTax: 2300 },
+    ]);
+    assert.equal(s, "A0250000B0.000350000C15.0015000115000D15.0030000230000");
+  });
+
+  it("orders taxCode by code point, not locale", () => {
+    // localeCompare puts "a" before "B" and "Ä" next to "A"; FDMS sorts bytes.
+    const s = concatenateReceiptTaxes([
+      { taxID: 1, taxCode: "a", taxPercent: 15, taxAmount: 1, salesAmountWithTax: 1 },
+      { taxID: 1, taxCode: "Ä", taxPercent: 15, taxAmount: 1, salesAmountWithTax: 1 },
+      { taxID: 1, taxCode: "B", taxPercent: 15, taxAmount: 1, salesAmountWithTax: 1 },
+      { taxID: 1, taxCode: null, taxPercent: 15, taxAmount: 1, salesAmountWithTax: 1 },
+    ]);
+    assert.equal(s, "15.00100100" + "B15.00100100" + "a15.00100100" + "Ä15.00100100");
   });
 });
 
@@ -272,6 +310,22 @@ describe("buildReceiptTaxes", () => {
     const taxes = buildReceiptTaxes([line(1, 100, 515, 15.5)], false);
     assert.equal(taxes[0]!.taxAmount, 15.5);
     assert.equal(taxes[0]!.salesAmountWithTax, 115.5);
+  });
+
+  it("keeps two tax codes under one taxID as separate entries", () => {
+    // Spec v7.2 section 13.2.1, Example No 1: C and D are both taxID 3 at 15%.
+    const taxes = buildReceiptTaxes(
+      [
+        { ...line(1, 2300, 3, 15), taxCode: "D" },
+        { ...line(2, 1150, 3, 15), taxCode: "C" },
+        { ...line(3, 115, 3, 15), taxCode: "C" },
+      ],
+      true,
+    );
+    assert.deepEqual(
+      taxes.map((t) => [t.taxCode, t.salesAmountWithTax]),
+      [["C", 1265], ["D", 2300]],
+    );
   });
 });
 

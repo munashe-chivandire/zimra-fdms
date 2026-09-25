@@ -56,6 +56,7 @@ describe("published vectors", () => {
   });
   it("pins the first live-verified receipt canonical string", () => {
     // Receipt 24 on device 37367, accepted by the FDMS test environment on 2026-09-06.
+    // It has no taxCode, so the taxCode rule leaves its tax block unchanged.
     assert.equal(vectors.receipts[0].canonical, "37367FISCALINVOICEUSD242026-09-06T12:18:391150015.00150011500");
   });
 });
