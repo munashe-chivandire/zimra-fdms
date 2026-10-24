@@ -1,0 +1,74 @@
+name: Claude PR review
+
+# Reviews a PR once when it opens, reopens or leaves draft. Later pushes do
+# not re-run it, to keep usage down: comment "@claude review this again" for a
+# second pass (handled by claude.yml).
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    # Fork PRs get no secrets on pull_request events, so they are skipped here.
+    # Read the diff yourself, then comment "@claude review" to run it.
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          track_progress: true
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            Review this PR to zimra-fdms, a TypeScript SDK for ZIMRA's fiscal
+            device API. The PR branch is checked out in the working directory.
+            Start with `gh pr diff` and read surrounding code where you need it.
+
+            Look for real problems, in this order:
+            1. Fiscal correctness. Receipt signature input strings, the hash
+               chain to the previous receipt, money and tax rounding, fiscal
+               day open/close counters, offline queue ordering and replay.
+               A wrong byte here means ZIMRA rejects receipts in production.
+            2. Secrets. Device private keys, certificates or tokens must never
+               be logged, thrown in error messages or written to disk unasked.
+            3. Core portability. src/core must run on Node, React Native and
+               Android. `npm run lint:core` catches banned imports, so focus
+               on what it misses (Node-only APIs used indirectly, Buffer-like
+               assumptions).
+            4. Public API. A change to anything exported from src/index.ts
+               that breaks callers needs a version bump plus CHANGELOG.md and
+               MIGRATION.md entries.
+            5. Tests. Behaviour changes need a test or an updated vector in
+               vectors/.
+
+            Rules:
+            - Inline comments only for concrete problems, at most 8. Use
+              `mcp__github_inline_comment__create_inline_comment` with
+              `confirmed: true`. Say what breaks and how to fix it.
+            - No comments on style, naming or formatting.
+            - Finish with one `gh pr comment`: a verdict (ready to merge, or
+              needs changes) and the top risks in a few lines. If you found
+              nothing, say so in one line.
+            - Plain language. No em dashes, no filler.
+          claude_args: |
+            --max-turns 30
+            --allowedTools "Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
