@@ -16,9 +16,11 @@ jobs:
   review:
     # Fork PRs get no secrets on pull_request events, so they are skipped here.
     # Read the diff yourself, then comment "@claude review" to run it.
+    # Dependabot runs get no repo secrets either, so skip them too.
     if: >-
       github.event.pull_request.draft == false &&
-      github.event.pull_request.head.repo.full_name == github.repository
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
