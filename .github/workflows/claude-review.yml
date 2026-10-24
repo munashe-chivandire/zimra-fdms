@@ -52,20 +52,31 @@ jobs:
                A wrong byte here means ZIMRA rejects receipts in production.
             2. Secrets. Device private keys, certificates or tokens must never
                be logged, thrown in error messages or written to disk unasked.
-            3. Core portability. src/core must run on Node, React Native and
+            3. Reuse. New code that redoes something the repo already has.
+               Grep src/ before you flag it, and name the existing function
+               or module by path. Also copy-pasted blocks that should be one
+               function.
+            4. Needless complexity. Wrappers, options, generics or layers with
+               a single caller, and long code a few lines or an existing
+               pattern would cover. Show the shorter version in a
+               ```suggestion block.
+            5. Core portability. src/core must run on Node, React Native and
                Android. `npm run lint:core` catches banned imports, so focus
                on what it misses (Node-only APIs used indirectly, Buffer-like
                assumptions).
-            4. Public API. A change to anything exported from src/index.ts
+            6. Public API. A change to anything exported from src/index.ts
                that breaks callers needs a version bump plus CHANGELOG.md and
                MIGRATION.md entries.
-            5. Tests. Behaviour changes need a test or an updated vector in
+            7. Tests. Behaviour changes need a test or an updated vector in
                vectors/.
 
             Rules:
             - Inline comments only for concrete problems, at most 8. Use
               `mcp__github_inline_comment__create_inline_comment` with
               `confirmed: true`. Say what breaks and how to fix it.
+            - Reuse and complexity comments must be concrete: point to the
+              existing code or show the shorter code. "Could be simpler"
+              alone is not a comment.
             - No comments on style, naming or formatting.
             - Finish with one `gh pr comment`: a verdict (ready to merge, or
               needs changes) and the top risks in a few lines. If you found
