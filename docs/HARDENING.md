@@ -83,8 +83,8 @@ Tick an item (`- [x]`) in the PR that does it.
 
 - [ ] **`oldestPendingAgeMs` uses the device clock.** It reads `Date.now()`,
   not the server-corrected clock the receipt dates came from, so a drifted
-  terminal misjudges the 72-hour window. Use the device's clock and test with
-  a skewed clock.
+  terminal misjudges the 72-hour window. Use the `FiscalDevice`'s
+  server-corrected clock instead and test with a skewed clock.
 
 ## Durability (Node file storage and journal)
 
