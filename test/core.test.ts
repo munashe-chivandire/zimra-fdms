@@ -361,6 +361,24 @@ describe("FiscalDevice through injected Signer and Transport", () => {
     assert.ok(Math.abs(fd.clock.offsetMs - 7_200_000) < 5_000);
   });
 
+  it("stores the currency uppercased, as it is signed", async () => {
+    const { signer, publicKeyPem } = await generatePemSigner();
+    const fdms = fakeFdms(publicKeyPem);
+    const fd = new FiscalDevice(device, { signer, transport: fdms.transport });
+    await fd.openDay();
+    const input = {
+      invoiceNo: "1",
+      lines: [{ name: "a", price: 1, quantity: 1, taxId: 1 }],
+      payments: [{ moneyType: "Cash" as const, amount: 1 }],
+    };
+    const { receipt } = await fd.submitReceipt({ ...input, currency: "usd" });
+    await fd.submitReceipt({ ...input, currency: "USD", invoiceNo: "2" });
+    assert.equal(receipt.receiptCurrency, "USD");
+    const currencies = new Set(fd.getState()!.counters.map((c) => c.fiscalCounterCurrency));
+    assert.deepEqual([...currencies], ["USD"]);
+    await fd.closeDay();
+  });
+
   it("renews the certificate with the same key", async () => {
     const { signer, publicKeyPem } = await generatePemSigner();
     const fdms = fakeFdms(publicKeyPem);

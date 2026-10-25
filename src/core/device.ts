@@ -516,7 +516,9 @@ export class FiscalDevice {
 
     const unsigned: Omit<Receipt, "receiptDeviceSignature"> = {
       receiptType,
-      receiptCurrency: input.currency,
+      // The signing string uppercases the currency, so the stored receipt and
+      // the day counters must too, or "usd" and "USD" split one day's totals.
+      receiptCurrency: input.currency.toUpperCase(),
       receiptCounter: s.receiptCounter + 1,
       receiptGlobalNo: s.receiptGlobalNo + 1,
       invoiceNo: input.invoiceNo,
@@ -751,7 +753,7 @@ export function accumulateCounters(
   counters: FiscalDayCounter[],
   receipt: Receipt,
 ): void {
-  const currency = receipt.receiptCurrency;
+  const currency = receipt.receiptCurrency.toUpperCase();
   const sign = receipt.receiptType === "CreditNote" ? -1 : 1;
   const byTaxType =
     receipt.receiptType === "FiscalInvoice"
@@ -787,7 +789,7 @@ export function accumulateCounters(
     upsert(
       (c) =>
         c.fiscalCounterType === byTaxType &&
-        c.fiscalCounterCurrency === currency &&
+        c.fiscalCounterCurrency.toUpperCase() === currency &&
         c.fiscalCounterTaxID === t.taxID,
       () => ({
         fiscalCounterType: byTaxType,
@@ -801,7 +803,7 @@ export function accumulateCounters(
     upsert(
       (c) =>
         c.fiscalCounterType === taxByTaxType &&
-        c.fiscalCounterCurrency === currency &&
+        c.fiscalCounterCurrency.toUpperCase() === currency &&
         c.fiscalCounterTaxID === t.taxID,
       () => ({
         fiscalCounterType: taxByTaxType,
@@ -818,7 +820,7 @@ export function accumulateCounters(
     upsert(
       (c) =>
         c.fiscalCounterType === "BalanceByMoneyType" &&
-        c.fiscalCounterCurrency === currency &&
+        c.fiscalCounterCurrency.toUpperCase() === currency &&
         c.fiscalCounterMoneyType === p.moneyTypeCode,
       () => ({
         fiscalCounterType: "BalanceByMoneyType",
