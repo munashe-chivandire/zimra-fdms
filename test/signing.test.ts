@@ -201,7 +201,8 @@ describe("fiscalDaySigningString", () => {
 
   it("orders currencies by code point, not locale", () => {
     // Estonian collation puts Z before T and U, so localeCompare under an
-    // "et" default locale would sign ZWG ahead of USD. Simulate that locale.
+    // "et" default locale would sign ZWG ahead of USD. Stub that order so the
+    // test does not depend on the ICU data this Node build ships.
     const two: FiscalDayCounter[] = ["ZWG", "usd"].map((cur) => ({
       fiscalCounterType: "SaleByTax",
       fiscalCounterCurrency: cur,
@@ -210,10 +211,10 @@ describe("fiscalDaySigningString", () => {
       fiscalCounterValue: 1,
     }));
     const original = String.prototype.localeCompare;
-    const et = new Intl.Collator("et");
-    assert.ok(et.compare("ZWG", "USD") < 0, "this ICU build has Estonian collation");
+    const zFirst = (x: string) => x.toUpperCase().replace(/^Z/, "\u0000");
     String.prototype.localeCompare = function (this: string, that: string) {
-      return et.compare(this, that);
+      const a = zFirst(this), b = zFirst(that);
+      return a < b ? -1 : a > b ? 1 : 0;
     };
     let s: string;
     try {

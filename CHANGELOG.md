@@ -23,8 +23,9 @@ unless noted.
   `currency: "usd"` signed as `USD` but kept `usd` in the submitted receipt
   and in the fiscal-day counters, so a day with both `usd` and `USD`
   receipts had two counter sets that both signed as `USD` at CloseDay.
-  Counters with a lowercase currency left over from an earlier version
-  now merge with the uppercase set. CloseDay counters now sort currencies
+  A day stored by an earlier version that already holds both `usd` and
+  `USD` counters is merged into one uppercase set when CloseDay is signed
+  and sent. CloseDay counters now sort currencies
   by code point instead of `localeCompare`, so the signing string no
   longer depends on the runtime's locale (under Estonian collation ZWG
   sorted before USD). Tested locally, not live.

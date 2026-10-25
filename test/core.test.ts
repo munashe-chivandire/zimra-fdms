@@ -379,6 +379,35 @@ describe("FiscalDevice through injected Signer and Transport", () => {
     await fd.closeDay();
   });
 
+  it("merges case-variant counters from an older stored day at CloseDay", async () => {
+    const { signer, publicKeyPem } = await generatePemSigner();
+    const fdms = fakeFdms(publicKeyPem);
+    const fd = new FiscalDevice(device, { signer, transport: fdms.transport });
+    const sale = (cur: string, value: number) => ({
+      fiscalCounterType: "SaleByTax" as const,
+      fiscalCounterCurrency: cur,
+      fiscalCounterTaxID: 1,
+      fiscalCounterTaxPercent: 15,
+      fiscalCounterValue: value,
+    });
+    fd.restoreState({
+      fiscalDayNo: 9,
+      fiscalDayDate: "2026-07-29",
+      receiptCounter: 2,
+      receiptGlobalNo: 43,
+      previousReceiptHash: "H",
+      counters: [sale("usd", 1.15), sale("USD", 2.3)],
+    });
+    await fd.closeDay();
+    const body = fdms.calls.find((c) => c.path === "CloseDay")!.body as {
+      fiscalDayCounters: { fiscalCounterCurrency: string; fiscalCounterValue: number }[];
+    };
+    assert.deepEqual(
+      body.fiscalDayCounters.map((c) => [c.fiscalCounterCurrency, c.fiscalCounterValue]),
+      [["USD", 3.45]],
+    );
+  });
+
   it("renews the certificate with the same key", async () => {
     const { signer, publicKeyPem } = await generatePemSigner();
     const fdms = fakeFdms(publicKeyPem);

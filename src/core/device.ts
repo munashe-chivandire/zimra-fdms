@@ -421,11 +421,14 @@ export class FiscalDevice {
     if (!opts.force && s.redErrors?.length) {
       throw new DayNotClosableError(s.fiscalDayNo, s.redErrors);
     }
+    // A day persisted by an earlier SDK version can hold "usd" and "USD"
+    // counter sets. Merge them so CloseDay signs and sends one set.
+    const counters = mergeCurrencyCase(s.counters);
     const canonical = fiscalDaySigningString(
       this.device.deviceId,
       s.fiscalDayNo,
       s.fiscalDayDate,
-      s.counters,
+      counters,
     );
     const signature = await signCanonicalString(
       this.signer,
@@ -434,7 +437,7 @@ export class FiscalDevice {
     );
     const body: CloseDayRequest = {
       fiscalDayNo: s.fiscalDayNo,
-      fiscalDayCounters: s.counters.filter(
+      fiscalDayCounters: counters.filter(
         (c) => toCents(c.fiscalCounterValue) !== 0,
       ),
       fiscalDayDeviceSignature: signature,
@@ -746,6 +749,32 @@ function divideRoundHalfAwayFromZero(n: number, d: number): number {
   let q = (abs - rem) / d;
   if (rem * 2 >= d) q += 1;
   return n < 0 ? 0 - q : q; // 0 - q, not -q: never -0
+}
+
+/**
+ * Copy of the counters with each currency uppercased and counters that then
+ * share type, currency, taxID and moneyType summed into one.
+ */
+function mergeCurrencyCase(counters: FiscalDayCounter[]): FiscalDayCounter[] {
+  const merged: FiscalDayCounter[] = [];
+  for (const c of counters) {
+    const currency = c.fiscalCounterCurrency.toUpperCase();
+    const same = merged.find(
+      (m) =>
+        m.fiscalCounterType === c.fiscalCounterType &&
+        m.fiscalCounterCurrency === currency &&
+        (m.fiscalCounterTaxID ?? null) === (c.fiscalCounterTaxID ?? null) &&
+        (m.fiscalCounterMoneyType ?? null) === (c.fiscalCounterMoneyType ?? null),
+    );
+    if (same) {
+      same.fiscalCounterValue = centsToAmount(
+        toCents(same.fiscalCounterValue) + toCents(c.fiscalCounterValue),
+      );
+    } else {
+      merged.push({ ...c, fiscalCounterCurrency: currency });
+    }
+  }
+  return merged;
 }
 
 /** Fold a submitted receipt into the running fiscal-day counters. */
