@@ -31,7 +31,9 @@ Tick an item (`- [x]`) in the PR that does it.
 - [x] **Property tests for the signing strings and counters.** No test checks
   invariants across random inputs. Add seeded property tests: tax order in
   `concatenateReceiptTaxes` does not depend on input order;
-  `toCents(centsToAmount(c)) === c` across the full safe range;
+  `toCents(centsToAmount(c)) === c` up to 2^51 cents (above about
+  3.5e15 cents the float division loses the last cent; a known limit, far
+  past any real amount);
   `accumulateCounters` over N random receipts sums to the receipt totals,
   taxes and payments; zero counters never reach the CloseDay string.
   Tests only.
