@@ -82,6 +82,26 @@ const BAD: [string, string, unknown][] = [
   ["unknown receiptType", "receiptType", { ...SALE, receiptType: "Refund" }],
   ["invalid receiptDate", "receiptDate", { ...SALE, receiptDate: new Date("nope") }],
   ["payments not adding up", "payments", { ...SALE, payments: [{ moneyType: "Cash", amount: 22 }] }],
+  ["credit note without creditDebitNote", "creditDebitNote", { ...SALE, receiptType: "CreditNote" }],
+  ["debit note without creditDebitNote", "creditDebitNote", { ...SALE, receiptType: "DebitNote" }],
+  ["credit note with null creditDebitNote", "creditDebitNote", { ...SALE, receiptType: "CreditNote", creditDebitNote: null }],
+  ["credit note with empty creditDebitNote", "creditDebitNote", { ...SALE, receiptType: "CreditNote", creditDebitNote: {} }],
+  ["credit note with all-null creditDebitNote", "creditDebitNote", {
+    ...SALE, receiptType: "CreditNote",
+    creditDebitNote: { receiptID: null, deviceID: null, receiptGlobalNo: null, fiscalDayNo: null },
+  }],
+  ["credit note with string creditDebitNote", "creditDebitNote", { ...SALE, receiptType: "CreditNote", creditDebitNote: "123" }],
+  ["credit note with zero receiptID", "creditDebitNote.receiptID", { ...SALE, receiptType: "CreditNote", creditDebitNote: { receiptID: 0 } }],
+  ["credit note with fractional receiptID", "creditDebitNote.receiptID", { ...SALE, receiptType: "CreditNote", creditDebitNote: { receiptID: 1.5 } }],
+  ["credit note missing fiscalDayNo", "creditDebitNote.fiscalDayNo", {
+    ...SALE, receiptType: "CreditNote", creditDebitNote: { deviceID: 7, receiptGlobalNo: 11 },
+  }],
+  ["debit note missing deviceID", "creditDebitNote.deviceID", {
+    ...SALE, receiptType: "DebitNote", creditDebitNote: { receiptGlobalNo: 11, fiscalDayNo: 3 },
+  }],
+  ["credit note with negative receiptGlobalNo", "creditDebitNote.receiptGlobalNo", {
+    ...SALE, receiptType: "CreditNote", creditDebitNote: { deviceID: 7, receiptGlobalNo: -11, fiscalDayNo: 3 },
+  }],
 ];
 
 describe("signReceipt validates its input", () => {
@@ -137,6 +157,22 @@ describe("signReceipt validates its input", () => {
     const later = await fd.submitReceipt({ ...SALE, invoiceNo: "INV-2", receiptDate: new Date(first.getTime() + 1_000) });
     assert.equal(later.receipt.receiptCounter, 2);
     assert.equal(fdms.submits.length, 2);
+  });
+
+  it("signs credit and debit notes that reference the original receipt", async () => {
+    const { fd, fdms } = await openDevice();
+    const byId = await fd.submitReceipt({ ...SALE, receiptType: "CreditNote", invoiceNo: "CN-1", creditDebitNote: { receiptID: 4711 } });
+    assert.deepEqual(byId.receipt.creditDebitNote, { receiptID: 4711 });
+    const byNumber = { deviceID: 7, receiptGlobalNo: 11, fiscalDayNo: 3 };
+    const debit = await fd.submitReceipt({ ...SALE, receiptType: "DebitNote", invoiceNo: "DN-1", creditDebitNote: byNumber });
+    assert.deepEqual(debit.receipt.creditDebitNote, byNumber);
+    assert.equal(fdms.submits.length, 2);
+  });
+
+  it("does not require creditDebitNote on a fiscal invoice", async () => {
+    const { fd } = await openDevice();
+    const prepared = await fd.signReceipt({ ...SALE, receiptType: "FiscalInvoice" });
+    assert.equal(prepared.receipt.creditDebitNote, null);
   });
 
   it("is exported from the package root", async () => {

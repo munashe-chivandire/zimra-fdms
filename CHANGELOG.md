@@ -20,6 +20,12 @@ unless noted.
   total now throw `ReceiptValidationError` too (it extends `Error`, and
   the payments message is unchanged). Not verified live: no FDMS call is
   involved.
+- A `CreditNote` or `DebitNote` without a usable `creditDebitNote` is now
+  refused with `ReceiptValidationError` before numbering or signing. The
+  reference must give either a positive integer `receiptID`, or the
+  original's `deviceID`, `receiptGlobalNo` and `fiscalDayNo` together.
+  Fiscal invoices are unchanged. Not verified live: no FDMS call is
+  involved.
 
 ### Fixed
 

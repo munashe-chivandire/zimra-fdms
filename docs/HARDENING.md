@@ -46,10 +46,12 @@ Tick an item (`- [x]`) in the PR that does it.
   closed by the device). Validate before signing and throw one typed error
   naming the field, so nothing is numbered or signed for a bad input.
 
-- [ ] **Credit and debit notes are not checked.** The `ReceiptInput` doc says
+- [x] **Credit and debit notes are not checked.** The `ReceiptInput` doc says
   `creditDebitNote` is required for CreditNote and DebitNote, but
   `signReceipt` accepts a credit note without one. Enforce it, with tests.
-  Separately, the vectors sign credit notes with positive amounts; confirm
+
+- [ ] **Credit note sign convention is unverified.** The vectors sign credit
+  notes with positive amounts; confirm
   the sign convention FDMS v7.2 expects for credit note lines, taxes and
   payments against the spec PDF or a live test before changing any vector.
   If it has to change, that is a breaking change: write it up, do not merge
