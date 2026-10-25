@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import { buildReceiptTaxes } from "../src/core/device.js";
 import { toCents } from "../src/core/signing.js";
 import type { ReceiptLine } from "../src/core/types.js";
+import { rng } from "./prng.js";
 
 function line(totalCents: number, taxPercent: number | null, no = 1, taxID = 1): ReceiptLine {
   return {
@@ -40,18 +41,6 @@ function exactTaxCents(totalCents: number, bp: number, inclusive: boolean): numb
 function taxCentsOf(totalCents: number, taxPercent: number, inclusive: boolean): number {
   const [t] = buildReceiptTaxes([line(totalCents, taxPercent)], inclusive);
   return toCents(t!.taxAmount);
-}
-
-/** Small seeded PRNG (mulberry32) so a failure is reproducible. */
-function rng(seed: number): () => number {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
 }
 
 describe("receipt tax arithmetic", () => {

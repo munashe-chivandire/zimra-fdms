@@ -10,7 +10,7 @@ Tick an item (`- [x]`) in the PR that does it.
 
 ## Receipt arithmetic and signing
 
-- [ ] **Tax-exclusive tax is computed with a float multiply.**
+- [x] **Tax-exclusive tax is computed with a float multiply.**
   `buildReceiptTaxes` does `Math.round(totalCents * rate)`. At 14.5%, a
   $1.00 line gives `100 * 0.145 = 14.499999999999998`, so 14 cents instead of
   15. A brute-force check over totals 1..3,000,000 cents finds 3,951 wrong
@@ -20,7 +20,7 @@ Tick an item (`- [x]`) in the PR that does it.
   against exact rational rounding over many totals, rates and signs, and a
   vector for the $1.00 at 14.5% exclusive case.
 
-- [ ] **Receipt currency case is not normalised before counters.** The
+- [x] **Receipt currency case is not normalised before counters.** The
   signing strings uppercase the currency, but `accumulateCounters` keys on
   `receiptCurrency` as given, so `"usd"` and `"USD"` receipts on one day make
   two counter sets that both sign as `USD`. `fiscalDaySigningString` also
@@ -28,7 +28,7 @@ Tick an item (`- [x]`) in the PR that does it.
   (the same class of bug 0.4.1 fixed for tax codes). Uppercase the currency
   in `signReceipt`, sort counters by code point, and add tests for both.
 
-- [ ] **Property tests for the signing strings and counters.** No test checks
+- [x] **Property tests for the signing strings and counters.** No test checks
   invariants across random inputs. Add seeded property tests: tax order in
   `concatenateReceiptTaxes` does not depend on input order;
   `toCents(centsToAmount(c)) === c` across the full safe range;
