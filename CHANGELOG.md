@@ -19,6 +19,16 @@ unless noted.
   too large to compute exactly, now throws a `RangeError` instead of
   signing a wrong amount. New conformance vector for the 14.5% case.
   Tested locally against exact rational rounding, not live.
+- The receipt currency is now stored uppercased, as it is signed. Before,
+  `currency: "usd"` signed as `USD` but kept `usd` in the submitted receipt
+  and in the fiscal-day counters, so a day with both `usd` and `USD`
+  receipts had two counter sets that both signed as `USD` at CloseDay.
+  A day stored by an earlier version that already holds both `usd` and
+  `USD` counters is merged into one uppercase set when CloseDay is signed
+  and sent. CloseDay counters now sort currencies
+  by code point instead of `localeCompare`, so the signing string no
+  longer depends on the runtime's locale (under Estonian collation ZWG
+  sorted before USD). Tested locally, not live.
 
 ## 0.4.1 — 2026-09-29
 

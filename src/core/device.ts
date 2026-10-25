@@ -421,11 +421,14 @@ export class FiscalDevice {
     if (!opts.force && s.redErrors?.length) {
       throw new DayNotClosableError(s.fiscalDayNo, s.redErrors);
     }
+    // A day persisted by an earlier SDK version can hold "usd" and "USD"
+    // counter sets. Merge them so CloseDay signs and sends one set.
+    const counters = mergeCurrencyCase(s.counters);
     const canonical = fiscalDaySigningString(
       this.device.deviceId,
       s.fiscalDayNo,
       s.fiscalDayDate,
-      s.counters,
+      counters,
     );
     const signature = await signCanonicalString(
       this.signer,
@@ -434,7 +437,7 @@ export class FiscalDevice {
     );
     const body: CloseDayRequest = {
       fiscalDayNo: s.fiscalDayNo,
-      fiscalDayCounters: s.counters.filter(
+      fiscalDayCounters: counters.filter(
         (c) => toCents(c.fiscalCounterValue) !== 0,
       ),
       fiscalDayDeviceSignature: signature,
@@ -516,7 +519,9 @@ export class FiscalDevice {
 
     const unsigned: Omit<Receipt, "receiptDeviceSignature"> = {
       receiptType,
-      receiptCurrency: input.currency,
+      // The signing string uppercases the currency, so the stored receipt and
+      // the day counters must too, or "usd" and "USD" split one day's totals.
+      receiptCurrency: input.currency.toUpperCase(),
       receiptCounter: s.receiptCounter + 1,
       receiptGlobalNo: s.receiptGlobalNo + 1,
       invoiceNo: input.invoiceNo,
@@ -746,12 +751,38 @@ function divideRoundHalfAwayFromZero(n: number, d: number): number {
   return n < 0 ? 0 - q : q; // 0 - q, not -q: never -0
 }
 
+/**
+ * Copy of the counters with each currency uppercased and counters that then
+ * share type, currency, taxID and moneyType summed into one.
+ */
+function mergeCurrencyCase(counters: FiscalDayCounter[]): FiscalDayCounter[] {
+  const merged: FiscalDayCounter[] = [];
+  for (const c of counters) {
+    const currency = c.fiscalCounterCurrency.toUpperCase();
+    const same = merged.find(
+      (m) =>
+        m.fiscalCounterType === c.fiscalCounterType &&
+        m.fiscalCounterCurrency === currency &&
+        (m.fiscalCounterTaxID ?? null) === (c.fiscalCounterTaxID ?? null) &&
+        (m.fiscalCounterMoneyType ?? null) === (c.fiscalCounterMoneyType ?? null),
+    );
+    if (same) {
+      same.fiscalCounterValue = centsToAmount(
+        toCents(same.fiscalCounterValue) + toCents(c.fiscalCounterValue),
+      );
+    } else {
+      merged.push({ ...c, fiscalCounterCurrency: currency });
+    }
+  }
+  return merged;
+}
+
 /** Fold a submitted receipt into the running fiscal-day counters. */
 export function accumulateCounters(
   counters: FiscalDayCounter[],
   receipt: Receipt,
 ): void {
-  const currency = receipt.receiptCurrency;
+  const currency = receipt.receiptCurrency.toUpperCase();
   const sign = receipt.receiptType === "CreditNote" ? -1 : 1;
   const byTaxType =
     receipt.receiptType === "FiscalInvoice"
@@ -787,7 +818,7 @@ export function accumulateCounters(
     upsert(
       (c) =>
         c.fiscalCounterType === byTaxType &&
-        c.fiscalCounterCurrency === currency &&
+        c.fiscalCounterCurrency.toUpperCase() === currency &&
         c.fiscalCounterTaxID === t.taxID,
       () => ({
         fiscalCounterType: byTaxType,
@@ -801,7 +832,7 @@ export function accumulateCounters(
     upsert(
       (c) =>
         c.fiscalCounterType === taxByTaxType &&
-        c.fiscalCounterCurrency === currency &&
+        c.fiscalCounterCurrency.toUpperCase() === currency &&
         c.fiscalCounterTaxID === t.taxID,
       () => ({
         fiscalCounterType: taxByTaxType,
@@ -818,7 +849,7 @@ export function accumulateCounters(
     upsert(
       (c) =>
         c.fiscalCounterType === "BalanceByMoneyType" &&
-        c.fiscalCounterCurrency === currency &&
+        c.fiscalCounterCurrency.toUpperCase() === currency &&
         c.fiscalCounterMoneyType === p.moneyTypeCode,
       () => ({
         fiscalCounterType: "BalanceByMoneyType",

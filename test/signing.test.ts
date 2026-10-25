@@ -199,6 +199,32 @@ describe("fiscalDaySigningString", () => {
     assert.ok(!s.includes("SALETAXBYTAX"));
   });
 
+  it("orders currencies by code point, not locale", () => {
+    // Estonian collation puts Z before T and U, so localeCompare under an
+    // "et" default locale would sign ZWG ahead of USD. Stub that order so the
+    // test does not depend on the ICU data this Node build ships.
+    const two: FiscalDayCounter[] = ["ZWG", "usd"].map((cur) => ({
+      fiscalCounterType: "SaleByTax",
+      fiscalCounterCurrency: cur,
+      fiscalCounterTaxID: 1,
+      fiscalCounterTaxPercent: 15,
+      fiscalCounterValue: 1,
+    }));
+    const original = String.prototype.localeCompare;
+    const zFirst = (x: string) => x.toUpperCase().replace(/^Z/, "\u0000");
+    String.prototype.localeCompare = function (this: string, that: string) {
+      const a = zFirst(this), b = zFirst(that);
+      return a < b ? -1 : a > b ? 1 : 0;
+    };
+    let s: string;
+    try {
+      s = fiscalDaySigningString(1, 1, "2026-07-29", two);
+    } finally {
+      String.prototype.localeCompare = original;
+    }
+    assert.equal(s, "112026-07-29" + "SALEBYTAXUSD15.00100" + "SALEBYTAXZWG15.00100");
+  });
+
   it("handles an empty day", () => {
     assert.equal(fiscalDaySigningString(10626, 17, "2024-09-02", []), "10626172024-09-02");
   });
@@ -348,6 +374,18 @@ describe("accumulateCounters", () => {
     assert.equal(sale?.fiscalCounterValue, 230);
     assert.equal(bal?.fiscalCounterValue, 230);
     assert.equal(bal?.fiscalCounterMoneyType, "Cash");
+  });
+
+  it("keeps one counter set per currency whatever its case", () => {
+    const counters: FiscalDayCounter[] = [];
+    accumulateCounters(counters, receipt("FiscalInvoice", 115, "Cash"));
+    accumulateCounters(counters, { ...receipt("FiscalInvoice", 115, "Cash"), receiptCurrency: "usd" });
+    const sale = counters.filter((c) => c.fiscalCounterType === "SaleByTax");
+    const bal = counters.filter((c) => c.fiscalCounterType === "BalanceByMoneyType");
+    assert.equal(sale.length, 1);
+    assert.equal(bal.length, 1);
+    assert.equal(sale[0]!.fiscalCounterValue, 230);
+    assert.equal(bal[0]!.fiscalCounterValue, 230);
   });
 
   it("credit notes subtract", () => {

@@ -133,7 +133,8 @@ const MONEY_TYPE_ORDER: Record<string, number> = {
  * deviceID + fiscalDayNo + fiscalDayDate(YYYY-MM-DD) + counters, where
  * counters are sorted by (type priority, currency, taxID/moneyType), zero
  * counters skipped, each as TYPE + CURRENCY + [taxPercent 2dp | moneyType] +
- * value(cents).
+ * value(cents). Currency compares uppercased and by code point, not
+ * localeCompare, so the order does not depend on the runtime's locale.
  */
 export function fiscalDaySigningString(
   deviceId: number,
@@ -146,7 +147,10 @@ export function fiscalDaySigningString(
     const pa = COUNTER_ORDER[a.fiscalCounterType] ?? 99;
     const pb = COUNTER_ORDER[b.fiscalCounterType] ?? 99;
     if (pa !== pb) return pa - pb;
-    const cur = a.fiscalCounterCurrency.localeCompare(b.fiscalCounterCurrency);
+    const cur = compareCodePoints(
+      a.fiscalCounterCurrency.toUpperCase(),
+      b.fiscalCounterCurrency.toUpperCase(),
+    );
     if (cur !== 0) return cur;
     const ta = a.fiscalCounterTaxID ?? -1;
     const tb = b.fiscalCounterTaxID ?? -1;
