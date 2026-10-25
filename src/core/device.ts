@@ -794,17 +794,17 @@ function validateCreditDebitNote(
       fail(`${field}.${key}`, `must be a positive integer, got ${String(v)}`);
     }
   };
-  if (given(ref.receiptID)) {
-    positiveInt("receiptID");
-    return;
-  }
+  // Every part that is given is sent to FDMS, so check each one.
   const byNumber = ["deviceID", "receiptGlobalNo", "fiscalDayNo"] as const;
+  for (const k of ["receiptID", ...byNumber] as const) {
+    if (given(ref[k])) positiveInt(k);
+  }
+  if (given(ref.receiptID)) return;
   if (!byNumber.some((k) => given(ref[k]))) {
     fail(field, "has no reference: give receiptID, or deviceID, receiptGlobalNo and fiscalDayNo");
   }
   for (const k of byNumber) {
     if (!given(ref[k])) fail(`${field}.${k}`, "is required when receiptID is not given");
-    positiveInt(k);
   }
 }
 

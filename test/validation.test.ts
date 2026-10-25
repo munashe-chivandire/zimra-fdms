@@ -93,6 +93,9 @@ const BAD: [string, string, unknown][] = [
   ["credit note with string creditDebitNote", "creditDebitNote", { ...SALE, receiptType: "CreditNote", creditDebitNote: "123" }],
   ["credit note with zero receiptID", "creditDebitNote.receiptID", { ...SALE, receiptType: "CreditNote", creditDebitNote: { receiptID: 0 } }],
   ["credit note with fractional receiptID", "creditDebitNote.receiptID", { ...SALE, receiptType: "CreditNote", creditDebitNote: { receiptID: 1.5 } }],
+  ["credit note with receiptID and a negative deviceID", "creditDebitNote.deviceID", {
+    ...SALE, receiptType: "CreditNote", creditDebitNote: { receiptID: 4711, deviceID: -5 },
+  }],
   ["credit note missing fiscalDayNo", "creditDebitNote.fiscalDayNo", {
     ...SALE, receiptType: "CreditNote", creditDebitNote: { deviceID: 7, receiptGlobalNo: 11 },
   }],
