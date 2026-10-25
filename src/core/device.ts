@@ -700,12 +700,14 @@ function validateReceiptInput(input: ReceiptInput, previousReceiptDate?: string)
     throw new ReceiptValidationError(field, reason);
   };
   const amount = (v: number | Money, field: string): void => {
+    let c: number;
     try {
-      amountToCents(v, field);
+      c = amountToCents(v, field);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      fail(field, msg.startsWith(`${field}: `) ? msg.slice(field.length + 2) : msg);
+      return fail(field, msg.startsWith(`${field}: `) ? msg.slice(field.length + 2) : msg);
     }
+    if (!Number.isSafeInteger(c)) fail(field, `${String(v)} is too large to hold exactly in cents`);
   };
 
   if (input.receiptType !== undefined && !RECEIPT_TYPES.includes(input.receiptType)) {
@@ -729,6 +731,7 @@ function validateReceiptInput(input: ReceiptInput, previousReceiptDate?: string)
 
   input.lines.forEach((l, i) => {
     const at = `lines[${i}]`;
+    if (l === null || typeof l !== "object") fail(at, "must be an object");
     if (typeof l.name !== "string" || l.name.trim() === "") fail(`${at}.name`, "must be a non-empty string");
     amount(l.price, `${at}.price`);
     if (typeof l.quantity !== "number" || !Number.isFinite(l.quantity) || l.quantity <= 0) {
@@ -743,7 +746,10 @@ function validateReceiptInput(input: ReceiptInput, previousReceiptDate?: string)
       fail(`${at}.taxPercent`, `must be a finite number of at least 0, or null for exempt, got ${String(l.taxPercent)}`);
     }
   });
-  input.payments.forEach((p, i) => amount(p.amount, `payments[${i}].amount`));
+  input.payments.forEach((p, i) => {
+    if (p === null || typeof p !== "object") fail(`payments[${i}]`, "must be an object");
+    amount(p.amount, `payments[${i}].amount`);
+  });
 
   // Only an explicit date is checked: generated dates are nudged forward in
   // signReceipt. A date at or before the previous receipt's gets RCPT030
