@@ -238,6 +238,7 @@ const taxVectors = [
   { name: "Exclusive 15%: 100.00 -> tax 15.00, sales 115.00", lines: [line(1, "a", 100, 1, 1, 15)], taxInclusive: false },
   { name: "Per-line rounding: 0.30 and 0.20 inclusive at 15% give 0.04 + 0.03", lines: [line(1, "a", 0.1, 3, 1, 15), line(2, "b", 0.2, 1, 1, 15)], taxInclusive: true },
   { name: "Exempt and zero-rated grouped separately from 15%", lines: [line(1, "a", 10, 1, 3, null), line(2, "b", 10, 1, 2, 0), line(3, "c", 10, 1, 1, 15)], taxInclusive: true },
+  { name: "Exclusive 14.5%: 1.00 -> tax 0.15 (a float multiply gives 0.14)", lines: [line(1, "a", 1, 1, 1, 14.5)], taxInclusive: false },
 ].map((t) => ({ ...t, expected: buildReceiptTaxes(t.lines, t.taxInclusive) }));
 
 const out = {

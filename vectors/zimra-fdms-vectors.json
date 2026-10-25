@@ -827,6 +827,33 @@
           "salesAmountWithTax": 10
         }
       ]
+    },
+    {
+      "name": "Exclusive 14.5%: 1.00 -> tax 0.15 (a float multiply gives 0.14)",
+      "lines": [
+        {
+          "receiptLineType": "Sale",
+          "receiptLineNo": 1,
+          "receiptLineHSCode": null,
+          "receiptLineName": "a",
+          "receiptLinePrice": 1,
+          "receiptLineQuantity": 1,
+          "receiptLineTotal": 1,
+          "taxCode": null,
+          "taxPercent": 14.5,
+          "taxID": 1
+        }
+      ],
+      "taxInclusive": false,
+      "expected": [
+        {
+          "taxCode": null,
+          "taxPercent": 14.5,
+          "taxID": 1,
+          "taxAmount": 0.15,
+          "salesAmountWithTax": 1.15
+        }
+      ]
     }
   ]
 }
