@@ -38,7 +38,7 @@ Tick an item (`- [x]`) in the PR that does it.
   taxes and payments; zero counters never reach the CloseDay string.
   Tests only.
 
-- [ ] **`signReceipt` does almost no input validation.** Nothing stops an
+- [x] **`signReceipt` does almost no input validation.** Nothing stops an
   empty `lines` or `payments` array, a zero, negative or `NaN` quantity, a
   negative or `NaN` tax percent, a currency that is not three letters, an
   empty `invoiceNo`, or an explicit `receiptDate` that is not after the

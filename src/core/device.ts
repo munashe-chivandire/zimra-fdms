@@ -127,6 +127,22 @@ export class PendingSubmitError extends Error {
   }
 }
 
+/**
+ * Thrown by signReceipt() and submitReceipt() when a ReceiptInput cannot
+ * make a valid receipt. Raised before anything is numbered, signed or sent,
+ * so the day state is unchanged. `field` is a path into the input, such as
+ * "lines[2].quantity".
+ */
+export class ReceiptValidationError extends Error {
+  constructor(
+    public readonly field: string,
+    public readonly reason: string,
+  ) {
+    super(`${field}: ${reason}`);
+    this.name = "ReceiptValidationError";
+  }
+}
+
 export type ReconcileResult =
   | { action: "none" }
   /** FDMS already had the receipt; local state caught up. */
@@ -470,6 +486,7 @@ export class FiscalDevice {
    */
   async signReceipt(input: ReceiptInput): Promise<PreparedReceipt> {
     const s = this.requireDay();
+    validateReceiptInput(input, s.previousReceiptDate);
     const receiptType = input.receiptType ?? "FiscalInvoice";
     const inclusive = input.linesTaxInclusive ?? true;
     let date = input.receiptDate ?? this.clock.now();
@@ -512,7 +529,8 @@ export class FiscalDevice {
       0,
     );
     if (paymentsTotalCents !== receiptTotalCents) {
-      throw new Error(
+      throw new ReceiptValidationError(
+        "payments",
         `Payments (${centsToAmount(paymentsTotalCents)}) do not equal receipt total (${receiptTotal})`,
       );
     }
@@ -668,6 +686,81 @@ export class FiscalDevice {
 }
 
 // ---------------------------------------------------------------------------
+
+const RECEIPT_TYPES: readonly ReceiptType[] = ["FiscalInvoice", "CreditNote", "DebitNote"];
+
+/**
+ * Refuse inputs FDMS would reject or record wrongly, naming the field.
+ * Amounts are checked here too so every input error is a
+ * ReceiptValidationError. Payments adding up is checked in signReceipt,
+ * once the total is known.
+ */
+function validateReceiptInput(input: ReceiptInput, previousReceiptDate?: string): void {
+  const fail = (field: string, reason: string): never => {
+    throw new ReceiptValidationError(field, reason);
+  };
+  const amount = (v: number | Money, field: string): void => {
+    try {
+      amountToCents(v, field);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      fail(field, msg.startsWith(`${field}: `) ? msg.slice(field.length + 2) : msg);
+    }
+  };
+
+  if (input.receiptType !== undefined && !RECEIPT_TYPES.includes(input.receiptType)) {
+    fail("receiptType", `expected one of ${RECEIPT_TYPES.join(", ")}, got ${String(input.receiptType)}`);
+  }
+  if (typeof input.currency !== "string" || !/^[A-Za-z]{3}$/.test(input.currency)) {
+    fail("currency", `expected a three-letter ISO 4217 code, got ${JSON.stringify(input.currency)}`);
+  }
+  if (typeof input.invoiceNo !== "string" || input.invoiceNo.trim() === "") {
+    fail("invoiceNo", "must be a non-empty string");
+  }
+  if (input.invoiceNo.length > 50) {
+    fail("invoiceNo", `is ${input.invoiceNo.length} characters; FDMS allows at most 50`);
+  }
+  if (!Array.isArray(input.lines) || input.lines.length === 0) {
+    fail("lines", "a receipt needs at least one line");
+  }
+  if (!Array.isArray(input.payments) || input.payments.length === 0) {
+    fail("payments", "a receipt needs at least one payment");
+  }
+
+  input.lines.forEach((l, i) => {
+    const at = `lines[${i}]`;
+    if (typeof l.name !== "string" || l.name.trim() === "") fail(`${at}.name`, "must be a non-empty string");
+    amount(l.price, `${at}.price`);
+    if (typeof l.quantity !== "number" || !Number.isFinite(l.quantity) || l.quantity <= 0) {
+      fail(`${at}.quantity`, `must be a finite number greater than 0, got ${String(l.quantity)}`);
+    }
+    if (!Number.isInteger(l.taxId)) fail(`${at}.taxId`, `must be an integer, got ${String(l.taxId)}`);
+    if (
+      l.taxPercent !== undefined &&
+      l.taxPercent !== null &&
+      (typeof l.taxPercent !== "number" || !Number.isFinite(l.taxPercent) || l.taxPercent < 0)
+    ) {
+      fail(`${at}.taxPercent`, `must be a finite number of at least 0, or null for exempt, got ${String(l.taxPercent)}`);
+    }
+  });
+  input.payments.forEach((p, i) => amount(p.amount, `payments[${i}].amount`));
+
+  // Only an explicit date is checked: generated dates are nudged forward in
+  // signReceipt. A date at or before the previous receipt's gets RCPT030
+  // (Red), after which the device can no longer close the day.
+  if (input.receiptDate !== undefined) {
+    if (!(input.receiptDate instanceof Date) || Number.isNaN(input.receiptDate.getTime())) {
+      fail("receiptDate", "must be a valid Date");
+    }
+    const date = fdmsDateTime(input.receiptDate);
+    if (previousReceiptDate && date <= previousReceiptDate) {
+      fail(
+        "receiptDate",
+        `${date} is not after the previous receipt's ${previousReceiptDate}; FDMS would answer RCPT030 and the day could no longer be closed by the device`,
+      );
+    }
+  }
+}
 
 /** State is plain JSON; structuredClone is missing on Hermes. */
 function cloneState(state: FiscalDayState): FiscalDayState {

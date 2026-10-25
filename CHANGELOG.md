@@ -5,6 +5,22 @@ unless noted.
 
 ## Unreleased
 
+### Added
+
+- `signReceipt()` and `submitReceipt()` validate the `ReceiptInput` before
+  numbering or signing and throw the new `ReceiptValidationError` (with a
+  `field` path such as `lines[0].quantity`). Refused: empty `lines` or
+  `payments`; a zero, negative, `NaN` or non-numeric quantity; a negative
+  or `NaN` tax percent; a non-integer `taxId`; an empty line name; a
+  currency that is not three letters; an empty or over-50-character
+  `invoiceNo`; an unknown `receiptType`; an invalid `receiptDate`; and an
+  explicit `receiptDate` at or before the previous receipt's, which FDMS
+  answers with RCPT030 (Red) and which leaves the day unclosable by the
+  device. Fractional float amounts and payments that do not match the
+  total now throw `ReceiptValidationError` too (it extends `Error`, and
+  the payments message is unchanged). Not verified live: no FDMS call is
+  involved.
+
 ### Fixed
 
 - Receipt tax is now computed with integer arithmetic only. The
