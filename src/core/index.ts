@@ -14,6 +14,7 @@ export {
   FiscalDevice,
   DayNotClosableError,
   PendingSubmitError,
+  ReceiptValidationError,
   buildReceiptTaxes,
   accumulateCounters,
   type FiscalDeviceDeps,

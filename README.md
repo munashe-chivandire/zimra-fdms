@@ -163,6 +163,16 @@ decimal text once; `receiptInputFromJson(input)` converts numbers with up to
 two places and refuses anything finer. The CLI and MCP server do this for
 you.
 
+`signReceipt()` and `submitReceipt()` check the input before anything is
+numbered or signed and throw `ReceiptValidationError` with a `field` such as
+`"lines[2].quantity"`. They refuse empty `lines` or `payments`, a quantity
+that is not a finite number above 0, a negative or `NaN` tax percent, a
+currency that is not three letters, an empty or over-50-character
+`invoiceNo`, payments that do not add up, and an explicit `receiptDate`
+that is not after the previous receipt's (FDMS would answer RCPT030, Red,
+and the device could no longer close the day). The day state is unchanged
+after the error, so fix the input and try again.
+
 ### 4. Surviving a crash
 
 Give the device a `Storage` and it persists day state and a pending-submit

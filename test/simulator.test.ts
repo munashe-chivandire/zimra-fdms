@@ -16,7 +16,7 @@ import { MemoryStorage } from "../src/core/storage.js";
 import { TransportError } from "../src/core/transport.js";
 import { FdmsApiError, type DeviceIdentity } from "../src/core/types.js";
 import { cents } from "../src/core/money.js";
-import { DayNotClosableError, type ReceiptInput } from "../src/core/device.js";
+import { DayNotClosableError, ReceiptValidationError, type ReceiptInput } from "../src/core/device.js";
 import { fdmsDateTime } from "../src/core/signing.js";
 
 const SALE: ReceiptInput = {
@@ -152,6 +152,13 @@ describe("simulator", () => {
       a.response.validationErrors.map((e) => `${e.validationErrorCode}:${e.validationErrorColor}`),
       ["RCPT031:Yellow"],
     );
+    // The SDK now refuses the backwards date itself...
+    await assert.rejects(
+      fd.submitReceipt({ ...SALE, invoiceNo: "INV-2", receiptDate: new Date() }),
+      (err: unknown) => err instanceof ReceiptValidationError && err.field === "receiptDate",
+    );
+    // ...so forget the previous date locally to check the simulator still flags it.
+    fd.restoreState({ ...fd.getState()!, previousReceiptDate: undefined });
     const b = await fd.submitReceipt({ ...SALE, invoiceNo: "INV-2", receiptDate: new Date() });
     assert.deepEqual(b.response.validationErrors.map((e) => e.validationErrorCode), ["RCPT030"]);
     assert.equal(fd.getState()!.redErrors?.length, 1);
