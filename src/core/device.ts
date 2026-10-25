@@ -18,6 +18,7 @@ import {
   FdmsApiError,
   type CloseDayRequest,
   type CloseDayResponse,
+  type CreditDebitNote,
   type DeviceIdentity,
   type FiscalDayCounter,
   type GetConfigResponse,
@@ -722,6 +723,9 @@ function validateReceiptInput(input: ReceiptInput, previousReceiptDate?: string)
   if (input.invoiceNo.length > 50) {
     fail("invoiceNo", `is ${input.invoiceNo.length} characters; FDMS allows at most 50`);
   }
+  if (input.receiptType === "CreditNote" || input.receiptType === "DebitNote") {
+    validateCreditDebitNote(input.creditDebitNote, input.receiptType, fail);
+  }
   if (!Array.isArray(input.lines) || input.lines.length === 0) {
     fail("lines", "a receipt needs at least one line");
   }
@@ -765,6 +769,42 @@ function validateReceiptInput(input: ReceiptInput, previousReceiptDate?: string)
         `${date} is not after the previous receipt's ${previousReceiptDate}; FDMS would answer RCPT030 and the day could no longer be closed by the device`,
       );
     }
+  }
+}
+
+/**
+ * A credit or debit note must say which receipt it corrects: either the
+ * FDMS receiptID, or the original's deviceID, receiptGlobalNo and
+ * fiscalDayNo together. Without one FDMS cannot link the note to a sale.
+ */
+function validateCreditDebitNote(
+  ref: ReceiptInput["creditDebitNote"],
+  receiptType: ReceiptType,
+  fail: (field: string, reason: string) => never,
+): void {
+  const field = "creditDebitNote";
+  if (ref === undefined || ref === null) {
+    fail(field, `is required for a ${receiptType}: reference the original receipt by receiptID, or by deviceID, receiptGlobalNo and fiscalDayNo`);
+  }
+  if (typeof ref !== "object" || Array.isArray(ref)) fail(field, "must be an object");
+  const given = (v: unknown): boolean => v !== undefined && v !== null;
+  const positiveInt = (key: keyof CreditDebitNote): void => {
+    const v = ref[key];
+    if (!Number.isSafeInteger(v) || (v as number) <= 0) {
+      fail(`${field}.${key}`, `must be a positive integer, got ${String(v)}`);
+    }
+  };
+  // Every part that is given is sent to FDMS, so check each one.
+  const byNumber = ["deviceID", "receiptGlobalNo", "fiscalDayNo"] as const;
+  for (const k of ["receiptID", ...byNumber] as const) {
+    if (given(ref[k])) positiveInt(k);
+  }
+  if (given(ref.receiptID)) return;
+  if (!byNumber.some((k) => given(ref[k]))) {
+    fail(field, "has no reference: give receiptID, or deviceID, receiptGlobalNo and fiscalDayNo");
+  }
+  for (const k of byNumber) {
+    if (!given(ref[k])) fail(`${field}.${k}`, "is required when receiptID is not given");
   }
 }
 
