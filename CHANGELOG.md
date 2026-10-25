@@ -3,6 +3,23 @@
 All changes verified live against ZIMRA's FDMS test environment on device 37367
 unless noted.
 
+## Unreleased
+
+### Fixed
+
+- Receipt tax is now computed with integer arithmetic only. The
+  tax-exclusive path multiplied cents by a float rate, so $1.00 at 14.5%
+  gave `14.499999999999998` and rounded to $0.14 instead of $0.15 (439 of
+  the totals from $0.01 to $3,000 were a cent low at 14.5%, 219 at 7.25%).
+  The tax-inclusive path had the same flaw on exact half-cent results at
+  some rates (17 cents at 36% inclusive gave 4 cents of tax, not 5); at
+  15%, 15.5%, 14.5% and 5% it matched exact rounding on every total checked.
+  Negative line totals now round half away from zero, so a negative
+  line's tax mirrors the positive one. A non-finite tax percent, or a line
+  too large to compute exactly, now throws a `RangeError` instead of
+  signing a wrong amount. New conformance vector for the 14.5% case.
+  Tested locally against exact rational rounding, not live.
+
 ## 0.4.1 — 2026-09-29
 
 ### Fixed

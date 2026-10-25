@@ -511,8 +511,10 @@ sale.qrData;     // string to encode in the printed QR code</code></pre>
   <h3>Tax handling</h3>
   <p>Lines are grouped into a tax summary by <code>(taxId, taxPercent)</code> and sorted by
   <code>taxID</code>. With tax-inclusive pricing the tax is extracted from the line total
-  (<code>total − total ÷ (1 + rate)</code>); with exclusive pricing it is added on top. Amounts are
-  rounded to 2 dp at each step, then converted to integer cents for signing.</p>
+  (<code>total × rate ÷ (1 + rate)</code>); with exclusive pricing it is <code>total × rate</code>,
+  added on top. Each line's tax is computed in integer cents from the signed two-decimal rate and
+  rounded half away from zero, with no floating-point step, so $1.00 at 14.5% exclusive is always
+  $0.15.</p>
 
   <p>Payments are checked against the computed total in cents — a mismatch throws before anything is
   sent:</p>

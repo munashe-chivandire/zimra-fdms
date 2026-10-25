@@ -10,6 +10,7 @@ import {
   fdmsDate,
   fdmsDateTime,
   fiscalDaySigningString,
+  formatTaxPercent,
   receiptSigningString,
   toCents,
 } from "./signing.js";
@@ -693,10 +694,7 @@ export function buildReceiptTaxes(
       salesCents: 0,
     };
     const totalCents = toCents(line.receiptLineTotal);
-    const rate = (line.taxPercent ?? 0) / 100;
-    const taxCents = taxInclusive
-      ? Math.round(totalCents - totalCents / (1 + rate))
-      : Math.round(totalCents * rate);
+    const taxCents = lineTaxCents(totalCents, line.taxPercent ?? 0, taxInclusive);
     g.taxCents += taxCents;
     g.salesCents += taxInclusive ? totalCents : totalCents + taxCents;
     groups.set(key, g);
@@ -708,6 +706,44 @@ export function buildReceiptTaxes(
       salesAmountWithTax: centsToAmount(g.salesCents),
     }))
     .sort(compareReceiptTaxes);
+}
+
+/**
+ * Tax on one line total, in integer cents, rounded half away from zero.
+ *
+ * The rate is taken in hundredths of a percent from the same two-decimal
+ * text that is signed (formatTaxPercent), so the tax always matches the
+ * signed percent. All arithmetic is on integers: a float multiply such as
+ * 100 * 0.145 gives 14.499999999999998 and rounds to 14 instead of 15.
+ *
+ *   exclusive: tax = total * bp / 10000
+ *   inclusive: tax = total * bp / (10000 + bp)
+ */
+function lineTaxCents(totalCents: number, taxPercent: number, taxInclusive: boolean): number {
+  const bp = Number(formatTaxPercent(taxPercent).replace(".", ""));
+  if (!Number.isSafeInteger(bp)) {
+    throw new RangeError(`taxPercent ${taxPercent} is not a finite percentage`);
+  }
+  const numerator = totalCents * bp;
+  if (!Number.isSafeInteger(numerator)) {
+    throw new RangeError(
+      `tax on a line total of ${totalCents} cents at ${taxPercent}% is too large to compute exactly`,
+    );
+  }
+  const denominator = taxInclusive ? 10000 + bp : 10000;
+  if (denominator <= 0) {
+    throw new RangeError(`taxPercent ${taxPercent} is not a valid tax-inclusive rate`);
+  }
+  return divideRoundHalfAwayFromZero(numerator, denominator);
+}
+
+/** n / d for integers with d > 0, rounded half away from zero, exactly. */
+function divideRoundHalfAwayFromZero(n: number, d: number): number {
+  const abs = Math.abs(n);
+  const rem = abs % d;
+  let q = (abs - rem) / d;
+  if (rem * 2 >= d) q += 1;
+  return n < 0 ? 0 - q : q; // 0 - q, not -q: never -0
 }
 
 /** Fold a submitted receipt into the running fiscal-day counters. */
