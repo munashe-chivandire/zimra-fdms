@@ -778,7 +778,10 @@ await device.submitReceipt(input);    // marker -> request -> commit -> marker d
   since FDMS answered and did not take the receipt. A 5xx, 408 or 429 does not: a 502 or 504 from a
   proxy, or a 500 after FDMS committed, says nothing about whether the receipt was recorded, so the
   marker stays for <code>reconcile()</code>. The same holds when the resubmit inside
-  <code>reconcile()</code> gets one of those answers: it throws and keeps the marker.</p>
+  <code>reconcile()</code> gets one of those answers: it throws and keeps the marker. When
+  <code>submitOrEnqueue()</code> journals a receipt after an unknown outcome, the marker stays too,
+  and the next <code>flush()</code> settles it through <code>reconcile()</code>. This 5xx, 408 and
+  429 handling is tested against a scripted FDMS, not yet seen live.</p>
 
   <h3>Storage</h3>
   <p>Three keys are ever written: <code>day-state</code>, <code>pending-submit</code> and

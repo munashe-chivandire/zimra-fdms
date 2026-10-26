@@ -38,7 +38,10 @@ unless noted.
   `PendingSubmitError` until `reconcile()` settles it. `reconcile()` keeps
   the marker (and throws) when its resubmit gets one of those answers, and
   `OfflineReceiptQueue.submitOrEnqueue()` journals the receipt instead of
-  throwing. New `isOutcomeUnknown(err)` helper says which errors these are.
+  throwing. `submitOrEnqueue()` also keeps the device's pending marker when
+  it journals a receipt (it used to drop it, network failures included),
+  so the next flush confirms the receipt through GetStatus instead of
+  resending one FDMS may already hold. New `isOutcomeUnknown(err)` helper says which errors these are.
   Tested locally with a scripted FDMS that records the receipt and then
   answers 502, not live.
 - Receipt tax is now computed with integer arithmetic only. The

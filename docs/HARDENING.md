@@ -68,13 +68,14 @@ Tick an item (`- [x]`) in the PR that does it.
   network failure. Test with the simulator accepting a receipt and answering
   502.
 
-- [ ] **The queue resubmits blindly after an unknown outcome in
-  `submitOrEnqueue`.** On a network failure, 5xx, 408 or 429 it drops the
-  device's pending marker and journals the receipt, so `flush()` sends it
-  again without asking GetStatus first. If FDMS had recorded it, the
-  resubmit gets RCPT012 (Red). Keep the marker (or check GetStatus before
-  the first journaled submit) so flush confirms instead of resubmitting,
-  and test with FDMS accepting then the connection dropping.
+- [ ] **`reconcile()` and the offline queue can both settle one receipt.**
+  When the head of the queue journal also has the device's pending marker,
+  a caller that runs `FiscalDevice.reconcile()` on start (as documented)
+  settles and clears the marker, and the next `flush()` then sends the
+  same receipt again without asking GetStatus; if FDMS had it, that is
+  RCPT012 (Red). Have the queue check GetStatus for the journal head when
+  no marker matches it, or skip a head that reconcile already confirmed,
+  and test the restart path.
 
 - [ ] **Concurrent calls on one `FiscalDevice` race.** `signReceipt`,
   `submitReceipt`, `submitPrepared`, `closeDay` and the queue's

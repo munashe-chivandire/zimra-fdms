@@ -264,6 +264,28 @@ describe("server answers that leave the outcome unknown", () => {
     assert.deepEqual(fdms.accepted, [11]);
   });
 
+  for (const fault of ["answerAfterAccept", "dropAfterSubmit"] as const) {
+    it(`the queue confirms instead of resubmitting after ${fault} in submitOrEnqueue`, async () => {
+      const storage = new MemoryStorage();
+      const fdms = fakeFdms();
+      const fd = await device(storage, fdms.transport);
+      await fd.openDay();
+      const q = new OfflineReceiptQueue(fd, new MemoryJournal());
+      if (fault === "answerAfterAccept") fdms.faults.answerAfterAccept = 502;
+      else fdms.faults.dropAfterSubmit = true;
+      assert.equal(await q.submitOrEnqueue({ ...SALE, invoiceNo: "a" }), undefined);
+      assert.equal(q.size, 1);
+      assert.equal((await fd.pendingReceipt())!.receipt.receiptGlobalNo, 11);
+
+      // The next sale drains the queue first: 11 is confirmed, not resent.
+      const b = await q.submitOrEnqueue({ ...SALE, invoiceNo: "b" });
+      assert.equal(b!.receipt.receiptGlobalNo, 12);
+      assert.equal(q.size, 0);
+      assert.deepEqual(fdms.accepted, [11, 12]);
+      assert.equal(await fd.pendingReceipt(), undefined);
+    });
+  }
+
   it("a 502 during flush keeps the marker, and the next flush confirms without a duplicate", async () => {
     const storage = new MemoryStorage();
     const fdms = fakeFdms();

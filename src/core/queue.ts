@@ -138,9 +138,9 @@ export class OfflineReceiptQueue {
       return await this.device.submitPrepared(prepared);
     } catch (err) {
       if (isOutcomeUnknown(err)) {
-        // The device wrote a pending marker for this receipt; the journal
-        // owns it from here, so the marker is dropped.
-        await this.device.discardPending();
+        // FDMS may hold this receipt already. The device's pending marker is
+        // kept, so the next flush() finds it at the head and settles it with
+        // reconcile() (GetStatus first) instead of sending it blind.
         await this.take(prepared);
         return undefined;
       }
