@@ -513,15 +513,17 @@ export class FiscalDevice {
     // 0 - c, not -c: a zero payment must not become -0.
     const signed = (c: number): number => (receiptType === "CreditNote" ? 0 - c : c);
     const lines: ReceiptLine[] = input.lines.map((l, i) => {
-      const priceCents = signed(amountToCents(l.price, `lines[${i}].price`));
+      // Round the magnitude, then sign it: Math.round takes -52.5 to -52,
+      // so rounding a negative total would differ from the sale by a cent.
+      const priceCents = amountToCents(l.price, `lines[${i}].price`);
       return {
         receiptLineType: "Sale",
         receiptLineNo: i + 1,
         receiptLineHSCode: l.hsCode ?? null,
         receiptLineName: l.name,
-        receiptLinePrice: centsToAmount(priceCents),
+        receiptLinePrice: centsToAmount(signed(priceCents)),
         receiptLineQuantity: l.quantity,
-        receiptLineTotal: centsToAmount(Math.round(priceCents * l.quantity)),
+        receiptLineTotal: centsToAmount(signed(Math.round(priceCents * l.quantity))),
         taxCode: l.taxCode ?? null,
         taxPercent: l.taxPercent ?? null,
         taxID: l.taxId,

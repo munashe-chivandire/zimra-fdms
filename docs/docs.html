@@ -128,7 +128,7 @@
 <h1>Documentation</h1>
 <p class="lead">Everything needed to fiscalise with <code>zimra-fdms</code> — from a first registered
 device to a signed fiscal-day close. Every behaviour described here is the behaviour of the shipped
-code, verified live against ZIMRA's FDMS test environment.</p>
+code, verified live against ZIMRA's FDMS test environment unless its section says otherwise.</p>
 
 <!-- ---------------- Introduction ---------------- -->
 <section class="doc-sec" id="introduction">
@@ -527,7 +527,9 @@ sale.qrData;     // string to encode in the printed QR code</code></pre>
   payments as positive amounts, as on the original sale. FDMS v7.2 wants a credit note negative
   (line prices below 0, RCPT022; payments and receiptTotal at or below 0, RCPT028 and RCPT040),
   so the SDK sends and signs every credit note amount negative, and its counters lower the
-  day's totals.</p>
+  day's totals. This sign convention is taken from the spec and tested against the simulator;
+  it is not yet verified live. Still to check on the FDMS test environment: that a negative
+  credit note gets no validation errors, and that a day holding one closes.</p>
 
   <div class="codewin" data-lang="ts" data-file="credit-note.ts">
 <pre><code>await device.submitReceipt({

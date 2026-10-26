@@ -68,6 +68,23 @@ describe("credit note sign convention", () => {
     assert.deepEqual(credit.receiptTaxes.map((t) => [t.taxAmount, t.salesAmountWithTax]), sale.receiptTaxes.map((t) => [0 - t.taxAmount, 0 - t.salesAmountWithTax]));
   });
 
+  it("rounds a half-cent line total the same as the sale, then negates it", async () => {
+    const half: ReceiptInput = {
+      ...SALE,
+      lines: [
+        { name: "Fuel", price: cents("1.05"), quantity: 0.5, taxId: 3, taxPercent: 15 },
+        { name: "Nails", price: cents("0.03"), quantity: 0.5, taxId: 3, taxPercent: 15 },
+      ],
+      payments: [{ moneyType: "Cash", amount: cents("0.55") }],
+    };
+    const sale = (await (await openDevice()).signReceipt(half)).receipt;
+    const credit = (await (await openDevice()).signReceipt({ ...half, receiptType: "CreditNote", invoiceNo: "CN-1", creditDebitNote: { receiptID: 4711 } })).receipt;
+    assert.deepEqual(sale.receiptLines.map((l) => l.receiptLineTotal), [0.53, 0.02]);
+    assert.deepEqual(credit.receiptLines.map((l) => l.receiptLineTotal), [-0.53, -0.02]);
+    assert.equal(credit.receiptTotal, -0.55);
+    assert.deepEqual(credit.receiptTaxes.map((t) => t.taxAmount), sale.receiptTaxes.map((t) => 0 - t.taxAmount));
+  });
+
   it("leaves debit notes and fiscal invoices positive", async () => {
     const fd = await openDevice();
     const debit = (await fd.signReceipt({ ...CREDIT, receiptType: "DebitNote" })).receipt;
