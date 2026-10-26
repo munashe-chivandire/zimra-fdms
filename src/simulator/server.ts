@@ -4,7 +4,8 @@
  * Implements the Device API the SDK uses and replays the validation
  * behaviour observed against ZIMRA's test environment: signature and hash
  * checks (RCPT010), counter and global-number sequencing (RCPT011,
- * RCPT012), receipt-date rules (RCPT014, RCPT030, RCPT031), the quirk that
+ * RCPT012), receipt-date rules (RCPT014, RCPT030, RCPT031), amount sign rules (RCPT022,
+ * RCPT028, RCPT040), the quirk that
  * GetStatus reports the number of the receipt with the latest date rather
  * than the highest issued, and the asynchronous CloseDay that ends in
  * FiscalDayClosed or bounces back with a fiscalDayClosingErrorCode.
@@ -439,6 +440,23 @@ export class FdmsSimulator {
     const paid = r.receiptPayments.reduce((s, p) => s + toCents(p.paymentAmount), 0);
     if (paid !== toCents(r.receiptTotal)) {
       err("RCPT021", RED, "Payments do not equal the receipt total");
+    }
+    // Sign rules, FDMS v7.2 section 4.7. The spec text gives no colour for
+    // these; the simulator treats them as Red. Only Sale lines are checked:
+    // the SDK does not produce Discount lines.
+    const credit = r.receiptType === "CreditNote";
+    for (const l of r.receiptLines) {
+      if (l.receiptLineType !== "Sale" || l.receiptLinePrice === undefined || l.receiptLinePrice === null) continue;
+      if (credit ? l.receiptLinePrice >= 0 : l.receiptLinePrice <= 0) {
+        err("RCPT022", RED, `Receipt line price must be ${credit ? "less" : "greater"} than 0 for ${r.receiptType}`);
+        break;
+      }
+    }
+    if (r.receiptPayments.some((p) => (credit ? p.paymentAmount > 0 : p.paymentAmount < 0))) {
+      err("RCPT028", RED, `Payment amount must be ${credit ? "<= 0" : ">= 0"} for ${r.receiptType}`);
+    }
+    if (credit ? r.receiptTotal > 0 : r.receiptTotal < 0) {
+      err("RCPT040", RED, `Receipt total must be ${credit ? "<= 0" : ">= 0"} for ${r.receiptType}`);
     }
     for (const t of r.receiptTaxes) {
       if (!this.options.taxes.some((x) => x.taxID === t.taxID)) {

@@ -120,8 +120,9 @@ const receipts = [
     previousReceiptHash: "n4bQgYhMfWWaL+qgxVrQFaO/TxsrC4Is0V1sFbDwCgg=",
     receipt: receipt({
       type: "CreditNote", currency: "USD", counter: 4, globalNo: 27, invoiceNo: "CN-0001", date: "2026-09-06T14:30:15", inclusive: true,
-      lines: [line(1, "Consulting", 115, 1, 1, 15, "A")],
-      payments: [{ moneyTypeCode: "Cash", paymentAmount: 115 }],
+      // FDMS v7.2 RCPT022/RCPT028/RCPT040: credit note amounts are negative.
+      lines: [line(1, "Consulting", -115, 1, 1, 15, "A")],
+      payments: [{ moneyTypeCode: "Cash", paymentAmount: -115 }],
     }),
   },
   {

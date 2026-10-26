@@ -86,12 +86,19 @@ function randomPayments(r: Rand, totalCents: number): Payment[] {
   return out;
 }
 
+/** Line amounts negated: FDMS v7.2 wants credit notes negative (RCPT022). */
+function negateLine(l: ReceiptLine): ReceiptLine {
+  return { ...l, receiptLinePrice: 0 - (l.receiptLinePrice ?? 0), receiptLineTotal: 0 - l.receiptLineTotal };
+}
+
 function randomReceipt(r: Rand, n: number): Receipt {
-  const lines = Array.from({ length: int(r, 1, 6) }, (_, i) => randomLine(r, i + 1));
+  const receiptType = pick<ReceiptType>(r, ["FiscalInvoice", "FiscalInvoice", "CreditNote", "DebitNote"]);
+  const sign = receiptType === "CreditNote" ? -1 : 1;
+  const positive = Array.from({ length: int(r, 1, 6) }, (_, i) => randomLine(r, i + 1));
+  const lines = sign < 0 ? positive.map(negateLine) : positive;
   const inclusive = r() < 0.5;
   const taxes = buildReceiptTaxes(lines, inclusive);
   const totalCents = taxes.reduce((s, t) => s + toCents(t.salesAmountWithTax), 0);
-  const receiptType = pick<ReceiptType>(r, ["FiscalInvoice", "FiscalInvoice", "CreditNote", "DebitNote"]);
   return {
     receiptType,
     receiptCurrency: pick(r, ["USD", "usd", "Usd", "ZWG", "zwg"]),
@@ -102,7 +109,10 @@ function randomReceipt(r: Rand, n: number): Receipt {
     receiptLinesTaxInclusive: inclusive,
     receiptLines: lines,
     receiptTaxes: taxes,
-    receiptPayments: randomPayments(r, totalCents),
+    receiptPayments: randomPayments(r, sign * totalCents).map((p) => ({
+      ...p,
+      paymentAmount: sign < 0 ? 0 - p.paymentAmount : p.paymentAmount,
+    })),
     receiptTotal: centsToAmount(totalCents),
     receiptDeviceSignature: { hash: "", signature: "" },
   };
@@ -119,22 +129,20 @@ const counterKey = (c: FiscalDayCounter) =>
 
 /**
  * Expected counters in integer cents, built straight from the receipts.
- * Credit notes count negative, matching the SDK today (the sign convention
- * itself is a separate backlog item).
+ * Credit note amounts are already negative, so every receipt just adds.
  */
 function expectedCounters(receipts: Receipt[]): Map<string, number> {
   const out = new Map<string, number>();
   const add = (key: string, v: number) => out.set(key, (out.get(key) ?? 0) + v);
   for (const rc of receipts) {
     const cur = rc.receiptCurrency.toUpperCase();
-    const sign = rc.receiptType === "CreditNote" ? -1 : 1;
     const [byTax, taxByTax] = BY_TAX[rc.receiptType];
     for (const t of rc.receiptTaxes) {
-      add(`${byTax}|${cur}|${t.taxID}|`, sign * toCents(t.salesAmountWithTax));
-      add(`${taxByTax}|${cur}|${t.taxID}|`, sign * toCents(t.taxAmount));
+      add(`${byTax}|${cur}|${t.taxID}|`, toCents(t.salesAmountWithTax));
+      add(`${taxByTax}|${cur}|${t.taxID}|`, toCents(t.taxAmount));
     }
     for (const p of rc.receiptPayments) {
-      add(`BalanceByMoneyType|${cur}||${p.moneyTypeCode}`, sign * toCents(p.paymentAmount));
+      add(`BalanceByMoneyType|${cur}||${p.moneyTypeCode}`, toCents(p.paymentAmount));
     }
   }
   return out;
@@ -233,7 +241,7 @@ describe("fiscal-day counter properties", () => {
       for (const cur of new Set(receipts.map((rc) => rc.receiptCurrency.toUpperCase()))) {
         const totals = receipts
           .filter((rc) => rc.receiptCurrency.toUpperCase() === cur)
-          .reduce((s, rc) => s + (rc.receiptType === "CreditNote" ? -1 : 1) * toCents(rc.receiptTotal), 0);
+          .reduce((s, rc) => s + toCents(rc.receiptTotal), 0);
         const sum = (types: string[]) =>
           counters
             .filter((c) => c.fiscalCounterCurrency === cur && types.includes(c.fiscalCounterType))
@@ -260,10 +268,18 @@ describe("fiscal-day counter properties", () => {
       const counters: FiscalDayCounter[] = [];
       const receipts = Array.from({ length: int(r, 1, 10) }, (_, i) => randomReceipt(r, i + 1));
       for (const rc of receipts) accumulateCounters(counters, rc);
-      // A credit note that mirrors the first receipt's payments cancels its
-      // balance counters to zero, alongside any zero-rated tax counters.
+      // A receipt that mirrors the first one with the other type and sign
+      // cancels its balance counters to zero, alongside any zero-rated tax
+      // counters.
       const first = receipts[0]!;
-      accumulateCounters(counters, { ...first, receiptType: first.receiptType === "CreditNote" ? "FiscalInvoice" : "CreditNote" });
+      accumulateCounters(counters, {
+        ...first,
+        receiptType: first.receiptType === "CreditNote" ? "FiscalInvoice" : "CreditNote",
+        receiptLines: first.receiptLines.map(negateLine),
+        receiptTaxes: first.receiptTaxes.map((t) => ({ ...t, taxAmount: 0 - t.taxAmount, salesAmountWithTax: 0 - t.salesAmountWithTax })),
+        receiptPayments: first.receiptPayments.map((p) => ({ ...p, paymentAmount: 0 - p.paymentAmount })),
+        receiptTotal: 0 - first.receiptTotal,
+      });
       sawZero += counters.filter((c) => toCents(c.fiscalCounterValue) === 0).length;
 
       const fd = new FiscalDevice(device, { signer, transport });

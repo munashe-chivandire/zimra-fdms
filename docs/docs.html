@@ -523,8 +523,11 @@ sale.qrData;     // string to encode in the printed QR code</code></pre>
   </div>
 
   <h3>Credit and debit notes</h3>
-  <p>A credit note reverses an earlier receipt and must point back at it. Its counters are
-  accumulated with a negative sign, which is what makes the day balance.</p>
+  <p>A credit note reverses an earlier receipt and must point back at it. Give its prices and
+  payments as positive amounts, as on the original sale. FDMS v7.2 wants a credit note negative
+  (line prices below 0, RCPT022; payments and receiptTotal at or below 0, RCPT028 and RCPT040),
+  so the SDK sends and signs every credit note amount negative, and its counters lower the
+  day's totals.</p>
 
   <div class="codewin" data-lang="ts" data-file="credit-note.ts">
 <pre><code>await device.submitReceipt({
@@ -1123,7 +1126,8 @@ for (const v of sale.response.validationErrors ?? []) {
   <div class="api">
     <h4><span class="nm">accumulateCounters</span>(counters, receipt): <span class="rt">void</span></h4>
     <p>Folds a submitted receipt into the running fiscal-day counters, in place. Credit notes are
-    accumulated negatively. Also exported for testing and manual day reconstruction.</p>
+    accumulated negatively, whether their amounts were signed negative (the current SDK) or
+    positive (releases up to 0.4.1). Also exported for testing and manual day reconstruction.</p>
   </div>
 </section>
 

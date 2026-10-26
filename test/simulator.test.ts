@@ -182,6 +182,37 @@ describe("simulator", () => {
     assert.deepEqual(res.response.validationErrors.map((e) => e.validationErrorCode), ["RCPT013"]);
   });
 
+  it("accepts an SDK credit note with negative amounts, and the day still closes", async () => {
+    const { fd } = await freshDevice();
+    await fd.openDay();
+    const sale = await fd.submitReceipt(SALE);
+    const credit = await fd.submitReceipt({
+      ...SALE,
+      receiptType: "CreditNote",
+      invoiceNo: "CN-1",
+      creditDebitNote: { receiptID: sale.response.receiptID },
+    });
+    assert.deepEqual(credit.response.validationErrors, []);
+    assert.equal(credit.receipt.receiptTotal, -23);
+    await fd.closeDay();
+    await waitForStatus(fd, "FiscalDayClosed");
+  });
+
+  it("flags RCPT022, RCPT028 and RCPT040 for a credit note sent with positive amounts", async () => {
+    const { fd } = await freshDevice();
+    await fd.openDay();
+    const prepared = await fd.signReceipt({ ...SALE, receiptType: "CreditNote", invoiceNo: "CN-1", creditDebitNote: { receiptID: 1 } });
+    // The wire form releases up to 0.4.1 sent: every amount positive.
+    const r = prepared.receipt;
+    r.receiptLines = r.receiptLines.map((l) => ({ ...l, receiptLinePrice: Math.abs(l.receiptLinePrice!), receiptLineTotal: Math.abs(l.receiptLineTotal) }));
+    r.receiptTaxes = r.receiptTaxes.map((t) => ({ ...t, taxAmount: Math.abs(t.taxAmount), salesAmountWithTax: Math.abs(t.salesAmountWithTax) }));
+    r.receiptPayments = r.receiptPayments.map((p) => ({ ...p, paymentAmount: Math.abs(p.paymentAmount) }));
+    r.receiptTotal = Math.abs(r.receiptTotal);
+    const res = await fd.submitPrepared(prepared);
+    const codes = res.response.validationErrors.map((e) => e.validationErrorCode);
+    for (const code of ["RCPT022", "RCPT028", "RCPT040"]) assert.ok(codes.includes(code), `${code} in ${codes.join(",")}`);
+  });
+
   it("bounces a close signed over the wrong date with BadCertificateSignature", async () => {
     const { fd } = await freshDevice();
     await fd.openDay();

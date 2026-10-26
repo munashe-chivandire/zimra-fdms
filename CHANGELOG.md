@@ -5,6 +5,30 @@ unless noted.
 
 ## Unreleased
 
+### Changed (breaking)
+
+- Credit notes are now sent and signed with negative amounts. FDMS API
+  spec v7.2 section 4.7 requires a credit note's Sale line prices to be
+  below 0 (RCPT022), its payments to be 0 or below (RCPT028) and its
+  `receiptTotal` to be 0 or below (RCPT040). Up to 0.4.1 the SDK sent every
+  credit note amount positive. Callers still give credit note prices and
+  payments as positive amounts; `signReceipt()` negates the line prices,
+  line totals, payments and total, and the taxes follow from the lines, so
+  the signing string carries the negative cents (for example
+  `CREDITNOTEUSD...-11500A15.00-1500-11500`). Day counters are unchanged:
+  a credit note still lowers them by the same amounts, and a credit note
+  signed positive by 0.4.x (for example one still in an offline journal)
+  is counted the same as a negative one. Already-signed receipts are not
+  rewritten. The credit note conformance vector changed. Tested locally
+  and against the simulator, which now replays RCPT022, RCPT028 and
+  RCPT040; not yet verified live.
+- A line price must now be greater than 0 and a payment 0 or more, on
+  every receipt type, or `signReceipt()` throws `ReceiptValidationError`
+  naming the field. FDMS rejects a zero or negative Sale line price on a
+  fiscal invoice or debit note (RCPT022) and a negative payment (RCPT028).
+  Code that passed negative amounts for a credit note must pass them
+  positive.
+
 ### Added
 
 - `signReceipt()` and `submitReceipt()` validate the `ReceiptInput` before

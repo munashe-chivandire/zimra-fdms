@@ -3,7 +3,7 @@ import { type Signer, type EcdsaSignatureFormat, signCanonicalString } from "./s
 import { ServerCorrectedClock, type Clock } from "./clock.js";
 import { buildCsr, deviceCommonName } from "./csr.js";
 import { receiptQrData } from "./qr.js";
-import { amountToCents, centsToAmount, type Money } from "./money.js";
+import { amountToCents, centsToAmount, formatCents, isMoney, type Money } from "./money.js";
 import type { Storage } from "./storage.js";
 import {
   compareReceiptTaxes,
@@ -38,6 +38,8 @@ export interface ReceiptLineInput {
   /**
    * Unit price, tax-inclusive if linesTaxInclusive. A whole number of major
    * units or `cents("11.50")`; a fractional number throws. See money.ts.
+   * Must be greater than 0, also on a credit note: the SDK sends credit note
+   * amounts negative, as FDMS requires (RCPT022, RCPT028, RCPT040).
    */
   price: number | Money;
   quantity: number;
@@ -53,6 +55,7 @@ export interface ReceiptInput {
   currency: string;
   invoiceNo: string;
   lines: ReceiptLineInput[];
+  /** Amounts are 0 or more, also on a credit note (sent negative, see `price`). */
   payments: { moneyType: MoneyType; amount: number | Money }[];
   linesTaxInclusive?: boolean;
   receiptDate?: Date;
@@ -503,8 +506,14 @@ export class FiscalDevice {
       date = new Date(new Date(s.previousReceiptDate).getTime() + 1000);
     }
 
+    // Callers give every amount as a positive magnitude. FDMS v7.2 wants a
+    // credit note negative on the wire: line prices < 0 (RCPT022), payments
+    // <= 0 (RCPT028) and receiptTotal <= 0 (RCPT040). Taxes and the total
+    // follow from the negated lines, so the signed string is negative too.
+    // 0 - c, not -c: a zero payment must not become -0.
+    const signed = (c: number): number => (receiptType === "CreditNote" ? 0 - c : c);
     const lines: ReceiptLine[] = input.lines.map((l, i) => {
-      const priceCents = amountToCents(l.price, `lines[${i}].price`);
+      const priceCents = signed(amountToCents(l.price, `lines[${i}].price`));
       return {
         receiptLineType: "Sale",
         receiptLineNo: i + 1,
@@ -525,14 +534,14 @@ export class FiscalDevice {
       (inclusive ? 0 : taxes.reduce((sum, t) => sum + toCents(t.taxAmount), 0));
     const receiptTotal = centsToAmount(receiptTotalCents);
 
-    const paymentsTotalCents = input.payments.reduce(
-      (sum, p, i) => sum + amountToCents(p.amount, `payments[${i}].amount`),
-      0,
+    const paymentCents = input.payments.map(
+      (p, i) => signed(amountToCents(p.amount, `payments[${i}].amount`)),
     );
+    const paymentsTotalCents = paymentCents.reduce((sum, c) => sum + c, 0);
     if (paymentsTotalCents !== receiptTotalCents) {
       throw new ReceiptValidationError(
         "payments",
-        `Payments (${centsToAmount(paymentsTotalCents)}) do not equal receipt total (${receiptTotal})`,
+        `Payments (${centsToAmount(signed(paymentsTotalCents))}) do not equal receipt total (${centsToAmount(signed(receiptTotalCents))})`,
       );
     }
 
@@ -553,7 +562,7 @@ export class FiscalDevice {
       receiptTaxes: taxes,
       receiptPayments: input.payments.map((p, i) => ({
         moneyTypeCode: p.moneyType,
-        paymentAmount: centsToAmount(amountToCents(p.amount, `payments[${i}].amount`)),
+        paymentAmount: centsToAmount(paymentCents[i]!),
       })),
       receiptTotal,
       receiptPrintForm: "Receipt48",
@@ -738,6 +747,10 @@ function validateReceiptInput(input: ReceiptInput, previousReceiptDate?: string)
     if (l === null || typeof l !== "object") fail(at, "must be an object");
     if (typeof l.name !== "string" || l.name.trim() === "") fail(`${at}.name`, "must be a non-empty string");
     amount(l.price, `${at}.price`);
+    // RCPT022: a sale line's price is > 0 (negated by the SDK for a credit note).
+    if (amountToCents(l.price, `${at}.price`) <= 0) {
+      fail(`${at}.price`, `must be greater than 0, got ${String(isMoney(l.price) ? formatCents(l.price.cents) : l.price)}; give credit note amounts as positive values, the SDK makes them negative`);
+    }
     if (typeof l.quantity !== "number" || !Number.isFinite(l.quantity) || l.quantity <= 0) {
       fail(`${at}.quantity`, `must be a finite number greater than 0, got ${String(l.quantity)}`);
     }
@@ -753,6 +766,10 @@ function validateReceiptInput(input: ReceiptInput, previousReceiptDate?: string)
   input.payments.forEach((p, i) => {
     if (p === null || typeof p !== "object") fail(`payments[${i}]`, "must be an object");
     amount(p.amount, `payments[${i}].amount`);
+    // RCPT028: payments are >= 0 (negated by the SDK for a credit note).
+    if (amountToCents(p.amount, `payments[${i}].amount`) < 0) {
+      fail(`payments[${i}].amount`, `must be 0 or more, got ${String(isMoney(p.amount) ? formatCents(p.amount.cents) : p.amount)}; give credit note amounts as positive values, the SDK makes them negative`);
+    }
   });
 
   // Only an explicit date is checked: generated dates are nudged forward in
@@ -922,7 +939,15 @@ export function accumulateCounters(
   receipt: Receipt,
 ): void {
   const currency = receipt.receiptCurrency.toUpperCase();
-  const sign = receipt.receiptType === "CreditNote" ? -1 : 1;
+  // A credit note lowers the counters. Its amounts are now signed negative,
+  // as FDMS requires; releases up to 0.4.1 signed them positive, and such
+  // receipts may still sit in a journal or a day being reconstructed.
+  // Count a credit note as -|amount| so both give the same counters. The
+  // SDK only makes Sale lines, so a credit note amount is never positive.
+  const signed =
+    receipt.receiptType === "CreditNote"
+      ? (v: number) => 0 - Math.abs(v)
+      : (v: number) => v;
   const byTaxType =
     receipt.receiptType === "FiscalInvoice"
       ? ("SaleByTax" as const)
@@ -966,7 +991,7 @@ export function accumulateCounters(
         fiscalCounterTaxPercent: t.taxPercent ?? null,
         fiscalCounterValue: 0,
       }),
-      sign * t.salesAmountWithTax,
+      signed(t.salesAmountWithTax),
     );
     upsert(
       (c) =>
@@ -980,7 +1005,7 @@ export function accumulateCounters(
         fiscalCounterTaxPercent: t.taxPercent ?? null,
         fiscalCounterValue: 0,
       }),
-      sign * t.taxAmount,
+      signed(t.taxAmount),
     );
   }
 
@@ -996,7 +1021,7 @@ export function accumulateCounters(
         fiscalCounterMoneyType: p.moneyTypeCode,
         fiscalCounterValue: 0,
       }),
-      sign * p.paymentAmount,
+      signed(p.paymentAmount),
     );
   }
 }
