@@ -23,6 +23,7 @@ import {
   FdmsClient,
   TransportError,
   isNetworkError,
+  isOutcomeUnknown,
   type Transport,
   type TransportRequest,
 } from "../src/core/transport.js";
@@ -215,6 +216,17 @@ describe("FdmsClient", () => {
   it("classifies TransportError as a network failure", () => {
     assert.equal(isNetworkError(new TransportError("boom")), true);
     assert.equal(isNetworkError(new FdmsApiError(400, undefined)), false);
+  });
+
+  it("treats network failures, 5xx, 408 and 429 as an unknown outcome", () => {
+    assert.equal(isOutcomeUnknown(new TransportError("boom")), true);
+    for (const s of [500, 502, 503, 504, 408, 429]) {
+      assert.equal(isOutcomeUnknown(new FdmsApiError(s, undefined)), true, String(s));
+    }
+    for (const s of [400, 401, 403, 404, 409, 422]) {
+      assert.equal(isOutcomeUnknown(new FdmsApiError(s, undefined)), false, String(s));
+    }
+    assert.equal(isOutcomeUnknown(new Error("bug")), false);
   });
 });
 

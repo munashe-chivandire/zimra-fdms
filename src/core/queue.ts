@@ -7,7 +7,7 @@
  */
 import type { FiscalDevice, PreparedReceipt, ReceiptInput, SubmittedReceipt } from "./device.js";
 import { MemoryJournal, type Journal } from "./journal.js";
-import { isNetworkError } from "./transport.js";
+import { isOutcomeUnknown } from "./transport.js";
 
 /**
  * 0.3.x storage: a whole-array snapshot. Still accepted; it is wrapped in a
@@ -118,7 +118,8 @@ export class OfflineReceiptQueue {
   }
 
   /**
-   * Try to submit a receipt immediately; on network failure, journal it.
+   * Try to submit a receipt immediately; on a network failure, 5xx, 408 or
+   * 429 (outcome unknown), journal it.
    * Always flushes older queued receipts first to preserve ordering.
    */
   async submitOrEnqueue(
@@ -136,10 +137,10 @@ export class OfflineReceiptQueue {
     try {
       return await this.device.submitPrepared(prepared);
     } catch (err) {
-      if (isNetworkError(err)) {
-        // The device wrote a pending marker for this receipt; the journal
-        // owns it from here, so the marker is dropped.
-        await this.device.discardPending();
+      if (isOutcomeUnknown(err)) {
+        // FDMS may hold this receipt already. The device's pending marker is
+        // kept, so the next flush() finds it at the head and settles it with
+        // reconcile() (GetStatus first) instead of sending it blind.
         await this.take(prepared);
         return undefined;
       }

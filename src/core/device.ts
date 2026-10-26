@@ -1,4 +1,4 @@
-import { FdmsClient, type FdmsClientOptions, type Transport } from "./transport.js";
+import { FdmsClient, isOutcomeUnknown, type FdmsClientOptions, type Transport } from "./transport.js";
 import { type Signer, type EcdsaSignatureFormat, signCanonicalString } from "./signer.js";
 import { ServerCorrectedClock, type Clock } from "./clock.js";
 import { buildCsr, deviceCommonName } from "./csr.js";
@@ -311,7 +311,9 @@ export class FiscalDevice {
       await this.commitPrepared(pending, response);
       return { action: "resubmitted", receiptGlobalNo, response };
     } catch (error) {
-      if (error instanceof FdmsApiError) {
+      // A 5xx, 408 or 429 on the resubmit is no answer either; keep the
+      // marker so the next reconcile() asks GetStatus again.
+      if (error instanceof FdmsApiError && !isOutcomeUnknown(error)) {
         await this.storage?.delete(KEY_PENDING);
         return { action: "rejected", receiptGlobalNo, error };
       }
@@ -614,9 +616,12 @@ export class FiscalDevice {
         { receipt: prepared.receipt },
       );
     } catch (err) {
-      // A server answer means FDMS did not take the receipt; nothing is
-      // pending. A network failure keeps the marker for reconcile().
-      if (err instanceof FdmsApiError) await this.storage?.delete(KEY_PENDING);
+      // A definite refusal (4xx) means FDMS did not take the receipt;
+      // nothing is pending. A network failure, 5xx, 408 or 429 leaves the
+      // outcome unknown and keeps the marker for reconcile().
+      if (err instanceof FdmsApiError && !isOutcomeUnknown(err)) {
+        await this.storage?.delete(KEY_PENDING);
+      }
       throw err;
     }
 

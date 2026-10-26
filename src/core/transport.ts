@@ -142,3 +142,18 @@ export function isNetworkError(err: unknown): boolean {
     /timed out|network request failed/i.test(err.message)
   );
 }
+
+/**
+ * True when a failed call may or may not have been processed by FDMS: a
+ * network failure, a request timeout (408), throttling (429) or any 5xx. A
+ * 502 or 504 from a proxy, or a 500 after FDMS committed, says nothing
+ * about whether the receipt was recorded, so a submit that fails this way
+ * stays pending for reconcile(). Any other FdmsApiError is a definite
+ * refusal.
+ */
+export function isOutcomeUnknown(err: unknown): boolean {
+  if (err instanceof FdmsApiError) {
+    return err.status >= 500 || err.status === 408 || err.status === 429;
+  }
+  return isNetworkError(err);
+}

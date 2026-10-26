@@ -199,7 +199,7 @@ on every command.
 import { OfflineReceiptQueue, FileJournal } from "zimra-fdms";
 
 const queue = new OfflineReceiptQueue(device, new FileJournal("./.zimra"));
-await queue.submitOrEnqueue(receiptInput); // journals on network failure
+await queue.submitOrEnqueue(receiptInput); // journals on network failure, 5xx, 408 or 429
 await queue.flush();                       // FIFO retry when back online
 queue.oldestPendingAgeMs;                  // warn before the 72 hours run out
 ```

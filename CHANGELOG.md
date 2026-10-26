@@ -29,6 +29,21 @@ unless noted.
 
 ### Fixed
 
+- A 5xx, 408 or 429 answer to SubmitReceipt no longer clears the
+  pending-submit marker. Before, any HTTP error was taken as a definite
+  rejection, so when a proxy answered 502 or 504, or FDMS answered 500
+  after recording the receipt, the next sale reused the same global
+  number and FDMS gave it RCPT012 (Red), leaving the day unclosable by the
+  device. The marker now stays and `submitReceipt()` refuses with
+  `PendingSubmitError` until `reconcile()` settles it. `reconcile()` keeps
+  the marker (and throws) when its resubmit gets one of those answers, and
+  `OfflineReceiptQueue.submitOrEnqueue()` journals the receipt instead of
+  throwing. `submitOrEnqueue()` also keeps the device's pending marker when
+  it journals a receipt (it used to drop it, network failures included),
+  so the next flush confirms the receipt through GetStatus instead of
+  resending one FDMS may already hold. New `isOutcomeUnknown(err)` helper says which errors these are.
+  Tested locally with a scripted FDMS that records the receipt and then
+  answers 502, not live.
 - Receipt tax is now computed with integer arithmetic only. The
   tax-exclusive path multiplied cents by a float rate, so $1.00 at 14.5%
   gave `14.499999999999998` and rounded to $0.14 instead of $0.15 (439 of

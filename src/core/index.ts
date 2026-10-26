@@ -66,6 +66,7 @@ export {
   FdmsClient,
   TransportError,
   isNetworkError,
+  isOutcomeUnknown,
   type Transport,
   type TransportRequest,
   type TransportResponse,
