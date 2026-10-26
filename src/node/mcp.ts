@@ -62,7 +62,7 @@ const profileArg = z
 
 const receiptLineSchema = z.object({
   name: z.string().describe("Item name as it appears on the receipt"),
-  price: z.number().describe("Unit price (tax-inclusive if linesTaxInclusive)"),
+  price: z.number().describe("Unit price, greater than 0 (tax-inclusive if linesTaxInclusive). Positive on credit notes too: the SDK sends credit note amounts negative, as FDMS requires"),
   quantity: z.number(),
   taxId: z.number().int().describe("Tax ID from the device tax table (see get_config)"),
   taxPercent: z

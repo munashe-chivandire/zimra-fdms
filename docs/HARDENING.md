@@ -50,12 +50,15 @@ Tick an item (`- [x]`) in the PR that does it.
   `creditDebitNote` is required for CreditNote and DebitNote, but
   `signReceipt` accepts a credit note without one. Enforce it, with tests.
 
-- [ ] **Credit note sign convention is unverified.** The vectors sign credit
+- [x] **Credit note sign convention is unverified.** The vectors sign credit
   notes with positive amounts; confirm
   the sign convention FDMS v7.2 expects for credit note lines, taxes and
   payments against the spec PDF or a live test before changing any vector.
   If it has to change, that is a breaking change: write it up, do not merge
   without Shaun.
+  Checked against the v7.2 spec PDF, section 4.7: RCPT022 (credit note
+  Sale line price < 0), RCPT028 (credit note payment <= 0), RCPT040
+  (credit note receiptTotal <= 0). The SDK now sends credit notes negative.
 
 ## Submission, retries and the offline queue
 

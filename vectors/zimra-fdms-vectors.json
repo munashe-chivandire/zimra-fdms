@@ -237,9 +237,9 @@
             "receiptLineNo": 1,
             "receiptLineHSCode": null,
             "receiptLineName": "Consulting",
-            "receiptLinePrice": 115,
+            "receiptLinePrice": -115,
             "receiptLineQuantity": 1,
-            "receiptLineTotal": 115,
+            "receiptLineTotal": -115,
             "taxCode": "A",
             "taxPercent": 15,
             "taxID": 1
@@ -250,23 +250,23 @@
             "taxCode": "A",
             "taxPercent": 15,
             "taxID": 1,
-            "taxAmount": 15,
-            "salesAmountWithTax": 115
+            "taxAmount": -15,
+            "salesAmountWithTax": -115
           }
         ],
         "receiptPayments": [
           {
             "moneyTypeCode": "Cash",
-            "paymentAmount": 115
+            "paymentAmount": -115
           }
         ],
-        "receiptTotal": 115,
+        "receiptTotal": -115,
         "receiptPrintForm": "Receipt48"
       },
-      "taxBlock": "A15.00150011500",
-      "canonical": "37367CREDITNOTEUSD272026-09-06T14:30:1511500A15.00150011500n4bQgYhMfWWaL+qgxVrQFaO/TxsrC4Is0V1sFbDwCgg=",
-      "hash": "Y/ocyc3KWm9ZP+Q+VqpVpt0UIepKON1MXJu9GGOR61s=",
-      "signature": "MEUCIQDM7/8qVahrNG2PU4oOjdz/a88BCIh4zxxW2cf7abhutgIgZk2V0tT2yyuLoDNjzh2Vihq4Nq2bwHK2H53z9tQXDMA="
+      "taxBlock": "A15.00-1500-11500",
+      "canonical": "37367CREDITNOTEUSD272026-09-06T14:30:15-11500A15.00-1500-11500n4bQgYhMfWWaL+qgxVrQFaO/TxsrC4Is0V1sFbDwCgg=",
+      "hash": "eBevUa9HBsVrw8GB2yDvzoWfs201Z3ec+bxOLWemU00=",
+      "signature": "MEQCIGaSx9LLszZMgcep4FpyM0BEB0Z7M+DkPXMdZ+lQVoRGAiATmSh1aeS7FHwJExKpvLM/ZoDlLh8XY6C4HjFZw/2d6w=="
     },
     {
       "name": "Large amounts near the 2^31 cents boundary",

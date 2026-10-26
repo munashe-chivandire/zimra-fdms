@@ -54,7 +54,7 @@ writeFileSync(values.ca!, caPem);
 console.log(`FDMS simulator listening at ${url}`);
 console.log(`CA certificate written to ${values.ca}`);
 console.log(`Register with any 8-character activation key${values["activation-key"] ? ` from: ${values["activation-key"].join(", ")}` : ""}.`);
-console.log(`Replays: RCPT010 RCPT011 RCPT012 RCPT013 RCPT014 RCPT020 RCPT021 RCPT030 RCPT031, async CloseDay, BadCertificateSignature, ReceiptsWithValidationErrors.`);
+console.log(`Replays: RCPT010 RCPT011 RCPT012 RCPT013 RCPT014 RCPT020 RCPT021 RCPT022 RCPT028 RCPT030 RCPT031 RCPT040, async CloseDay, BadCertificateSignature, ReceiptsWithValidationErrors.`);
 
 const stop = () => void sim.stop().then(() => process.exit(0));
 process.on("SIGINT", stop);
