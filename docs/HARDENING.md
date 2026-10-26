@@ -59,7 +59,7 @@ Tick an item (`- [x]`) in the PR that does it.
 
 ## Submission, retries and the offline queue
 
-- [ ] **A 5xx answer to SubmitReceipt is treated as a definite rejection.**
+- [x] **A 5xx answer to SubmitReceipt is treated as a definite rejection.**
   `submitPrepared` deletes the pending marker on any `FdmsApiError`. A 502 or
   504 from a proxy, or a 500 after FDMS committed, means the outcome is
   unknown; the next receipt then reuses the same global number (RCPT012,
@@ -67,6 +67,14 @@ Tick an item (`- [x]`) in the PR that does it.
   `reconcile()` settles it, and make the offline queue treat those like a
   network failure. Test with the simulator accepting a receipt and answering
   502.
+
+- [ ] **The queue resubmits blindly after an unknown outcome in
+  `submitOrEnqueue`.** On a network failure, 5xx, 408 or 429 it drops the
+  device's pending marker and journals the receipt, so `flush()` sends it
+  again without asking GetStatus first. If FDMS had recorded it, the
+  resubmit gets RCPT012 (Red). Keep the marker (or check GetStatus before
+  the first journaled submit) so flush confirms instead of resubmitting,
+  and test with FDMS accepting then the connection dropping.
 
 - [ ] **Concurrent calls on one `FiscalDevice` race.** `signReceipt`,
   `submitReceipt`, `submitPrepared`, `closeDay` and the queue's

@@ -633,10 +633,11 @@ const { submitted, remaining, error } = await queue.flush();</code></pre>
     <li><b>Ordering first.</b> <code>submitOrEnqueue()</code> drains anything already queued before
     attempting the new sale. If the drain does not finish, the new receipt joins the back of the
     queue rather than jumping ahead.</li>
-    <li><b>Only network failures queue.</b> <code>ECONNREFUSED</code>, <code>ECONNRESET</code>,
-    <code>ENOTFOUND</code>, <code>ETIMEDOUT</code>, <code>EAI_AGAIN</code> and timeouts are treated as
-    offline. A rejection from FDMS — a bad tax id, a duplicate invoice number — throws, because
-    queueing it would just fail again later.</li>
+    <li><b>Only unknown outcomes queue.</b> <code>ECONNREFUSED</code>, <code>ECONNRESET</code>,
+    <code>ENOTFOUND</code>, <code>ETIMEDOUT</code>, <code>EAI_AGAIN</code>, timeouts, and HTTP 5xx,
+    408 and 429 answers are treated as offline (<code>isOutcomeUnknown()</code>). A 4xx rejection
+    from FDMS (a bad tax id, a duplicate invoice number) throws, because queueing it would just fail
+    again later.</li>
     <li><b>Flush stops at the first failure.</b> The chain is sequential; skipping a receipt would
     break it. <code>flush()</code> returns what it managed to submit, how many remain, and the error
     that stopped it.</li>
@@ -773,8 +774,11 @@ await device.submitReceipt(input);    // marker -> request -> commit -> marker d
 
   <p>While a marker exists, <code>submitReceipt()</code>, <code>openDay()</code> and
   <code>closeDay()</code> throw <code>PendingSubmitError</code> rather than compound the problem. A
-  server rejection (4xx) during a normal submit clears the marker itself, since FDMS answered and did
-  not take the receipt.</p>
+  server rejection (4xx other than 408 and 429) during a normal submit clears the marker itself,
+  since FDMS answered and did not take the receipt. A 5xx, 408 or 429 does not: a 502 or 504 from a
+  proxy, or a 500 after FDMS committed, says nothing about whether the receipt was recorded, so the
+  marker stays for <code>reconcile()</code>. The same holds when the resubmit inside
+  <code>reconcile()</code> gets one of those answers: it throws and keeps the marker.</p>
 
   <h3>Storage</h3>
   <p>Three keys are ever written: <code>day-state</code>, <code>pending-submit</code> and
