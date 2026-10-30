@@ -36,9 +36,18 @@ coverage/
 .env*.local
 
 # agent config & design scratch — local only
-.claude/
+.claude/*
 Design Inspiration/
 productIdea/
 
 # conformance vectors use a public test key; it is not a credential
 !vectors/test-key.pem
+
+# Claude Code personal settings
+.claude/settings.local.json
+
+# Shared Claude Code config for cloud sessions (claude-env)
+!.claude/settings.json
+!.claude/hooks/
+.claude/hooks/*
+!.claude/hooks/cloud-install.sh
