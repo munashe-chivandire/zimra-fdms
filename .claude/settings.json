@@ -24,8 +24,12 @@
     "deny": [
       "Read(./**/*.pem)",
       "Read(./.env)",
+      "Read(./.env.*.local)",
+      "Read(./.env.development)",
       "Read(./.env.local)",
       "Read(./.env.production)",
+      "Read(./.env.staging)",
+      "Read(./.env.test)",
       "Read(./secrets/**)"
     ]
   },
