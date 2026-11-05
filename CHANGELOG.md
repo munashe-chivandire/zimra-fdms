@@ -10,8 +10,10 @@ unless noted.
 - `examples/excel`: fiscalise invoices kept in Excel. Reads a sheet saved as
   CSV (one row per invoice line), submits one receipt per invoice through the
   CLI and writes receipt ID, global number, total and QR data to a results
-  CSV. Invoices already marked OK are skipped on a rerun. Verified against the
-  simulator, not the ZIMRA test environment.
+  CSV. Writes a PENDING row before each submit so a rerun after a crash or a
+  lost FDMS answer never fiscalises an invoice twice, and records FDMS
+  validation warnings on accepted receipts. Verified against the simulator,
+  not the ZIMRA test environment.
 - `signReceipt()` and `submitReceipt()` validate the `ReceiptInput` before
   numbering or signing and throw the new `ReceiptValidationError` (with a
   `field` path such as `lines[0].quantity`). Refused: empty `lines` or

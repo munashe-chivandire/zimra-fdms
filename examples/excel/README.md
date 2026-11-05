@@ -29,19 +29,43 @@ match before the first real run.
 ## Run it
 
 ```sh
-npx zimra-fdms register --device-id 12345 --serial MYPOS01 --activation-key AAAABBBB   # once
-npx zimra-fdms day open                                                               # each trading day
+npx zimra-fdms register --env production --device-id 12345 --serial MYPOS01 --activation-key AAAABBBB   # once
+npx zimra-fdms day open                                   # each trading day
 node excel-fiscalise.mjs sales.csv results.csv
-npx zimra-fdms day close                                                              # end of day
+npx zimra-fdms day close                                  # end of day
 ```
 
-In Excel use **File > Save As > CSV UTF-8**. `results.csv` gets one row per
-invoice: `Status`, `ReceiptID`, `GlobalNo`, `Total`, `QRData` and `Error`.
+`register` defaults to ZIMRA's test environment. Leave out `--env production`
+while you are trying things out, and register a separate production device
+for real sales.
 
-Running the same sheet again skips invoices already marked `OK` in
-`results.csv` and appends new ones, so a crash or a fixed row never
-fiscalises an invoice twice. Keep `results.csv` with the day's sales. The
-script exits with code 2 if any invoice failed.
+In Excel use **File > Save As > CSV UTF-8**. `results.csv` gets a row per
+invoice with `Status`, `ReceiptID`, `GlobalNo`, `Total`, `QRData`, `Warnings`
+and `Error`. Keep it with the day's sales: it is how the script knows what is
+already fiscalised.
+
+## Reruns and crashes
+
+The script writes a `PENDING` row before each submit and the outcome after
+it. The latest row for an invoice decides what the next run does:
+
+| Status    | Meaning                                    | Next run                    |
+| --------- | ------------------------------------------ | --------------------------- |
+| `OK`      | Fiscalised                                 | Skipped                     |
+| `FAILED`  | FDMS did not take it (see `Error`)         | Submitted again             |
+| `PENDING` | The script stopped mid-submit              | Skipped, listed for checking |
+| `UNKNOWN` | Sent, but FDMS never answered              | Skipped, listed for checking |
+
+`PENDING` and `UNKNOWN` invoices may already be fiscalised, so the script
+never resubmits them on its own. Confirm on the FDMS portal, then append a
+row with the invoice number and `OK`, or `FAILED` to submit it again. After
+an `UNKNOWN` the run stops, since the connection is probably down; the next
+CLI call delivers that receipt before anything else.
+
+`Warnings` lists validation errors FDMS returned for an accepted receipt. A
+Red one means the device can no longer close the day; close it on the ZIMRA
+portal. The script exits with code 2 if anything failed, got a Red error or needs
+checking.
 
 ## Before you rely on it
 
@@ -53,8 +77,9 @@ script exits with code 2 if any invoice failed.
   day, and keep `.zimra/` backed up and out of shared folders: it holds the
   device private key.
 - **A failed row does not break the day.** Bad input (an unknown VAT value,
-  three-decimal prices, payments that do not add up) is refused before
-  anything is signed. Fix the row and run again.
+  a blank or three-decimal price, rows of one invoice with different
+  currencies or payment types) is refused before anything is signed. Fix the
+  row and run again.
 
 ## Try it against the simulator
 
