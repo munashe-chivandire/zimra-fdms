@@ -74,6 +74,10 @@ points you at ZIMRA. See [CHANGELOG.md](CHANGELOG.md) for the observed codes. `s
 scripting. **Keep `.zimra/` out of version control** — it contains the
 device private key.
 
+Invoices kept in Excel: [examples/excel](examples/excel) turns a sheet saved
+as CSV into one receipt per invoice and writes the receipt numbers and QR
+data back to a results CSV.
+
 ## MCP server — fiscalise from an agent
 
 The same binary runs an MCP server (spec revision 2026-07-28, with fallback

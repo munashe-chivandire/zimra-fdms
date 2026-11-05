@@ -1,0 +1,7 @@
+InvoiceNo,Customer,Item,Qty,UnitPrice,VAT,Payment,Currency
+INV-1001,Walk-in,Bread,2,1.20,15,Cash,USD
+INV-1001,Walk-in,Milk 2L,1,2.50,15,Cash,USD
+INV-1002,"Moyo Hardware, Mbare",Cement 50kg,10,9.80,15,BankTransfer,USD
+INV-1003,Walk-in,Maize meal 10kg,1,6.50,0,MobileWallet,USD
+INV-1004,Walk-in,Cooking oil 2L,3,4.75,15,Cash,USD
+INV-1004,Walk-in,Sugar 2kg,1,2.33,15,Cash,USD
